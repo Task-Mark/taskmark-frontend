@@ -1,6 +1,6 @@
 # Board index
 
-Last synced: 2026-07-21T18:02:46Z
+Last synced: 2026-07-21T22:26:00Z
 
 ## Epics
 
@@ -8,6 +8,7 @@ Last synced: 2026-07-21T18:02:46Z
 |----|-------|--------|------|--------|-----------|--------------|------|
 | E-001 | MVP Taskmark dashboard | done | XL | 24 | 2490 | 94 | [epic.md](epics/E-001-mvp-dashboard/epic.md) |
 | E-002 | User stories view | done | L | 16 | 2160 | 51 | [epic.md](epics/E-002-user-stories-view/epic.md) |
+| E-003 | Refactor Taskmark project structure | backlog | XL | 29 | 3148 | 0 | [epic.md](epics/E-003-refactor-taskmark-project-structure/epic.md) |
 
 ## Stories
 
@@ -19,6 +20,10 @@ Last synced: 2026-07-21T18:02:46Z
 | S-004 | Add project accumulates workspaces | E-001 | done | M | 3 | 480 | 0 | [story.md](epics/E-001-mvp-dashboard/stories/S-004-add-project-accumulate/story.md) |
 | S-005 | Story list for selected epic | E-002 | done | S | 3 | 45 | 48 | [story.md](epics/E-002-user-stories-view/stories/S-005-story-list-for-epic/story.md) |
 | S-006 | Task list for selected story | E-002 | done | L | 8 | 1080 | 3 | [story.md](epics/E-002-user-stories-view/stories/S-006-task-list-for-story/story.md) |
+| S-007 | Single-project board placement | E-003 | backlog | M | 5 | 254 | 0 | [story.md](epics/E-003-refactor-taskmark-project-structure/stories/S-007-single-project-board-placement/story.md) |
+| S-008 | Multi-project dedicated board repo | E-003 | backlog | L | 8 | 734 | 0 | [story.md](epics/E-003-refactor-taskmark-project-structure/stories/S-008-multi-project-dedicated-board/story.md) |
+| S-009 | Ambiguous common-name resolution | E-003 | backlog | M | 4 | 240 | 0 | [story.md](epics/E-003-refactor-taskmark-project-structure/stories/S-009-ambiguous-common-name/story.md) |
+| S-010 | Migrate plugin tooling to new layout | E-003 | backlog | XL | 12 | 1920 | 0 | [story.md](epics/E-003-refactor-taskmark-project-structure/stories/S-010-migrate-plugin-tooling/story.md) |
 
 ## Open work sessions
 
@@ -46,4 +51,17 @@ Last synced: 2026-07-21T18:02:46Z
 | T-014 | Parse task and bug markdown under selected story | S-006 | done | M | 3 | 480 | 1 | [T-014](epics/E-002-user-stories-view/stories/S-006-task-list-for-story/items/T-014-parse-task-markdown.md) |
 | T-015 | Build task list UI | S-006 | done | M | 3 | 480 | 1 | [T-015](epics/E-002-user-stories-view/stories/S-006-task-list-for-story/items/T-015-task-list-ui.md) |
 | T-016 | Wire story selection to task list | S-006 | done | S | 2 | 120 | 1 | [T-016](epics/E-002-user-stories-view/stories/S-006-task-list-for-story/items/T-016-wire-story-to-task-list.md) |
+| T-017 | Detect single-repo workspace mode | S-007 | backlog | S | 2 | 120 | 0 | [T-017](epics/E-003-refactor-taskmark-project-structure/stories/S-007-single-project-board-placement/items/T-017-detect-single-repo-mode.md) |
+| T-018 | Place board inside project git root | S-007 | backlog | S | 2 | 120 | 0 | [T-018](epics/E-003-refactor-taskmark-project-structure/stories/S-007-single-project-board-placement/items/T-018-place-board-in-project-git.md) |
+| T-019 | Configure single-repo REPOS.md | S-007 | backlog | XS | 1 | 14 | 0 | [T-019](epics/E-003-refactor-taskmark-project-structure/stories/S-007-single-project-board-placement/items/T-019-single-repo-repos-md.md) |
+| T-020 | Derive common project name | S-008 | backlog | S | 2 | 120 | 0 | [T-020](epics/E-003-refactor-taskmark-project-structure/stories/S-008-multi-project-dedicated-board/items/T-020-derive-common-project-name.md) |
+| T-021 | Create sibling `_taskmark` project folder | S-008 | backlog | S | 2 | 120 | 0 | [T-021](epics/E-003-refactor-taskmark-project-structure/stories/S-008-multi-project-dedicated-board/items/T-021-create-sibling-taskmark-project.md) |
+| T-022 | Initialize git for dedicated Taskmark project | S-008 | backlog | XS | 1 | 14 | 0 | [T-022](epics/E-003-refactor-taskmark-project-structure/stories/S-008-multi-project-dedicated-board/items/T-022-init-git-for-taskmark-project.md) |
+| T-023 | Canonical board without product-repo copies | S-008 | backlog | M | 3 | 480 | 0 | [T-023](epics/E-003-refactor-taskmark-project-structure/stories/S-008-multi-project-dedicated-board/items/T-023-canonical-board-no-product-copies.md) |
+| T-024 | Detect ambiguous common-name cases | S-009 | backlog | S | 2 | 120 | 0 | [T-024](epics/E-003-refactor-taskmark-project-structure/stories/S-009-ambiguous-common-name/items/T-024-detect-ambiguous-common-name.md) |
+| T-025 | Prompt user and persist board project name | S-009 | backlog | S | 2 | 120 | 0 | [T-025](epics/E-003-refactor-taskmark-project-structure/stories/S-009-ambiguous-common-name/items/T-025-prompt-persist-board-name.md) |
+| T-026 | Rewrite multi-repo conventions and rule | S-010 | backlog | M | 3 | 480 | 0 | [T-026](epics/E-003-refactor-taskmark-project-structure/stories/S-010-migrate-plugin-tooling/items/T-026-rewrite-multi-repo-conventions.md) |
+| T-027 | Update sync-taskmark-repos skill and script | S-010 | backlog | M | 3 | 480 | 0 | [T-027](epics/E-003-refactor-taskmark-project-structure/stories/S-010-migrate-plugin-tooling/items/T-027-update-sync-taskmark-repos.md) |
+| T-028 | Update init and related skills | S-010 | backlog | M | 3 | 480 | 0 | [T-028](epics/E-003-refactor-taskmark-project-structure/stories/S-010-migrate-plugin-tooling/items/T-028-update-init-and-skills.md) |
+| T-029 | Migrate existing multi-copy boards | S-010 | backlog | M | 3 | 480 | 0 | [T-029](epics/E-003-refactor-taskmark-project-structure/stories/S-010-migrate-plugin-tooling/items/T-029-migrate-existing-multi-copy-boards.md) |
 | B-001 | Epic list fails after board frontmatter fence corruption | S-002 | done | S | 2 | 120 | 0 | [B-001](epics/E-001-mvp-dashboard/stories/S-002-epic-list/items/B-001-epic-frontmatter-parse.md) |
