@@ -7,9 +7,9 @@ priority: high
 size: L
 size_source: suggested
 size_basis: [T-005, T-006, T-007]
-points: 8
+points: 10
 points_source: suggested
-estimate_minutes: 1080
+estimate_minutes: 1200
 actual_minutes: 3
 estimate_basis: [T-005, T-006, T-007]
 session_cap_minutes: 480
@@ -20,11 +20,10 @@ blocked: false
 cancelled: false
 tags: [mvp, epics, dashboard]
 created: 2026-07-21
-updated: 2026-07-21T16:58:32Z
+updated: 2026-07-21T17:31:00Z
 started_at: 2026-07-21T16:49:52Z
 completed_at: 2026-07-21T16:51:19Z
 ---
-
 # S-002: Epic list for selected project
 
 ## User story

@@ -20,11 +20,10 @@ blocked: false
 cancelled: false
 tags: [mvp, parser, epics]
 created: 2026-07-21
-updated: 2026-07-21T16:51:19Z
+updated: 2026-07-21T17:31:00Z
 started_at: 2026-07-21T16:49:52Z
 completed_at: 2026-07-21T16:51:19Z
 ---
-
 # T-005: Parse epic markdown from local taskmark folder
 
 ## Description

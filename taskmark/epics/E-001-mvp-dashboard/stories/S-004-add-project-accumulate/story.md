@@ -10,7 +10,7 @@ size_basis: []
 points: 3
 points_source: suggested
 estimate_minutes: 480
-actual_minutes: 1
+actual_minutes: 0
 estimate_basis: []
 session_cap_minutes: 480
 parent: E-001
@@ -20,11 +20,10 @@ blocked: false
 cancelled: false
 tags: [mvp, app-bar, setup]
 created: 2026-07-21
-updated: 2026-07-21T17:12:10Z
+updated: 2026-07-21T17:31:00Z
 started_at: 2026-07-21T17:05:52Z
 completed_at: 2026-07-21T17:05:52Z
 ---
-
 # S-004: Add project accumulates workspaces
 
 ## User story

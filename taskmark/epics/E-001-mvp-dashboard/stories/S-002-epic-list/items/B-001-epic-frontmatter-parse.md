@@ -10,7 +10,7 @@ size_basis: []
 points: 2
 points_source: suggested
 estimate_minutes: 120
-actual_minutes: 1
+actual_minutes: 0
 estimate_basis: []
 session_cap_minutes: 480
 parent: S-002
@@ -20,11 +20,10 @@ blocked: false
 cancelled: false
 tags: [mvp, parser, bug]
 created: 2026-07-21
-updated: 2026-07-21T16:58:32Z
+updated: 2026-07-21T17:31:00Z
 started_at: 2026-07-21T16:56:26Z
 completed_at: 2026-07-21T16:56:26Z
 ---
-
 # B-001: Epic list fails after board frontmatter fence corruption
 
 ## Description

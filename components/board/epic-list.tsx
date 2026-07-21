@@ -14,33 +14,29 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { cn } from "@/lib/utils"
+import { formatDurationMinutes } from "@/lib/format-duration"
 import type { ProjectEpicList } from "@/lib/taskmark/epic-types"
-
-function formatMinutes(value: number | null): string {
-  if (value === null) return "—"
-  return String(value)
-}
 
 function formatPoints(value: number | null): string {
   if (value === null) return "—"
   return String(value)
 }
 
-function statusBadgeVariant(
-  status: string
-): "default" | "secondary" | "destructive" | "outline" | "ghost" {
+function statusBadgeClass(status: string): string {
   switch (status) {
     case "done":
-      return "secondary"
+      return "border-black bg-[var(--chart-4)] text-black"
     case "in_progress":
-      return "default"
+      return "border-black bg-[var(--chart-1)] text-black"
     case "blocked":
-      return "destructive"
+      return "border-black bg-destructive text-destructive-foreground"
     case "cancelled":
-      return "ghost"
+      return "border-black bg-muted text-muted-foreground line-through"
     case "backlog":
+      return "border-black bg-[var(--chart-3)] text-black"
     default:
-      return "outline"
+      return "border-black bg-card text-foreground"
   }
 }
 
@@ -108,8 +104,8 @@ export function EpicList({ lists }: EpicListProps) {
                     <TableHead>Title</TableHead>
                     <TableHead>Size</TableHead>
                     <TableHead>Points</TableHead>
-                    <TableHead>Est (min)</TableHead>
-                    <TableHead>Actual (min)</TableHead>
+                    <TableHead>Est</TableHead>
+                    <TableHead>Actual</TableHead>
                     <TableHead>Status</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -125,13 +121,16 @@ export function EpicList({ lists }: EpicListProps) {
                       <TableCell>{epic.size}</TableCell>
                       <TableCell>{formatPoints(epic.points)}</TableCell>
                       <TableCell>
-                        {formatMinutes(epic.estimateMinutes)}
+                        {formatDurationMinutes(epic.estimateMinutes)}
                       </TableCell>
                       <TableCell>
-                        {formatMinutes(epic.actualMinutes)}
+                        {formatDurationMinutes(epic.actualMinutes)}
                       </TableCell>
                       <TableCell>
-                        <Badge variant={statusBadgeVariant(epic.status)}>
+                        <Badge
+                          variant="outline"
+                          className={cn(statusBadgeClass(epic.status))}
+                        >
                           {formatStatusLabel(epic.status)}
                         </Badge>
                       </TableCell>

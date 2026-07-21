@@ -7,10 +7,10 @@ priority: high
 size: XL
 size_source: suggested
 size_basis: [T-001, T-002, T-003, T-004, T-008]
-points: 12
+points: 11
 points_source: suggested
-estimate_minutes: 1320
-actual_minutes: 5
+estimate_minutes: 1215
+actual_minutes: 18
 estimate_basis: [T-001, T-002, T-003, T-004, T-008]
 session_cap_minutes: 480
 parent: E-001
@@ -20,11 +20,10 @@ blocked: false
 cancelled: false
 tags: [mvp, wizard, setup]
 created: 2026-07-21
-updated: 2026-07-21T16:48:57Z
+updated: 2026-07-21T17:31:00Z
 started_at: 2026-07-21T16:35:18Z
 completed_at: 2026-07-21T16:37:18Z
 ---
-
 # S-001: Project setup wizard
 
 ## User story
@@ -72,3 +71,4 @@ As a user, I want a setup wizard that lets me select a local **master folder** s
 | Session | Actor | Started (UTC) | Ended (UTC) | Summary |
 |---------|-------|---------------|-------------|---------|
 | 1 | agent | 2026-07-21T16:35:18Z | 2026-07-21T16:37:18Z | Implemented setup wizard: master folder path, discovery under subfolders, validation, cookie persist, skip/switch setup, board gate |
+| 2 | agent | 2026-07-21T16:35:18Z | 2026-07-21T16:48:57Z | auto-recovered: commit span |

@@ -4,14 +4,14 @@ type: task
 title: Implement project folder selection
 status: done
 priority: high
-size: S
+size: XS
 size_source: suggested
-size_basis: []
-points: 2
+size_basis: [calibrated:T-002]
+points: 1
 points_source: suggested
-estimate_minutes: 120
-actual_minutes: 1
-estimate_basis: []
+estimate_minutes: 15
+actual_minutes: 14
+estimate_basis: [calibrated:T-002]
 session_cap_minutes: 480
 parent: S-001
 epic: E-001
@@ -20,7 +20,7 @@ blocked: false
 cancelled: false
 tags: [mvp, wizard, filesystem]
 created: 2026-07-21
-updated: 2026-07-21T16:48:57Z
+updated: 2026-07-21T17:31:00Z
 started_at: 2026-07-21T16:35:18Z
 completed_at: 2026-07-21T16:37:18Z
 ---
@@ -63,3 +63,4 @@ Browser sandboxes cannot expose absolute disk paths. Folder selection uses a **n
 | Session | Actor | Started (UTC) | Ended (UTC) | Summary |
 |---------|-------|---------------|-------------|---------|
 | 1 | agent | 2026-07-21T16:35:18Z | 2026-07-21T16:36:18Z | Implemented as part of S-001 setup wizard |
+| 2 | agent | 2026-07-21T16:35:18Z | 2026-07-21T16:48:57Z | auto-recovered: commit span |
