@@ -1,6 +1,6 @@
 # Team velocity
 
-Last synced: 2026-07-21T17:31:00Z
+Last synced: 2026-07-21T17:41:06Z
 Window: last 20 done tasks/bugs (or all if fewer)
 
 ## Throughput
@@ -8,7 +8,7 @@ Window: last 20 done tasks/bugs (or all if fewer)
 | Metric | Value |
 |--------|-------|
 | Done items in window | 11 |
-| Sum points | 23 |
+| Sum points | 21 |
 | Median points | 1 |
 | Median actual_minutes | 14 |
 | Median minutes per point | 14 |
@@ -18,10 +18,10 @@ Window: last 20 done tasks/bugs (or all if fewer)
 
 | Metric | Value |
 |--------|-------|
-| Open items (excl. cancelled) | 0 |
-| Sum points remaining | 0 |
-| Sum estimate_minutes remaining | 0 |
-| ETA (from median min/point) | insufficient data |
+| Open items (excl. cancelled) | 6 |
+| Sum points remaining | 16 |
+| Sum estimate_minutes remaining | 2160 |
+| ETA (from median min/point) | ~224 min billable |
 
 ## Notes
 

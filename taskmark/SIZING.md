@@ -16,6 +16,7 @@ Seed estimates are calibrated from **AI-assisted billable work-log minutes** (an
 
 | Date | Item | Sized | Points | Est | Actual | Note |
 |------|------|-------|--------|-----|--------|------|
+| 2026-07-21 | T-006 | M | 3 | 480 | 46 | estimate 480->45; size M->XS |
 | 2026-07-21 | T-002 | S | 2 | 120 | 14 | estimate 120->15; size S->XS |
 | 2026-07-21 | T-009 | M | 3 | 480 | 14 | estimate 480->15; size M->XS |
 | 2026-07-21 | T-010 | S | 2 | 120 | 14 | estimate 120->15; size S->XS |

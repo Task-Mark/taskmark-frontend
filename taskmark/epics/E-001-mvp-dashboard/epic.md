@@ -10,7 +10,7 @@ size_basis: [S-001, S-002, S-003, S-004]
 points: 26
 points_source: suggested
 estimate_minutes: 2925
-actual_minutes: 49
+actual_minutes: 94
 estimate_basis: [S-001, S-002, S-003, S-004]
 session_cap_minutes: 480
 parent: null
@@ -20,11 +20,10 @@ blocked: false
 cancelled: false
 tags: [mvp, dashboard, frontend]
 created: 2026-07-21
-updated: 2026-07-21T17:31:00Z
+updated: 2026-07-21T17:41:06Z
 started_at: 2026-07-21T16:35:18Z
 completed_at: 2026-07-21T17:02:25Z
 ---
-
 # E-001: MVP Taskmark dashboard
 
 ## Goal

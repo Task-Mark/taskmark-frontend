@@ -7,10 +7,10 @@ priority: high
 size: L
 size_source: suggested
 size_basis: [T-005, T-006, T-007]
-points: 10
+points: 8
 points_source: suggested
-estimate_minutes: 1200
-actual_minutes: 3
+estimate_minutes: 765
+actual_minutes: 48
 estimate_basis: [T-005, T-006, T-007]
 session_cap_minutes: 480
 parent: E-001
@@ -20,10 +20,11 @@ blocked: false
 cancelled: false
 tags: [mvp, epics, dashboard]
 created: 2026-07-21
-updated: 2026-07-21T17:35:33Z
+updated: 2026-07-21T17:41:06Z
 started_at: 2026-07-21T16:49:52Z
 completed_at: 2026-07-21T16:51:19Z
 ---
+
 # S-002: Epic list for selected project
 
 ## User story
@@ -68,3 +69,4 @@ As a user, I want to see every epic for **each** Taskmark project discovered und
 | Session | Actor | Started (UTC) | Ended (UTC) | Summary |
 |---------|-------|---------------|-------------|---------|
 | 1 | agent | 2026-07-21T16:49:52Z | 2026-07-21T16:51:19Z | Implemented epic parser and per-project epic list on /board |
+| 2 | agent | 2026-07-21T16:49:52Z | 2026-07-21T17:35:33Z | auto-recovered: commit span |

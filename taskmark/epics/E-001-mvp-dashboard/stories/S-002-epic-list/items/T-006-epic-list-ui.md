@@ -4,14 +4,14 @@ type: task
 title: Build epic list UI
 status: done
 priority: high
-size: M
+size: XS
 size_source: suggested
-size_basis: []
-points: 3
+size_basis: [calibrated:T-006]
+points: 1
 points_source: suggested
-estimate_minutes: 480
-actual_minutes: 1
-estimate_basis: []
+estimate_minutes: 45
+actual_minutes: 46
+estimate_basis: [calibrated:T-006]
 session_cap_minutes: 480
 parent: S-002
 epic: E-001
@@ -20,7 +20,7 @@ blocked: false
 cancelled: false
 tags: [mvp, epics, ui]
 created: 2026-07-21
-updated: 2026-07-21T17:35:33Z
+updated: 2026-07-21T17:41:06Z
 started_at: 2026-07-21T16:49:52Z
 completed_at: 2026-07-21T16:51:19Z
 ---
@@ -61,3 +61,4 @@ Story/task drill-down is out of scope for this MVP slice.
 | Session | Actor | Started (UTC) | Ended (UTC) | Summary |
 |---------|-------|---------------|-------------|---------|
 | 1 | agent | 2026-07-21T16:49:52Z | 2026-07-21T16:51:19Z | Built per-project epic list table UI |
+| 2 | agent | 2026-07-21T16:49:52Z | 2026-07-21T17:35:33Z | auto-recovered: commit span |
