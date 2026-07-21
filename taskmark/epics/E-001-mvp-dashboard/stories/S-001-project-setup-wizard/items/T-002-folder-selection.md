@@ -20,7 +20,7 @@ blocked: false
 cancelled: false
 tags: [mvp, wizard, filesystem]
 created: 2026-07-21
-updated: 2026-07-21T16:45:20Z
+updated: 2026-07-21T16:48:57Z
 started_at: 2026-07-21T16:35:18Z
 completed_at: 2026-07-21T16:37:18Z
 ---
@@ -55,6 +55,8 @@ Browser sandboxes cannot expose absolute disk paths. Folder selection uses a **n
 
 | SHA | Repo | Date (UTC) | Message |
 |-----|------|------------|---------|
+| 1fcb25f | taskmark-frontend | 2026-07-21T16:48:57Z | add native folder picker to setup |
+| e1923e9 | taskmark-cursor | 2026-07-21T16:48:57Z | sync taskmark board |
 
 ## Work log
 
