@@ -1,6 +1,6 @@
 "use client"
 
-import { useActionState, useEffect, useState } from "react"
+import { useActionState, useEffect, useState, useTransition } from "react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -12,6 +12,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import {
+  pickMasterFolder,
   previewMasterFolder,
   saveMasterFolder,
   type PreviewMasterFolderState,
@@ -31,6 +32,8 @@ export function SetupWizard({
   switching = false,
 }: SetupWizardProps) {
   const [path, setPath] = useState(initialPath)
+  const [pickerError, setPickerError] = useState<string | null>(null)
+  const [picking, startPick] = useTransition()
   const [preview, previewAction, previewPending] = useActionState(
     previewMasterFolder,
     initialPreview
@@ -46,9 +49,24 @@ export function SetupWizard({
     }
   }, [preview.masterPath])
 
-  const error = saveState.error ?? preview.error
+  function handleBrowse() {
+    setPickerError(null)
+    startPick(async () => {
+      const result = await pickMasterFolder()
+      if (result.error) {
+        setPickerError(result.error)
+        return
+      }
+      if (result.path) {
+        setPath(result.path)
+      }
+    })
+  }
+
+  const error = saveState.error ?? preview.error ?? pickerError ?? undefined
   const projects = preview.projects
   const canContinue = path.trim().length > 0
+  const busy = previewPending || savePending || picking
 
   return (
     <Card className="w-full max-w-xl border-2 shadow-lg">
@@ -58,8 +76,8 @@ export function SetupWizard({
         </CardTitle>
         <CardDescription className="text-base leading-relaxed">
           Choose a master folder. Taskmark will look inside its subfolders for
-          projects that contain a <code className="font-mono text-sm">taskmark/</code>{" "}
-          board.
+          projects that contain a{" "}
+          <code className="font-mono text-sm">taskmark/</code> board.
         </CardDescription>
       </CardHeader>
 
@@ -68,18 +86,33 @@ export function SetupWizard({
           <label htmlFor="masterPath" className="text-sm font-medium">
             Master folder path
           </label>
-          <input
-            id="masterPath"
-            name="masterPath"
-            value={path}
-            onChange={(e) => setPath(e.target.value)}
-            placeholder="/Users/you/Projects/my-workspace"
-            autoComplete="off"
-            spellCheck={false}
-            className="w-full rounded border-2 border-border bg-input px-3 py-2 font-mono text-sm shadow-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-          />
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-stretch">
+            <input
+              id="masterPath"
+              name="masterPath"
+              value={path}
+              onChange={(e) => setPath(e.target.value)}
+              placeholder="/Users/you/Projects/my-workspace"
+              autoComplete="off"
+              spellCheck={false}
+              className="w-full min-w-0 flex-1 rounded border-2 border-border bg-input px-3 py-2 font-mono text-sm shadow-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+            />
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={busy}
+              onClick={handleBrowse}
+              className="shrink-0 sm:self-stretch"
+            >
+              {picking ? "Opening…" : "Browse…"}
+            </Button>
+          </div>
           <div className="flex flex-wrap gap-2">
-            <Button type="submit" variant="outline" disabled={previewPending || !path.trim()}>
+            <Button
+              type="submit"
+              variant="outline"
+              disabled={busy || !path.trim()}
+            >
               {previewPending ? "Scanning…" : "Find projects"}
             </Button>
           </div>
@@ -123,7 +156,7 @@ export function SetupWizard({
           <input type="hidden" name="masterPath" value={path} />
           <Button
             type="submit"
-            disabled={!canContinue || savePending}
+            disabled={!canContinue || busy}
             size="lg"
           >
             {savePending ? "Saving…" : "Continue"}

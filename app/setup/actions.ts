@@ -6,6 +6,7 @@ import {
   clearMasterFolderCookie,
   setMasterFolderCookie,
 } from "@/lib/taskmark/cookies"
+import { pickFolderNative } from "@/lib/taskmark/pick-folder"
 import { validateMasterFolder } from "@/lib/taskmark/validate"
 import type { DiscoveredProject } from "@/lib/taskmark/types"
 
@@ -46,6 +47,22 @@ export async function saveMasterFolder(
 
   await setMasterFolderCookie(result.masterPath)
   redirect("/board")
+}
+
+export type PickMasterFolderState = {
+  path?: string
+  error?: string
+}
+
+export async function pickMasterFolder(): Promise<PickMasterFolderState> {
+  const result = await pickFolderNative()
+  if (result.ok) {
+    return { path: result.path }
+  }
+  if (result.cancelled) {
+    return {}
+  }
+  return { error: result.error }
 }
 
 export async function switchMasterFolder(): Promise<void> {

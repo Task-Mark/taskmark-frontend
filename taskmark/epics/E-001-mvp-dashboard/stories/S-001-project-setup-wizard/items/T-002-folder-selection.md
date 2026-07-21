@@ -20,7 +20,7 @@ blocked: false
 cancelled: false
 tags: [mvp, wizard, filesystem]
 created: 2026-07-21
-updated: 2026-07-21T16:37:18Z
+updated: 2026-07-21T16:45:20Z
 started_at: 2026-07-21T16:35:18Z
 completed_at: 2026-07-21T16:37:18Z
 ---
@@ -40,7 +40,7 @@ Let the user provide a local **master folder** path (path input and/or native fo
 
 ## Notes
 
-Browser sandboxes limit arbitrary disk access; prefer a practical local-dev approach (e.g. path string + Node fs on the server, or directory handle) and document the choice. The selected folder is a workspace root that may contain multiple project subfolders.
+Browser sandboxes cannot expose absolute disk paths. Folder selection uses a **native OS folder picker** via the Next.js server (`osascript` on macOS, `zenity` on Linux, PowerShell folder browser on Windows), plus a path text field for paste/edit. Local `next dev` / `next start` only — not suitable for a remote hosted deploy without a different picker strategy. The selected folder is a workspace root that may contain multiple project subfolders.
 
 ## Prompt & feedback log
 
@@ -49,6 +49,7 @@ Browser sandboxes limit arbitrary disk access; prefer a practical local-dev appr
 | 1 | 2026-07-21T16:24:55Z | prompt | Create MVP epic with setup wizard + epic list; create stories and tasks |
 | 2 | 2026-07-21T16:31:04Z | feedback | Selection is a master folder; Taskmark projects live in subfolders |
 | 3 | 2026-07-21T16:37:18Z | prompt | Implement S-001 setup wizard |
+| 4 | 2026-07-21T16:45:20Z | feedback | Find/select project should use a folder picker as well as path input |
 
 ## Commits
 
