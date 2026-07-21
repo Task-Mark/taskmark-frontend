@@ -20,7 +20,7 @@ blocked: false
 cancelled: false
 tags: [mvp, epics, ui]
 created: 2026-07-21
-updated: 2026-07-21T17:31:00Z
+updated: 2026-07-21T17:35:33Z
 started_at: 2026-07-21T16:49:52Z
 completed_at: 2026-07-21T16:51:19Z
 ---
@@ -54,6 +54,7 @@ Story/task drill-down is out of scope for this MVP slice.
 
 | SHA | Repo | Date (UTC) | Message |
 |-----|------|------------|---------|
+| 3d64d0e | taskmark-frontend | 2026-07-21T17:35:33Z | format epic list durations and status badges |
 
 ## Work log
 

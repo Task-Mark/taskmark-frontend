@@ -20,7 +20,7 @@ blocked: false
 cancelled: false
 tags: [mvp, epics, dashboard]
 created: 2026-07-21
-updated: 2026-07-21T17:31:00Z
+updated: 2026-07-21T17:35:33Z
 started_at: 2026-07-21T16:49:52Z
 completed_at: 2026-07-21T16:51:19Z
 ---
@@ -60,6 +60,8 @@ As a user, I want to see every epic for **each** Taskmark project discovered und
 |-----|------|------------|---------|
 | cc992dc | taskmark-frontend | 2026-07-21T16:58:32Z | add epic list and fix frontmatter parse |
 | 8f1a801 | taskmark-cursor | 2026-07-21T16:58:32Z | sync taskmark board |
+| 3d64d0e | taskmark-frontend | 2026-07-21T17:35:33Z | format epic list durations and status badges |
+| 622a560 | taskmark-cursor | 2026-07-21T17:35:33Z | add recompute-actuals and update effort skills |
 
 ## Work log
 
