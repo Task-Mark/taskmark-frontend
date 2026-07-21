@@ -4,14 +4,14 @@ type: task
 title: Parse story markdown under selected epic
 status: done
 priority: high
-size: M
+size: XS
 size_source: suggested
-size_basis: [T-005]
-points: 3
+size_basis: [calibrated:T-011]
+points: 1
 points_source: suggested
-estimate_minutes: 480
-actual_minutes: 2
-estimate_basis: [T-005]
+estimate_minutes: 15
+actual_minutes: 16
+estimate_basis: [calibrated:T-011]
 session_cap_minutes: 480
 parent: S-005
 epic: E-002
@@ -20,7 +20,7 @@ blocked: false
 cancelled: false
 tags: [parser, stories]
 created: 2026-07-21
-updated: 2026-07-21T17:59:56Z
+updated: 2026-07-21T18:02:46Z
 started_at: 2026-07-21T17:45:49Z
 completed_at: 2026-07-21T17:48:46Z
 ---
@@ -59,3 +59,4 @@ Mirror the epic parser pattern from T-005; keep the API consistent for later tas
 | Session | Actor | Started (UTC) | Ended (UTC) | Summary |
 |---------|-------|---------------|-------------|---------|
 | 1 | agent | 2026-07-21T17:45:49Z | 2026-07-21T17:48:46Z | Parsed story.md under selected epic; shared frontmatter helpers |
+| 2 | agent | 2026-07-21T17:45:49Z | 2026-07-21T17:59:56Z | auto-recovered: commit span |

@@ -2,7 +2,7 @@
 id: S-006
 type: story
 title: Task list for selected story
-status: backlog
+status: done
 priority: high
 size: L
 size_source: suggested
@@ -10,7 +10,7 @@ size_basis: [T-014, T-015, T-016]
 points: 8
 points_source: suggested
 estimate_minutes: 1080
-actual_minutes: 0
+actual_minutes: 3
 estimate_basis: [T-014, T-015, T-016]
 session_cap_minutes: 480
 parent: E-002
@@ -20,10 +20,11 @@ blocked: false
 cancelled: false
 tags: [dashboard, tasks, stories]
 created: 2026-07-21
-updated: 2026-07-21T17:48:46Z
-started_at: null
-completed_at: null
+updated: 2026-07-21T18:02:46Z
+started_at: 2026-07-21T18:00:53Z
+completed_at: 2026-07-21T18:02:46Z
 ---
+
 # S-006: Task list for selected story
 
 ## User story
@@ -32,12 +33,12 @@ As a user, I want to select a user story and see the tasks (and bugs) connected 
 
 ## Acceptance criteria
 
-- [ ] User can select a story from the story list (S-005).
-- [ ] Selecting a story shows all items under that story’s `items/` folder (tasks and bugs).
-- [ ] Each item row shows at least id, title, type (task/bug), status, size, and points.
-- [ ] Stories with no items show an empty state, not a crash.
-- [ ] Parse errors for individual items are surfaced without breaking the whole list.
-- [ ] Task list updates when the selected story changes; clearing or changing epic clears or resets story selection appropriately.
+- [x] User can select a story from the story list (S-005).
+- [x] Selecting a story shows all items under that story’s `items/` folder (tasks and bugs).
+- [x] Each item row shows at least id, title, type (task/bug), status, size, and points.
+- [x] Stories with no items show an empty state, not a crash.
+- [x] Parse errors for individual items are surfaced without breaking the whole list.
+- [x] Task list updates when the selected story changes; clearing or changing epic clears or resets story selection appropriately.
 
 ## Tasks
 
@@ -50,6 +51,7 @@ As a user, I want to select a user story and see the tasks (and bugs) connected 
 | # | When (UTC) | Kind | Summary |
 |---|------------|------|---------|
 | 1 | 2026-07-21T17:40:05Z | prompt | Create E-002 user stories view with stories and tasks; select epic → stories, select story → tasks |
+| 2 | 2026-07-21T18:00:53Z | prompt | Implement S-006 task list for selected story |
 
 ## Commits
 
@@ -60,3 +62,4 @@ As a user, I want to select a user story and see the tasks (and bugs) connected 
 
 | Session | Actor | Started (UTC) | Ended (UTC) | Summary |
 |---------|-------|---------------|-------------|---------|
+| 1 | agent | 2026-07-21T18:00:53Z | 2026-07-21T18:02:46Z | Delivered task list for selected story (parse + UI + wiring) |

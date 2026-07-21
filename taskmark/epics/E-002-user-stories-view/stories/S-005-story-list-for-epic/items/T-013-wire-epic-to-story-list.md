@@ -4,14 +4,14 @@ type: task
 title: Wire epic selection to story list
 status: done
 priority: high
-size: S
+size: XS
 size_source: suggested
-size_basis: [T-007]
-points: 2
+size_basis: [calibrated:T-013]
+points: 1
 points_source: suggested
-estimate_minutes: 120
-actual_minutes: 2
-estimate_basis: [T-007]
+estimate_minutes: 15
+actual_minutes: 16
+estimate_basis: [calibrated:T-013]
 session_cap_minutes: 480
 parent: S-005
 epic: E-002
@@ -20,7 +20,7 @@ blocked: false
 cancelled: false
 tags: [wiring, stories, epics]
 created: 2026-07-21
-updated: 2026-07-21T17:59:56Z
+updated: 2026-07-21T18:02:46Z
 started_at: 2026-07-21T17:45:49Z
 completed_at: 2026-07-21T17:48:46Z
 ---
@@ -59,3 +59,4 @@ Pair with T-016 for the next level of drill-down (story → tasks).
 | Session | Actor | Started (UTC) | Ended (UTC) | Summary |
 |---------|-------|---------------|-------------|---------|
 | 1 | agent | 2026-07-21T17:45:49Z | 2026-07-21T17:48:46Z | Wired epic selection via ?epic= to story list on /board |
+| 2 | agent | 2026-07-21T17:45:49Z | 2026-07-21T17:59:56Z | auto-recovered: commit span |

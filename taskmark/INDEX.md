@@ -1,13 +1,13 @@
 # Board index
 
-Last synced: 2026-07-21T17:49:25Z
+Last synced: 2026-07-21T18:02:46Z
 
 ## Epics
 
 | ID | Title | Status | Size | Points | Est (min) | Actual (min) | Path |
 |----|-------|--------|------|--------|-----------|--------------|------|
 | E-001 | MVP Taskmark dashboard | done | XL | 24 | 2490 | 94 | [epic.md](epics/E-001-mvp-dashboard/epic.md) |
-| E-002 | User stories view | in_progress | L | 16 | 2160 | 6 | [epic.md](epics/E-002-user-stories-view/epic.md) |
+| E-002 | User stories view | done | L | 16 | 2160 | 51 | [epic.md](epics/E-002-user-stories-view/epic.md) |
 
 ## Stories
 
@@ -17,8 +17,8 @@ Last synced: 2026-07-21T17:49:25Z
 | S-002 | Epic list for selected project | E-001 | done | L | 8 | 765 | 48 | [story.md](epics/E-001-mvp-dashboard/stories/S-002-epic-list/story.md) |
 | S-003 | App bar project switcher | E-001 | done | S | 2 | 30 | 28 | [story.md](epics/E-001-mvp-dashboard/stories/S-003-app-bar-project-switcher/story.md) |
 | S-004 | Add project accumulates workspaces | E-001 | done | M | 3 | 480 | 0 | [story.md](epics/E-001-mvp-dashboard/stories/S-004-add-project-accumulate/story.md) |
-| S-005 | Story list for selected epic | E-002 | done | L | 8 | 1080 | 6 | [story.md](epics/E-002-user-stories-view/stories/S-005-story-list-for-epic/story.md) |
-| S-006 | Task list for selected story | E-002 | backlog | L | 8 | 1080 | 0 | [story.md](epics/E-002-user-stories-view/stories/S-006-task-list-for-story/story.md) |
+| S-005 | Story list for selected epic | E-002 | done | S | 3 | 45 | 48 | [story.md](epics/E-002-user-stories-view/stories/S-005-story-list-for-epic/story.md) |
+| S-006 | Task list for selected story | E-002 | done | L | 8 | 1080 | 3 | [story.md](epics/E-002-user-stories-view/stories/S-006-task-list-for-story/story.md) |
 
 ## Open work sessions
 
@@ -40,10 +40,10 @@ Last synced: 2026-07-21T17:49:25Z
 | T-008 | Discover Taskmark projects under master folder | S-001 | done | M | 3 | 480 | 1 | [T-008](epics/E-001-mvp-dashboard/stories/S-001-project-setup-wizard/items/T-008-discover-projects-under-master.md) |
 | T-009 | Build post-setup app bar UI | S-003 | done | XS | 1 | 15 | 14 | [T-009](epics/E-001-mvp-dashboard/stories/S-003-app-bar-project-switcher/items/T-009-app-bar-ui.md) |
 | T-010 | Persist active project and filter epic list | S-003 | done | XS | 1 | 15 | 14 | [T-010](epics/E-001-mvp-dashboard/stories/S-003-app-bar-project-switcher/items/T-010-active-project-cookie.md) |
-| T-011 | Parse story markdown under selected epic | S-005 | done | M | 3 | 480 | 2 | [T-011](epics/E-002-user-stories-view/stories/S-005-story-list-for-epic/items/T-011-parse-story-markdown.md) |
-| T-012 | Build story list UI | S-005 | done | M | 3 | 480 | 2 | [T-012](epics/E-002-user-stories-view/stories/S-005-story-list-for-epic/items/T-012-story-list-ui.md) |
-| T-013 | Wire epic selection to story list | S-005 | done | S | 2 | 120 | 2 | [T-013](epics/E-002-user-stories-view/stories/S-005-story-list-for-epic/items/T-013-wire-epic-to-story-list.md) |
-| T-014 | Parse task and bug markdown under selected story | S-006 | backlog | M | 3 | 480 | 0 | [T-014](epics/E-002-user-stories-view/stories/S-006-task-list-for-story/items/T-014-parse-task-markdown.md) |
-| T-015 | Build task list UI | S-006 | backlog | M | 3 | 480 | 0 | [T-015](epics/E-002-user-stories-view/stories/S-006-task-list-for-story/items/T-015-task-list-ui.md) |
-| T-016 | Wire story selection to task list | S-006 | backlog | S | 2 | 120 | 0 | [T-016](epics/E-002-user-stories-view/stories/S-006-task-list-for-story/items/T-016-wire-story-to-task-list.md) |
+| T-011 | Parse story markdown under selected epic | S-005 | done | XS | 1 | 15 | 16 | [T-011](epics/E-002-user-stories-view/stories/S-005-story-list-for-epic/items/T-011-parse-story-markdown.md) |
+| T-012 | Build story list UI | S-005 | done | XS | 1 | 15 | 16 | [T-012](epics/E-002-user-stories-view/stories/S-005-story-list-for-epic/items/T-012-story-list-ui.md) |
+| T-013 | Wire epic selection to story list | S-005 | done | XS | 1 | 15 | 16 | [T-013](epics/E-002-user-stories-view/stories/S-005-story-list-for-epic/items/T-013-wire-epic-to-story-list.md) |
+| T-014 | Parse task and bug markdown under selected story | S-006 | done | M | 3 | 480 | 1 | [T-014](epics/E-002-user-stories-view/stories/S-006-task-list-for-story/items/T-014-parse-task-markdown.md) |
+| T-015 | Build task list UI | S-006 | done | M | 3 | 480 | 1 | [T-015](epics/E-002-user-stories-view/stories/S-006-task-list-for-story/items/T-015-task-list-ui.md) |
+| T-016 | Wire story selection to task list | S-006 | done | S | 2 | 120 | 1 | [T-016](epics/E-002-user-stories-view/stories/S-006-task-list-for-story/items/T-016-wire-story-to-task-list.md) |
 | B-001 | Epic list fails after board frontmatter fence corruption | S-002 | done | S | 2 | 120 | 0 | [B-001](epics/E-001-mvp-dashboard/stories/S-002-epic-list/items/B-001-epic-frontmatter-parse.md) |

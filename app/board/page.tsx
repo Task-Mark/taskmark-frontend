@@ -4,17 +4,27 @@ import { redirect } from "next/navigation"
 import { AppBar } from "@/components/board/app-bar"
 import { EpicList } from "@/components/board/epic-list"
 import { StoryList } from "@/components/board/story-list"
+import { TaskList } from "@/components/board/task-list"
 import { resolveActiveProject } from "@/lib/taskmark/active-project"
 import {
   getActiveProjectCookie,
   getMasterFoldersCookie,
 } from "@/lib/taskmark/cookies"
 import { parseEpicsForProject } from "@/lib/taskmark/parse-epics"
+import { parseItemsForStory } from "@/lib/taskmark/parse-items"
 import { parseStoriesForEpic } from "@/lib/taskmark/parse-stories"
 import { loadConfiguredWorkspace } from "@/lib/taskmark/workspace"
 
 type BoardPageProps = {
-  searchParams: Promise<{ epic?: string | string[] }>
+  searchParams: Promise<{
+    epic?: string | string[]
+    story?: string | string[]
+  }>
+}
+
+function paramValue(value: string | string[] | undefined): string | null {
+  if (typeof value === "string" && value.trim()) return value.trim()
+  return null
 }
 
 export default async function BoardPage({ searchParams }: BoardPageProps) {
@@ -38,11 +48,8 @@ export default async function BoardPage({ searchParams }: BoardPageProps) {
   }
 
   const params = await searchParams
-  const epicParam = params.epic
-  const selectedEpicId =
-    typeof epicParam === "string" && epicParam.trim()
-      ? epicParam.trim()
-      : null
+  const selectedEpicId = paramValue(params.epic)
+  const selectedStoryId = selectedEpicId ? paramValue(params.story) : null
 
   const list = parseEpicsForProject(activeProject)
   const epicCount = list.epics.length
@@ -55,6 +62,16 @@ export default async function BoardPage({ searchParams }: BoardPageProps) {
   const storyList =
     selectedEpicId != null
       ? parseStoriesForEpic(activeProject, selectedEpicId)
+      : null
+
+  const selectedStory =
+    storyList && selectedStoryId
+      ? storyList.stories.find((s) => s.id === selectedStoryId) ?? null
+      : null
+
+  const itemList =
+    selectedEpicId != null && selectedStoryId != null
+      ? parseItemsForStory(activeProject, selectedEpicId, selectedStoryId)
       : null
 
   return (
@@ -79,6 +96,11 @@ export default async function BoardPage({ searchParams }: BoardPageProps) {
               : selectedEpicId
                 ? ` · epic ${selectedEpicId} not in list`
                 : " · select an epic to view stories"}
+            {selectedStory
+              ? ` · story ${selectedStory.id}`
+              : selectedStoryId
+                ? ` · story ${selectedStoryId} not in list`
+                : ""}
           </p>
           <p className="mt-1 font-mono text-xs text-muted-foreground">
             {activeProject.boardPath}
@@ -106,8 +128,33 @@ export default async function BoardPage({ searchParams }: BoardPageProps) {
               {storyList.errors.length > 0
                 ? ` · ${storyList.errors.length} issue${storyList.errors.length === 1 ? "" : "s"}`
                 : ""}
+              {!selectedStoryId ? " · select a story to view tasks" : ""}
             </p>
-            <StoryList list={storyList} />
+            <StoryList list={storyList} selectedStoryId={selectedStoryId} />
+          </div>
+        ) : null}
+
+        {itemList ? (
+          <div className="flex flex-col gap-3">
+            <div className="flex items-baseline justify-between gap-3">
+              <h2 className="font-head text-2xl tracking-tight">
+                Tasks for {itemList.storyTitle ?? itemList.storyId}
+              </h2>
+              <Link
+                href={`/board?epic=${encodeURIComponent(itemList.epicId)}`}
+                className="text-sm text-muted-foreground underline-offset-2 hover:underline"
+              >
+                Clear story
+              </Link>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              {itemList.items.length} item
+              {itemList.items.length === 1 ? "" : "s"}
+              {itemList.errors.length > 0
+                ? ` · ${itemList.errors.length} issue${itemList.errors.length === 1 ? "" : "s"}`
+                : ""}
+            </p>
+            <TaskList list={itemList} />
           </div>
         ) : null}
       </div>

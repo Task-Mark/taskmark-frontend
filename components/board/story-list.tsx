@@ -1,3 +1,5 @@
+import Link from "next/link"
+
 import {
   Table,
   TableBody,
@@ -46,9 +48,10 @@ function formatStatusLabel(status: string): string {
 
 type StoryListProps = {
   list: EpicStoryList
+  selectedStoryId?: string | null
 }
 
-export function StoryList({ list }: StoryListProps) {
+export function StoryList({ list, selectedStoryId = null }: StoryListProps) {
   const { project, epicId, epicTitle, stories, errors } = list
   const heading = epicTitle ? `${epicId}: ${epicTitle}` : epicId
 
@@ -99,32 +102,54 @@ export function StoryList({ list }: StoryListProps) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {stories.map((story) => (
-                <TableRow key={`${project.id}:${story.id}:${story.filePath}`}>
-                  <TableCell className="font-mono text-xs">
-                    {story.id}
-                  </TableCell>
-                  <TableCell className="max-w-[18rem] whitespace-normal font-medium">
-                    {story.title}
-                  </TableCell>
-                  <TableCell>{story.size}</TableCell>
-                  <TableCell>{formatPoints(story.points)}</TableCell>
-                  <TableCell>
-                    {formatDurationMinutes(story.estimateMinutes)}
-                  </TableCell>
-                  <TableCell>
-                    {formatDurationMinutes(story.actualMinutes)}
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      variant="outline"
-                      className={cn(statusBadgeClass(story.status))}
-                    >
-                      {formatStatusLabel(story.status)}
-                    </Badge>
-                  </TableCell>
-                </TableRow>
-              ))}
+              {stories.map((story) => {
+                const selected = selectedStoryId === story.id
+                const href = `/board?epic=${encodeURIComponent(epicId)}&story=${encodeURIComponent(story.id)}`
+                return (
+                  <TableRow
+                    key={`${project.id}:${story.id}:${story.filePath}`}
+                    data-state={selected ? "selected" : undefined}
+                    className={cn(
+                      selected && "bg-muted/60",
+                      "hover:bg-muted/40"
+                    )}
+                  >
+                    <TableCell className="font-mono text-xs">
+                      <Link
+                        href={href}
+                        className="underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                        aria-current={selected ? "true" : undefined}
+                      >
+                        {story.id}
+                      </Link>
+                    </TableCell>
+                    <TableCell className="max-w-[18rem] whitespace-normal font-medium">
+                      <Link
+                        href={href}
+                        className="underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                      >
+                        {story.title}
+                      </Link>
+                    </TableCell>
+                    <TableCell>{story.size}</TableCell>
+                    <TableCell>{formatPoints(story.points)}</TableCell>
+                    <TableCell>
+                      {formatDurationMinutes(story.estimateMinutes)}
+                    </TableCell>
+                    <TableCell>
+                      {formatDurationMinutes(story.actualMinutes)}
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant="outline"
+                        className={cn(statusBadgeClass(story.status))}
+                      >
+                        {formatStatusLabel(story.status)}
+                      </Badge>
+                    </TableCell>
+                  </TableRow>
+                )
+              })}
             </TableBody>
           </Table>
         )}

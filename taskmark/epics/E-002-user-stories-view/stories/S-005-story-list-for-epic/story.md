@@ -4,13 +4,13 @@ type: story
 title: Story list for selected epic
 status: done
 priority: high
-size: L
+size: S
 size_source: suggested
 size_basis: [T-011, T-012, T-013]
-points: 8
+points: 3
 points_source: suggested
-estimate_minutes: 1080
-actual_minutes: 6
+estimate_minutes: 45
+actual_minutes: 48
 estimate_basis: [T-011, T-012, T-013]
 session_cap_minutes: 480
 parent: E-002
@@ -20,10 +20,11 @@ blocked: false
 cancelled: false
 tags: [dashboard, stories, epics]
 created: 2026-07-21
-updated: 2026-07-21T17:59:56Z
+updated: 2026-07-21T18:02:46Z
 started_at: 2026-07-21T17:45:49Z
 completed_at: 2026-07-21T17:48:46Z
 ---
+
 # S-005: Story list for selected epic
 
 ## User story
@@ -64,3 +65,4 @@ As a user, I want to select an epic and see all user stories under it so I can u
 | Session | Actor | Started (UTC) | Ended (UTC) | Summary |
 |---------|-------|---------------|-------------|---------|
 | 1 | agent | 2026-07-21T17:45:49Z | 2026-07-21T17:48:46Z | Delivered story list for selected epic (parse + UI + wiring) |
+| 2 | agent | 2026-07-21T17:45:49Z | 2026-07-21T17:59:56Z | auto-recovered: commit span |

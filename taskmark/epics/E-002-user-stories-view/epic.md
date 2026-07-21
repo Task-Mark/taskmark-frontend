@@ -2,7 +2,7 @@
 id: E-002
 type: epic
 title: User stories view
-status: in_progress
+status: done
 priority: high
 size: L
 size_source: suggested
@@ -10,7 +10,7 @@ size_basis: [S-005, S-006]
 points: 16
 points_source: suggested
 estimate_minutes: 2160
-actual_minutes: 6
+actual_minutes: 51
 estimate_basis: [S-005, S-006]
 session_cap_minutes: 480
 parent: null
@@ -20,10 +20,11 @@ blocked: false
 cancelled: false
 tags: [dashboard, stories, frontend]
 created: 2026-07-21
-updated: 2026-07-21T17:59:56Z
+updated: 2026-07-21T18:02:46Z
 started_at: 2026-07-21T17:45:49Z
-completed_at: null
+completed_at: 2026-07-21T18:02:46Z
 ---
+
 # E-002: User stories view
 
 ## Goal
@@ -70,3 +71,5 @@ Let users drill from an epic into its user stories, then from a selected story i
 | Session | Actor | Started (UTC) | Ended (UTC) | Summary |
 |---------|-------|---------------|-------------|---------|
 | 1 | agent | 2026-07-21T17:45:49Z | 2026-07-21T17:48:46Z | S-005 story list delivered; S-006 still open |
+| 2 | agent | 2026-07-21T18:00:53Z | 2026-07-21T18:02:46Z | E-002 complete: story and task drill-down delivered |
+| 3 | agent | 2026-07-21T17:43:42Z | 2026-07-21T17:59:56Z | auto-recovered: commit span |

@@ -4,14 +4,14 @@ type: task
 title: Build story list UI
 status: done
 priority: high
-size: M
+size: XS
 size_source: suggested
-size_basis: [T-006]
-points: 3
+size_basis: [calibrated:T-012]
+points: 1
 points_source: suggested
-estimate_minutes: 480
-actual_minutes: 2
-estimate_basis: [T-006]
+estimate_minutes: 15
+actual_minutes: 16
+estimate_basis: [calibrated:T-012]
 session_cap_minutes: 480
 parent: S-005
 epic: E-002
@@ -20,7 +20,7 @@ blocked: false
 cancelled: false
 tags: [ui, stories, dashboard]
 created: 2026-07-21
-updated: 2026-07-21T17:59:56Z
+updated: 2026-07-21T18:02:46Z
 started_at: 2026-07-21T17:45:49Z
 completed_at: 2026-07-21T17:48:46Z
 ---
@@ -60,3 +60,4 @@ Reuse shared list/row patterns from the epic list (T-006) where practical.
 | Session | Actor | Started (UTC) | Ended (UTC) | Summary |
 |---------|-------|---------------|-------------|---------|
 | 1 | agent | 2026-07-21T17:45:49Z | 2026-07-21T17:48:46Z | Built story list UI matching epic list |
+| 2 | agent | 2026-07-21T17:45:49Z | 2026-07-21T17:59:56Z | auto-recovered: commit span |
