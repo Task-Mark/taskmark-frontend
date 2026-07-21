@@ -1,26 +1,128 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  --font-head: var(--font-head);
+  --font-sans: var(--font-sans);
+  --radius: var(--radius);
+
+  --shadow-xs: 1px 1px 0 0 var(--border);
+  --shadow-sm: 2px 2px 0 0 var(--border);
+  --shadow: 3px 3px 0 0 var(--border);
+  --shadow-md: 4px 4px 0 0 var(--border);
+  --shadow-lg: 6px 6px 0 0 var(--border);
+  --shadow-xl: 10px 10px 0 1px var(--border);
+  --shadow-2xl: 16px 16px 0 1px var(--border);
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-hover: var(--primary-hover);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --border-w: var(--border-w);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-shadow-color: var(--shadow-color);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+:root {
+  --radius: 0.25rem;
+  --background: #ffffff;
+  --foreground: #0a0a0a;
+  --card: #ffffff;
+  --card-foreground: #0a0a0a;
+  --primary: #c4a1ff;
+  --primary-hover: #a97ffb;
+  --primary-foreground: #000000;
+  --secondary: #0a0a0a;
+  --secondary-foreground: #ffffff;
+  --muted: #f2f2f2;
+  --muted-foreground: #5c5c5c;
+  --accent: #eadffe;
+  --accent-foreground: #241a38;
+  --destructive: #e63946;
+  --destructive-foreground: #fff;
+  --border: #000000;
+  --input: #ffffff;
+  --ring: #c4a1ff;
+  --popover: #ffffff;
+  --popover-foreground: #0a0a0a;
+  --shadow-color: #000000;
+  --chart-1: #c4a1ff;
+  --chart-2: #ff30cd;
+  --chart-3: #ffdc58;
+  --chart-4: #01ffcc;
+  --chart-5: #5f4fe6;
+  --border-w: 2px;
+  --shadow-xs: 2px 2px 0 0 var(--shadow-color);
+  --shadow-sm: 3px 3px 0 0 var(--shadow-color);
+  --shadow: 5px 5px 0 0 var(--shadow-color);
+  --shadow-md: 6px 6px 0 0 var(--shadow-color);
+  --shadow-lg: 9px 9px 0 0 var(--shadow-color);
+  --shadow-xl: 14px 14px 0 1px var(--shadow-color);
+  --shadow-2xl: 20px 20px 0 2px var(--shadow-color);
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+.dark {
+  --background: #0f0f0f;
+  --foreground: #fafafa;
+  --card: #1a1a1a;
+  --card-foreground: #fafafa;
+  --primary: #c4a1ff;
+  --primary-hover: #a97ffb;
+  --primary-foreground: #000000;
+  --secondary: #fafafa;
+  --secondary-foreground: #0f0f0f;
+  --muted: #262626;
+  --muted-foreground: #a3a3a3;
+  --accent: #2f2542;
+  --accent-foreground: #eadffe;
+  --destructive: #ff6b6b;
+  --destructive-foreground: #1a1815;
+  --border: #000000;
+  --input: #1a1a1a;
+  --ring: #c4a1ff;
+  --popover: #1a1a1a;
+  --popover-foreground: #fafafa;
+  --shadow-color: #3d3d3d;
+  --chart-1: #c4a1ff;
+  --chart-2: #ff7ce0;
+  --chart-3: #ffdc58;
+  --chart-4: #5eead4;
+  --chart-5: #7b6df5;
+  --radius: 0.25rem;
+  --border-w: 2px;
+  --shadow-xs: 2px 2px 0 0 var(--shadow-color);
+  --shadow-sm: 3px 3px 0 0 var(--shadow-color);
+  --shadow: 5px 5px 0 0 var(--shadow-color);
+  --shadow-md: 6px 6px 0 0 var(--shadow-color);
+  --shadow-lg: 9px 9px 0 0 var(--shadow-color);
+  --shadow-xl: 14px 14px 0 1px var(--shadow-color);
+  --shadow-2xl: 20px 20px 0 2px var(--shadow-color);
 }
