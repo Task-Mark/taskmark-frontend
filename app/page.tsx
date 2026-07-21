@@ -1,13 +1,13 @@
 import { redirect } from "next/navigation"
 
-import { getMasterFolderCookie } from "@/lib/taskmark/cookies"
-import { validateMasterFolder } from "@/lib/taskmark/validate"
+import { getMasterFoldersCookie } from "@/lib/taskmark/cookies"
+import { loadConfiguredWorkspace } from "@/lib/taskmark/workspace"
 
 export default async function HomePage() {
-  const master = await getMasterFolderCookie()
-  if (master) {
-    const result = validateMasterFolder(master)
-    if (result.ok) {
+  const masters = await getMasterFoldersCookie()
+  if (masters.length > 0) {
+    const workspace = loadConfiguredWorkspace(masters)
+    if (workspace.projects.length > 0) {
       redirect("/board")
     }
   }

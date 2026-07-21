@@ -1,14 +1,14 @@
 # Team velocity
 
-Last synced: 2026-07-21T16:57:31Z
+Last synced: 2026-07-21T17:02:25Z
 Window: last 20 done tasks/bugs (or all if fewer)
 
 ## Throughput
 
 | Metric | Value |
 |--------|-------|
-| Done items in window | 8 |
-| Sum points | 20 |
+| Done items in window | 11 |
+| Sum points | 27 |
 | Median points | 2 |
 | Median actual_minutes | 1 |
 | Median minutes per point | 0.5 |

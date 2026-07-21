@@ -4,14 +4,14 @@ type: epic
 title: MVP Taskmark dashboard
 status: done
 priority: high
-size: L
+size: XL
 size_source: suggested
-size_basis: [S-001, S-002]
-points: 20
+size_basis: [S-001, S-002, S-003, S-004]
+points: 28
 points_source: suggested
-estimate_minutes: 2400
-actual_minutes: 8
-estimate_basis: [S-001, S-002]
+estimate_minutes: 3480
+actual_minutes: 11
+estimate_basis: [S-001, S-002, S-003, S-004]
 session_cap_minutes: 480
 parent: null
 epic: null
@@ -20,10 +20,11 @@ blocked: false
 cancelled: false
 tags: [mvp, dashboard, frontend]
 created: 2026-07-21
-updated: 2026-07-21T16:58:32Z
+updated: 2026-07-21T17:09:16Z
 started_at: 2026-07-21T16:35:18Z
-completed_at: 2026-07-21T16:51:19Z
+completed_at: 2026-07-21T17:02:25Z
 ---
+
 
 # E-001: MVP Taskmark dashboard
 
@@ -58,6 +59,8 @@ Ship an MVP dashboard that reads Taskmark markdown boards from a local **master 
 
 - [S-001: Project setup wizard](stories/S-001-project-setup-wizard/story.md)
 - [S-002: Epic list for selected project](stories/S-002-epic-list/story.md)
+- [S-003: App bar project switcher](stories/S-003-app-bar-project-switcher/story.md)
+- [S-004: Add project accumulates workspaces](stories/S-004-add-project-accumulate/story.md)
 
 ## Commits
 

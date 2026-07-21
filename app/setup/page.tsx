@@ -1,8 +1,17 @@
-import { SetupWizard } from "@/components/setup/setup-wizard"
-import { getMasterFolderCookie } from "@/lib/taskmark/cookies"
+import Link from "next/link"
 
-export default async function SetupPage() {
-  const existing = await getMasterFolderCookie()
+import { SetupWizard } from "@/components/setup/setup-wizard"
+import { getMasterFoldersCookie } from "@/lib/taskmark/cookies"
+
+type SetupPageProps = {
+  searchParams?: Promise<{ mode?: string }>
+}
+
+export default async function SetupPage({ searchParams }: SetupPageProps) {
+  const params = searchParams ? await searchParams : {}
+  const masters = await getMasterFoldersCookie()
+  const hasProjects = masters.length > 0
+  const adding = params.mode === "add" && hasProjects
 
   return (
     <div className="relative flex min-h-svh flex-col items-center justify-center px-4 py-16">
@@ -16,13 +25,23 @@ export default async function SetupPage() {
             Taskmark
           </p>
           <p className="mt-3 max-w-md text-base text-muted-foreground">
-            Local boards. Clear backlog. Pick a workspace to begin.
+            {adding
+              ? "Add another workspace folder. Existing projects stay in your list."
+              : "Local boards. Clear backlog. Pick a workspace to begin."}
           </p>
         </div>
         <SetupWizard
-          initialPath={existing ?? ""}
-          switching={Boolean(existing)}
+          initialPath=""
+          adding={adding}
+          hasExistingProjects={hasProjects}
         />
+        {adding ? (
+          <p className="text-sm text-muted-foreground">
+            <Link href="/board" className="underline underline-offset-2">
+              Cancel and return to board
+            </Link>
+          </p>
+        ) : null}
       </div>
     </div>
   )

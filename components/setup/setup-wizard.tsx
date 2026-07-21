@@ -24,12 +24,14 @@ const initialSave: SaveMasterFolderState = {}
 
 type SetupWizardProps = {
   initialPath?: string
-  switching?: boolean
+  adding?: boolean
+  hasExistingProjects?: boolean
 }
 
 export function SetupWizard({
   initialPath = "",
-  switching = false,
+  adding = false,
+  hasExistingProjects = false,
 }: SetupWizardProps) {
   const [path, setPath] = useState(initialPath)
   const [pickerError, setPickerError] = useState<string | null>(null)
@@ -72,12 +74,18 @@ export function SetupWizard({
     <Card className="w-full max-w-xl border-2 shadow-lg">
       <CardHeader>
         <CardTitle className="font-head text-2xl tracking-tight">
-          {switching ? "Switch master folder" : "Set up your workspace"}
+          {adding ? "Add a project workspace" : "Set up your workspace"}
         </CardTitle>
         <CardDescription className="text-base leading-relaxed">
-          Choose a master folder. Taskmark will look inside its subfolders for
-          projects that contain a{" "}
-          <code className="font-mono text-sm">taskmark/</code> board.
+          {adding ? (
+            "Choose another master folder. Newly found boards are added to your project list; existing ones stay."
+          ) : (
+            <>
+              Choose a master folder. Taskmark will look inside its subfolders
+              for projects that contain a{" "}
+              <code className="font-mono text-sm">taskmark/</code> board.
+            </>
+          )}
         </CardDescription>
       </CardHeader>
 
@@ -132,11 +140,12 @@ export function SetupWizard({
             <p className="mb-2 text-sm font-medium">
               Found {projects.length} Taskmark project
               {projects.length === 1 ? "" : "s"}
+              {hasExistingProjects ? " to add" : ""}
             </p>
             <ul className="flex flex-col gap-2">
               {projects.map((project) => (
                 <li
-                  key={project.boardPath}
+                  key={project.id}
                   className="font-mono text-xs leading-relaxed text-muted-foreground"
                 >
                   <span className="font-sans text-sm font-medium text-foreground">
@@ -154,12 +163,12 @@ export function SetupWizard({
       <CardFooter className="justify-end gap-2">
         <form action={saveAction}>
           <input type="hidden" name="masterPath" value={path} />
-          <Button
-            type="submit"
-            disabled={!canContinue || busy}
-            size="lg"
-          >
-            {savePending ? "Saving…" : "Continue"}
+          <Button type="submit" disabled={!canContinue || busy} size="lg">
+            {savePending
+              ? "Saving…"
+              : adding
+                ? "Add to project list"
+                : "Continue"}
           </Button>
         </form>
       </CardFooter>

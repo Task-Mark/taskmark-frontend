@@ -5,6 +5,7 @@ import {
   DISCOVERY_MAX_DEPTH,
   DISCOVERY_SKIP_DIR_NAMES,
 } from "@/lib/taskmark/constants"
+import { resolveBoardKey } from "@/lib/taskmark/projects"
 import type { DiscoveredProject } from "@/lib/taskmark/types"
 
 function isTaskmarkBoard(candidateProjectRoot: string): boolean {
@@ -22,18 +23,19 @@ function isTaskmarkBoard(candidateProjectRoot: string): boolean {
 }
 
 function toDiscoveredProject(projectPath: string): DiscoveredProject {
-  const name = path.basename(projectPath)
+  const resolvedProject = path.resolve(projectPath)
+  const boardPath = resolveBoardKey(path.join(resolvedProject, "taskmark"))
+  const name = path.basename(path.dirname(boardPath))
   return {
-    id: name,
+    id: boardPath,
     name,
-    projectPath,
-    boardPath: path.join(projectPath, "taskmark"),
+    projectPath: path.dirname(boardPath),
+    boardPath,
   }
 }
 
 function shouldSkipDir(name: string): boolean {
   if (DISCOVERY_SKIP_DIR_NAMES.has(name)) return true
-  // Skip other dot-directories; still allow scanning normal folders.
   if (name.startsWith(".")) return true
   return false
 }
@@ -43,6 +45,7 @@ function shouldSkipDir(name: string): boolean {
  * A project is any directory that contains a `taskmark/` board
  * (with INDEX.md and/or epics/). Does not require a board at the master root,
  * but will include the master itself if it has one.
+ * Dedupes by realpath of the board directory.
  */
 export function discoverTaskmarkProjects(
   masterPath: string,
@@ -54,7 +57,7 @@ export function discoverTaskmarkProjects(
   function visit(dir: string, depth: number) {
     if (isTaskmarkBoard(dir)) {
       const project = toDiscoveredProject(dir)
-      found.set(project.boardPath, project)
+      found.set(project.id, project)
       // Do not descend into a project's internals looking for nested boards.
       return
     }
@@ -71,7 +74,6 @@ export function discoverTaskmarkProjects(
     for (const entry of entries) {
       if (!entry.isDirectory()) continue
       if (shouldSkipDir(entry.name)) continue
-      // Never treat the board folder itself as a walk root for nested projects.
       if (entry.name === "taskmark") continue
       visit(path.join(dir, entry.name), depth + 1)
     }
@@ -79,5 +81,18 @@ export function discoverTaskmarkProjects(
 
   visit(root, 0)
 
+  return [...found.values()].sort((a, b) => a.name.localeCompare(b.name))
+}
+
+/** Discover across many master folders and dedupe identical boards. */
+export function discoverTaskmarkProjectsFromMasters(
+  masterPaths: string[]
+): DiscoveredProject[] {
+  const found = new Map<string, DiscoveredProject>()
+  for (const master of masterPaths) {
+    for (const project of discoverTaskmarkProjects(master)) {
+      found.set(project.id, project)
+    }
+  }
   return [...found.values()].sort((a, b) => a.name.localeCompare(b.name))
 }

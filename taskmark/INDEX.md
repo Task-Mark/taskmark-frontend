@@ -1,12 +1,12 @@
 # Board index
 
-Last synced: 2026-07-21T16:58:32Z
+Last synced: 2026-07-21T17:09:16Z
 
 ## Epics
 
 | ID | Title | Status | Size | Points | Est (min) | Actual (min) | Path |
 |----|-------|--------|------|--------|-----------|--------------|------|
-| E-001 | MVP Taskmark dashboard | done | L | 20 | 2400 | 8 | [epic.md](epics/E-001-mvp-dashboard/epic.md) |
+| E-001 | MVP Taskmark dashboard | done | XL | 28 | 3480 | 11 | [epic.md](epics/E-001-mvp-dashboard/epic.md) |
 
 ## Stories
 
@@ -14,6 +14,8 @@ Last synced: 2026-07-21T16:58:32Z
 |----|-------|------|--------|------|--------|-----------|--------------|------|
 | S-001 | Project setup wizard | E-001 | done | XL | 12 | 1320 | 5 | [story.md](epics/E-001-mvp-dashboard/stories/S-001-project-setup-wizard/story.md) |
 | S-002 | Epic list for selected project | E-001 | done | L | 8 | 1080 | 3 | [story.md](epics/E-001-mvp-dashboard/stories/S-002-epic-list/story.md) |
+| S-003 | App bar project switcher | E-001 | done | M | 5 | 600 | 2 | [story.md](epics/E-001-mvp-dashboard/stories/S-003-app-bar-project-switcher/story.md) |
+| S-004 | Add project accumulates workspaces | E-001 | done | M | 3 | 480 | 1 | [story.md](epics/E-001-mvp-dashboard/stories/S-004-add-project-accumulate/story.md) |
 
 ## Open work sessions
 
@@ -33,4 +35,6 @@ Last synced: 2026-07-21T16:58:32Z
 | T-006 | Build epic list UI | S-002 | done | M | 3 | 480 | 1 | [T-006](epics/E-001-mvp-dashboard/stories/S-002-epic-list/items/T-006-epic-list-ui.md) |
 | T-007 | Wire selected project to epic list | S-002 | done | S | 2 | 120 | 1 | [T-007](epics/E-001-mvp-dashboard/stories/S-002-epic-list/items/T-007-wire-project-to-epic-list.md) |
 | T-008 | Discover Taskmark projects under master folder | S-001 | done | M | 3 | 480 | 1 | [T-008](epics/E-001-mvp-dashboard/stories/S-001-project-setup-wizard/items/T-008-discover-projects-under-master.md) |
+| T-009 | Build post-setup app bar UI | S-003 | done | M | 3 | 480 | 1 | [T-009](epics/E-001-mvp-dashboard/stories/S-003-app-bar-project-switcher/items/T-009-app-bar-ui.md) |
+| T-010 | Persist active project and filter epic list | S-003 | done | S | 2 | 120 | 1 | [T-010](epics/E-001-mvp-dashboard/stories/S-003-app-bar-project-switcher/items/T-010-active-project-cookie.md) |
 | B-001 | Epic list fails after board frontmatter fence corruption | S-002 | done | S | 2 | 120 | 1 | [B-001](epics/E-001-mvp-dashboard/stories/S-002-epic-list/items/B-001-epic-frontmatter-parse.md) |

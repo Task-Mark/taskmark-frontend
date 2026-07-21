@@ -1,12 +1,16 @@
 "use server"
 
 import { redirect } from "next/navigation"
+import { revalidatePath } from "next/cache"
 
 import {
-  clearMasterFolderCookie,
-  setMasterFolderCookie,
+  addMasterFolderCookie,
+  clearActiveProjectCookie,
+  getMasterFoldersCookie,
+  setActiveProjectCookie,
 } from "@/lib/taskmark/cookies"
 import { pickFolderNative } from "@/lib/taskmark/pick-folder"
+import { loadConfiguredWorkspace } from "@/lib/taskmark/workspace"
 import { validateMasterFolder } from "@/lib/taskmark/validate"
 import type { DiscoveredProject } from "@/lib/taskmark/types"
 
@@ -45,7 +49,21 @@ export async function saveMasterFolder(
     return { error: result.error }
   }
 
-  await setMasterFolderCookie(result.masterPath)
+  await addMasterFolderCookie(result.masterPath)
+
+  const masters = await getMasterFoldersCookie()
+  const workspace = loadConfiguredWorkspace(masters)
+
+  // Prefer a newly discovered project from this master; else first overall.
+  const fromThisMaster = result.projects[0]
+  const preferred =
+    workspace.projects.find((p) => p.id === fromThisMaster?.id) ??
+    workspace.projects[0]
+
+  if (preferred) {
+    await setActiveProjectCookie(preferred.id)
+  }
+
   redirect("/board")
 }
 
@@ -65,7 +83,25 @@ export async function pickMasterFolder(): Promise<PickMasterFolderState> {
   return { error: result.error }
 }
 
-export async function switchMasterFolder(): Promise<void> {
-  await clearMasterFolderCookie()
+/** Open setup wizard to add another master folder without clearing existing ones. */
+export async function openAddProject(): Promise<void> {
+  redirect("/setup?mode=add")
+}
+
+export async function selectActiveProject(formData: FormData): Promise<void> {
+  const projectId = String(formData.get("projectId") ?? "").trim()
+  if (!projectId) {
+    return
+  }
+  await setActiveProjectCookie(projectId)
+  revalidatePath("/board")
+  redirect("/board")
+}
+
+/** Optional: clear everything and start over (not shown in app bar by default). */
+export async function resetWorkspace(): Promise<void> {
+  const { clearMasterFoldersCookie } = await import("@/lib/taskmark/cookies")
+  await clearMasterFoldersCookie()
+  await clearActiveProjectCookie()
   redirect("/setup")
 }

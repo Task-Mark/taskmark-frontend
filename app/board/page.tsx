@@ -1,62 +1,63 @@
-import Link from "next/link"
 import { redirect } from "next/navigation"
 
-import { switchMasterFolder } from "@/app/setup/actions"
+import { AppBar } from "@/components/board/app-bar"
 import { EpicList } from "@/components/board/epic-list"
-import { Button } from "@/components/ui/button"
-import { getMasterFolderCookie } from "@/lib/taskmark/cookies"
-import { parseEpicsForProjects } from "@/lib/taskmark/parse-epics"
-import { validateMasterFolder } from "@/lib/taskmark/validate"
+import { resolveActiveProject } from "@/lib/taskmark/active-project"
+import {
+  getActiveProjectCookie,
+  getMasterFoldersCookie,
+} from "@/lib/taskmark/cookies"
+import { parseEpicsForProject } from "@/lib/taskmark/parse-epics"
+import { loadConfiguredWorkspace } from "@/lib/taskmark/workspace"
 
 export default async function BoardPage() {
-  const master = await getMasterFolderCookie()
-  if (!master) {
+  const masters = await getMasterFoldersCookie()
+  if (masters.length === 0) {
     redirect("/setup")
   }
 
-  const result = validateMasterFolder(master)
-  if (!result.ok) {
+  const workspace = loadConfiguredWorkspace(masters)
+  if (workspace.projects.length === 0) {
     redirect("/setup")
   }
 
-  const lists = parseEpicsForProjects(result.projects)
-  const epicCount = lists.reduce((sum, list) => sum + list.epics.length, 0)
-  const errorCount = lists.reduce((sum, list) => sum + list.errors.length, 0)
+  const savedActiveId = await getActiveProjectCookie()
+  const activeProject = resolveActiveProject(
+    workspace.projects,
+    savedActiveId
+  )
+  if (!activeProject) {
+    redirect("/setup")
+  }
+
+  const list = parseEpicsForProject(activeProject)
+  const epicCount = list.epics.length
+  const errorCount = list.errors.length
 
   return (
-    <div className="min-h-svh bg-[linear-gradient(180deg,_#fff_0%,_#f7f4ff_100%)] px-4 py-10">
-      <div className="mx-auto flex w-full max-w-5xl flex-col gap-8">
-        <header className="flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <p className="font-head text-4xl tracking-tight">Taskmark</p>
-            <p className="mt-1 font-mono text-xs text-muted-foreground">
-              {result.masterPath}
-            </p>
-            <p className="mt-2 text-sm text-muted-foreground">
-              {result.projects.length} project
-              {result.projects.length === 1 ? "" : "s"} · {epicCount} epic
-              {epicCount === 1 ? "" : "s"}
-              {errorCount > 0
-                ? ` · ${errorCount} parse issue${errorCount === 1 ? "" : "s"}`
-                : ""}
-            </p>
-          </div>
-          <form action={switchMasterFolder}>
-            <Button type="submit" variant="outline">
-              Switch master folder
-            </Button>
-          </form>
-        </header>
+    <div className="min-h-svh bg-[linear-gradient(180deg,_#fff_0%,_#f7f4ff_100%)]">
+      <AppBar
+        projects={workspace.projects}
+        activeProjectId={activeProject.id}
+        masterCount={workspace.masters.length}
+      />
 
-        <EpicList lists={lists} />
+      <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-8">
+        <div>
+          <h1 className="font-head text-3xl tracking-tight">Epics</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {activeProject.name} · {epicCount} epic
+            {epicCount === 1 ? "" : "s"}
+            {errorCount > 0
+              ? ` · ${errorCount} parse issue${errorCount === 1 ? "" : "s"}`
+              : ""}
+          </p>
+          <p className="mt-1 font-mono text-xs text-muted-foreground">
+            {activeProject.boardPath}
+          </p>
+        </div>
 
-        <p className="text-sm text-muted-foreground">
-          Need to change workspace?{" "}
-          <Link href="/setup" className="underline underline-offset-2">
-            Open setup
-          </Link>
-          .
-        </p>
+        <EpicList lists={[list]} />
       </div>
     </div>
   )
