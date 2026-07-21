@@ -2,7 +2,7 @@
 id: E-001
 type: epic
 title: MVP Taskmark dashboard
-status: in_progress
+status: done
 priority: high
 size: L
 size_source: suggested
@@ -10,7 +10,7 @@ size_basis: [S-001, S-002]
 points: 20
 points_source: suggested
 estimate_minutes: 2400
-actual_minutes: 5
+actual_minutes: 8
 estimate_basis: [S-001, S-002]
 session_cap_minutes: 480
 parent: null
@@ -20,9 +20,9 @@ blocked: false
 cancelled: false
 tags: [mvp, dashboard, frontend]
 created: 2026-07-21
-updated: 2026-07-21T16:48:57Z
+updated: 2026-07-21T16:51:19Z
 started_at: 2026-07-21T16:35:18Z
-completed_at: null
+completed_at: 2026-07-21T16:51:19Z
 ---
 
 # E-001: MVP Taskmark dashboard
