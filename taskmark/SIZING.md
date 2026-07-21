@@ -2,7 +2,7 @@
 
 | Size | Points | Meaning | Seed estimate |
 |------|--------|---------|---------------|
-| XS | 1 | Trivial | 30 min |
+| XS | 1 | Trivial | 14 min |
 | S | 2 | Small | 2 h (120 min) |
 | M | 3 | Medium | 1 day (480 min) |
 | L | 5 | Large | 2 days |

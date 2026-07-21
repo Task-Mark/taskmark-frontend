@@ -2,7 +2,7 @@
 id: T-012
 type: task
 title: Build story list UI
-status: backlog
+status: done
 priority: high
 size: M
 size_source: suggested
@@ -10,7 +10,7 @@ size_basis: [T-006]
 points: 3
 points_source: suggested
 estimate_minutes: 480
-actual_minutes: 0
+actual_minutes: 2
 estimate_basis: [T-006]
 session_cap_minutes: 480
 parent: S-005
@@ -20,9 +20,9 @@ blocked: false
 cancelled: false
 tags: [ui, stories, dashboard]
 created: 2026-07-21
-updated: 2026-07-21T17:41:06Z
-started_at: null
-completed_at: null
+updated: 2026-07-21T17:48:46Z
+started_at: 2026-07-21T17:45:49Z
+completed_at: 2026-07-21T17:48:46Z
 ---
 # T-012: Build story list UI
 
@@ -32,11 +32,11 @@ Build a UI that lists user stories for the currently selected epic. Match the ex
 
 ## Acceptance criteria
 
-- [ ] Story list renders id, title, status, size, and points (plus estimate/actual when present).
-- [ ] Empty state when the epic has no stories.
-- [ ] Partial-error state when some stories fail to parse.
-- [ ] Visual style is consistent with the epic list.
-- [ ] A story can be highlighted/selected for drill-down.
+- [x] Story list renders id, title, status, size, and points (plus estimate/actual when present).
+- [x] Empty state when the epic has no stories.
+- [x] Partial-error state when some stories fail to parse.
+- [x] Visual style is consistent with the epic list.
+- [x] A story can be highlighted/selected for drill-down.
 
 ## Notes
 
@@ -47,6 +47,7 @@ Reuse shared list/row patterns from the epic list (T-006) where practical.
 | # | When (UTC) | Kind | Summary |
 |---|------------|------|---------|
 | 1 | 2026-07-21T17:40:05Z | prompt | Create E-002 user stories view with stories and tasks |
+| 2 | 2026-07-21T17:45:49Z | prompt | Start developing S-005 (includes this task) |
 
 ## Commits
 
@@ -57,3 +58,4 @@ Reuse shared list/row patterns from the epic list (T-006) where practical.
 
 | Session | Actor | Started (UTC) | Ended (UTC) | Summary |
 |---------|-------|---------------|-------------|---------|
+| 1 | agent | 2026-07-21T17:45:49Z | 2026-07-21T17:48:46Z | Built story list UI matching epic list |

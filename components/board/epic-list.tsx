@@ -1,3 +1,5 @@
+import Link from "next/link"
+
 import {
   Table,
   TableBody,
@@ -46,9 +48,10 @@ function formatStatusLabel(status: string): string {
 
 type EpicListProps = {
   lists: ProjectEpicList[]
+  selectedEpicId?: string | null
 }
 
-export function EpicList({ lists }: EpicListProps) {
+export function EpicList({ lists, selectedEpicId = null }: EpicListProps) {
   if (lists.length === 0) {
     return (
       <Card>
@@ -110,32 +113,53 @@ export function EpicList({ lists }: EpicListProps) {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {epics.map((epic) => (
-                    <TableRow key={`${project.id}:${epic.id}:${epic.filePath}`}>
-                      <TableCell className="font-mono text-xs">
-                        {epic.id}
-                      </TableCell>
-                      <TableCell className="max-w-[18rem] whitespace-normal font-medium">
-                        {epic.title}
-                      </TableCell>
-                      <TableCell>{epic.size}</TableCell>
-                      <TableCell>{formatPoints(epic.points)}</TableCell>
-                      <TableCell>
-                        {formatDurationMinutes(epic.estimateMinutes)}
-                      </TableCell>
-                      <TableCell>
-                        {formatDurationMinutes(epic.actualMinutes)}
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant="outline"
-                          className={cn(statusBadgeClass(epic.status))}
-                        >
-                          {formatStatusLabel(epic.status)}
-                        </Badge>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {epics.map((epic) => {
+                    const selected = selectedEpicId === epic.id
+                    return (
+                      <TableRow
+                        key={`${project.id}:${epic.id}:${epic.filePath}`}
+                        data-state={selected ? "selected" : undefined}
+                        className={cn(
+                          selected && "bg-muted/60",
+                          "hover:bg-muted/40"
+                        )}
+                      >
+                        <TableCell className="font-mono text-xs">
+                          <Link
+                            href={`/board?epic=${encodeURIComponent(epic.id)}`}
+                            className="underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                            aria-current={selected ? "true" : undefined}
+                          >
+                            {epic.id}
+                          </Link>
+                        </TableCell>
+                        <TableCell className="max-w-[18rem] whitespace-normal font-medium">
+                          <Link
+                            href={`/board?epic=${encodeURIComponent(epic.id)}`}
+                            className="underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                          >
+                            {epic.title}
+                          </Link>
+                        </TableCell>
+                        <TableCell>{epic.size}</TableCell>
+                        <TableCell>{formatPoints(epic.points)}</TableCell>
+                        <TableCell>
+                          {formatDurationMinutes(epic.estimateMinutes)}
+                        </TableCell>
+                        <TableCell>
+                          {formatDurationMinutes(epic.actualMinutes)}
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            variant="outline"
+                            className={cn(statusBadgeClass(epic.status))}
+                          >
+                            {formatStatusLabel(epic.status)}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
                 </TableBody>
               </Table>
             )}

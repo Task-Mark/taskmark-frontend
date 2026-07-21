@@ -2,7 +2,7 @@
 id: T-013
 type: task
 title: Wire epic selection to story list
-status: backlog
+status: done
 priority: high
 size: S
 size_source: suggested
@@ -10,7 +10,7 @@ size_basis: [T-007]
 points: 2
 points_source: suggested
 estimate_minutes: 120
-actual_minutes: 0
+actual_minutes: 2
 estimate_basis: [T-007]
 session_cap_minutes: 480
 parent: S-005
@@ -20,9 +20,9 @@ blocked: false
 cancelled: false
 tags: [wiring, stories, epics]
 created: 2026-07-21
-updated: 2026-07-21T17:41:06Z
-started_at: null
-completed_at: null
+updated: 2026-07-21T17:48:46Z
+started_at: 2026-07-21T17:45:49Z
+completed_at: 2026-07-21T17:48:46Z
 ---
 # T-013: Wire epic selection to story list
 
@@ -32,10 +32,10 @@ Connect epic selection in the dashboard to the story parser (T-011) and story li
 
 ## Acceptance criteria
 
-- [ ] Selecting an epic loads stories for that epic from the active project board.
-- [ ] Changing epic refreshes the story list.
-- [ ] Changing active project clears epic/story selection or reloads safely.
-- [ ] Loading and failure states are visible to the user.
+- [x] Selecting an epic loads stories for that epic from the active project board.
+- [x] Changing epic refreshes the story list.
+- [x] Changing active project clears epic/story selection or reloads safely.
+- [x] Loading and failure states are visible to the user.
 
 ## Notes
 
@@ -46,6 +46,7 @@ Pair with T-016 for the next level of drill-down (story → tasks).
 | # | When (UTC) | Kind | Summary |
 |---|------------|------|---------|
 | 1 | 2026-07-21T17:40:05Z | prompt | Create E-002 user stories view with stories and tasks |
+| 2 | 2026-07-21T17:45:49Z | prompt | Start developing S-005 (includes this task) |
 
 ## Commits
 
@@ -56,3 +57,4 @@ Pair with T-016 for the next level of drill-down (story → tasks).
 
 | Session | Actor | Started (UTC) | Ended (UTC) | Summary |
 |---------|-------|---------------|-------------|---------|
+| 1 | agent | 2026-07-21T17:45:49Z | 2026-07-21T17:48:46Z | Wired epic selection via ?epic= to story list on /board |
