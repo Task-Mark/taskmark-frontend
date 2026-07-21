@@ -82,8 +82,11 @@ export function SetupWizard({
           ) : (
             <>
               Choose a master folder. Taskmark will look inside its subfolders
-              for projects that contain a{" "}
-              <code className="font-mono text-sm">taskmark/</code> board.
+              for nested{" "}
+              <code className="font-mono text-sm">taskmark/</code> boards or
+              dedicated{" "}
+              <code className="font-mono text-sm">*-taskmark</code> project
+              folders.
             </>
           )}
         </CardDescription>

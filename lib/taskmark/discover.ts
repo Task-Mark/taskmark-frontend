@@ -5,32 +5,57 @@ import {
   DISCOVERY_MAX_DEPTH,
   DISCOVERY_SKIP_DIR_NAMES,
 } from "@/lib/taskmark/constants"
-import { resolveBoardKey } from "@/lib/taskmark/projects"
+import {
+  isDedicatedBoardRepoName,
+  projectNameForBoard,
+  projectPathForBoard,
+  resolveBoardKey,
+} from "@/lib/taskmark/projects"
 import type { DiscoveredProject } from "@/lib/taskmark/types"
 
-function isTaskmarkBoard(candidateProjectRoot: string): boolean {
-  const boardPath = path.join(candidateProjectRoot, "taskmark")
-  try {
-    if (!fs.statSync(boardPath).isDirectory()) return false
-  } catch {
-    return false
-  }
-
+function hasBoardMarkers(boardPath: string): boolean {
   return (
     fs.existsSync(path.join(boardPath, "INDEX.md")) ||
     fs.existsSync(path.join(boardPath, "epics"))
   )
 }
 
-function toDiscoveredProject(projectPath: string): DiscoveredProject {
-  const resolvedProject = path.resolve(projectPath)
-  const boardPath = resolveBoardKey(path.join(resolvedProject, "taskmark"))
-  const name = path.basename(path.dirname(boardPath))
+/** Single-project layout: `<project>/taskmark/` with INDEX.md or epics/. */
+function nestedBoardPath(candidateProjectRoot: string): string | null {
+  const boardPath = path.join(candidateProjectRoot, "taskmark")
+  try {
+    if (!fs.statSync(boardPath).isDirectory()) return null
+  } catch {
+    return null
+  }
+  return hasBoardMarkers(boardPath) ? boardPath : null
+}
+
+/**
+ * Multi-project layout: dedicated `<name>-taskmark` repo whose root is the board
+ * (INDEX.md / epics/ at the folder root — no nested taskmark/).
+ */
+function flatBoardPath(candidateRoot: string): string | null {
+  if (!isDedicatedBoardRepoName(path.basename(candidateRoot))) return null
+  try {
+    if (!fs.statSync(candidateRoot).isDirectory()) return null
+  } catch {
+    return null
+  }
+  return hasBoardMarkers(candidateRoot) ? candidateRoot : null
+}
+
+function resolveDiscoveredBoard(candidateRoot: string): string | null {
+  return flatBoardPath(candidateRoot) ?? nestedBoardPath(candidateRoot)
+}
+
+function toDiscoveredProject(boardPath: string): DiscoveredProject {
+  const key = resolveBoardKey(boardPath)
   return {
-    id: boardPath,
-    name,
-    projectPath: path.dirname(boardPath),
-    boardPath,
+    id: key,
+    name: projectNameForBoard(key),
+    projectPath: projectPathForBoard(key),
+    boardPath: key,
   }
 }
 
@@ -42,10 +67,13 @@ function shouldSkipDir(name: string): boolean {
 
 /**
  * Walk a master folder and find Taskmark boards in subfolders.
- * A project is any directory that contains a `taskmark/` board
- * (with INDEX.md and/or epics/). Does not require a board at the master root,
- * but will include the master itself if it has one.
- * Dedupes by realpath of the board directory.
+ *
+ * Recognizes:
+ * - Single-project: any directory with a nested `taskmark/` board (INDEX.md or epics/)
+ * - Multi-project: dedicated `*-taskmark` folders with board files at the repo root
+ *
+ * Does not require a board at the master root, but includes the master itself if it
+ * matches either layout. Dedupes by realpath of the board directory.
  */
 export function discoverTaskmarkProjects(
   masterPath: string,
@@ -55,8 +83,9 @@ export function discoverTaskmarkProjects(
   const found = new Map<string, DiscoveredProject>()
 
   function visit(dir: string, depth: number) {
-    if (isTaskmarkBoard(dir)) {
-      const project = toDiscoveredProject(dir)
+    const board = resolveDiscoveredBoard(dir)
+    if (board) {
+      const project = toDiscoveredProject(board)
       found.set(project.id, project)
       // Do not descend into a project's internals looking for nested boards.
       return
