@@ -4,29 +4,23 @@ import {
 
 export type TimingFields = {
   estimateMinutes: number | null
+  /** Billable work-log minutes from start-work → complete-work sessions. */
   actualMinutes: number | null
-  /** Session effort when present (E-004 dual model); optional. */
-  effortMinutes: number | null
 }
 
 /**
- * Read estimate / actual / optional effort from board frontmatter.
- * Always prefers `estimate_minutes` and `actual_minutes` so lists keep
- * showing Est and Actual after layout and speed-model changes.
+ * Read estimate and actual from board frontmatter.
+ * Est = planned minutes (velocity × points or seed).
+ * Actual = session time spent (falls back to legacy effort_minutes if needed).
  */
 export function readTimingFields(
   frontmatter: Record<string, unknown>
 ): TimingFields {
+  const actual =
+    asNumberOrNull(frontmatter.actual_minutes) ??
+    asNumberOrNull(frontmatter.effort_minutes)
   return {
     estimateMinutes: asNumberOrNull(frontmatter.estimate_minutes),
-    actualMinutes: asNumberOrNull(frontmatter.actual_minutes),
-    effortMinutes: asNumberOrNull(frontmatter.effort_minutes),
+    actualMinutes: actual,
   }
-}
-
-/** True when any row carries session effort (show Effort column). */
-export function hasEffortData(
-  rows: ReadonlyArray<{ effortMinutes: number | null }>
-): boolean {
-  return rows.some((row) => row.effortMinutes !== null)
 }

@@ -16,7 +16,6 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import { formatDurationMinutes } from "@/lib/format-duration"
-import { hasEffortData } from "@/lib/taskmark/timing"
 import type { StoryItemList } from "@/lib/taskmark/item-types"
 
 function formatPoints(value: number | null): string {
@@ -59,7 +58,6 @@ type TaskListProps = {
 export function TaskList({ list }: TaskListProps) {
   const { project, storyId, storyTitle, items, errors } = list
   const heading = storyTitle ? `${storyId}: ${storyTitle}` : storyId
-  const showEffort = hasEffortData(items)
 
   return (
     <Card>
@@ -104,7 +102,6 @@ export function TaskList({ list }: TaskListProps) {
                 <TableHead>Size</TableHead>
                 <TableHead>Points</TableHead>
                 <TableHead>Est</TableHead>
-                {showEffort ? <TableHead>Effort</TableHead> : null}
                 <TableHead>Actual</TableHead>
                 <TableHead>Status</TableHead>
               </TableRow>
@@ -131,11 +128,6 @@ export function TaskList({ list }: TaskListProps) {
                   <TableCell>
                     {formatDurationMinutes(item.estimateMinutes)}
                   </TableCell>
-                  {showEffort ? (
-                    <TableCell>
-                      {formatDurationMinutes(item.effortMinutes)}
-                    </TableCell>
-                  ) : null}
                   <TableCell>
                     {formatDurationMinutes(item.actualMinutes)}
                   </TableCell>
