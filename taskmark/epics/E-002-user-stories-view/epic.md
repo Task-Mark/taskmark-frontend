@@ -20,7 +20,7 @@ blocked: false
 cancelled: false
 tags: [dashboard, stories, frontend]
 created: 2026-07-21
-updated: 2026-07-21T17:41:06Z
+updated: 2026-07-21T17:43:42Z
 started_at: null
 completed_at: null
 ---
@@ -60,6 +60,8 @@ Let users drill from an epic into its user stories, then from a selected story i
 
 | SHA | Repo | Date (UTC) | Message |
 |-----|------|------------|---------|
+| a940d8b | taskmark-frontend | 2026-07-21T17:43:42Z | add e-002 user stories view board |
+| 10d1691 | taskmark-cursor | 2026-07-21T17:43:42Z | add e-002 user stories view board |
 
 ## Work log
 
