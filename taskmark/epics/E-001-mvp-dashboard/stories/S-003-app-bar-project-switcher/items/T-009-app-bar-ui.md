@@ -20,7 +20,7 @@ blocked: false
 cancelled: false
 tags: [mvp, app-bar, ui]
 created: 2026-07-21
-updated: 2026-07-21T17:02:25Z
+updated: 2026-07-21T17:12:10Z
 started_at: 2026-07-21T16:59:31Z
 completed_at: 2026-07-21T17:02:25Z
 ---
@@ -51,6 +51,7 @@ Add a sticky/top app bar on post-setup views with Taskmark branding, a project s
 
 | SHA | Repo | Date (UTC) | Message |
 |-----|------|------------|---------|
+| 5735f0b | taskmark-frontend | 2026-07-21T17:11:35Z | add app bar and project accumulate |
 
 ## Work log
 

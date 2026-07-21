@@ -13,6 +13,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
 import type { ProjectEpicList } from "@/lib/taskmark/epic-types"
 
 function formatMinutes(value: number | null): string {
@@ -23,6 +24,28 @@ function formatMinutes(value: number | null): string {
 function formatPoints(value: number | null): string {
   if (value === null) return "—"
   return String(value)
+}
+
+function statusBadgeVariant(
+  status: string
+): "default" | "secondary" | "destructive" | "outline" | "ghost" {
+  switch (status) {
+    case "done":
+      return "secondary"
+    case "in_progress":
+      return "default"
+    case "blocked":
+      return "destructive"
+    case "cancelled":
+      return "ghost"
+    case "backlog":
+    default:
+      return "outline"
+  }
+}
+
+function formatStatusLabel(status: string): string {
+  return status.replaceAll("_", " ")
 }
 
 type EpicListProps = {
@@ -83,11 +106,11 @@ export function EpicList({ lists }: EpicListProps) {
                   <TableRow>
                     <TableHead>ID</TableHead>
                     <TableHead>Title</TableHead>
-                    <TableHead>Status</TableHead>
                     <TableHead>Size</TableHead>
                     <TableHead>Points</TableHead>
                     <TableHead>Est (min)</TableHead>
                     <TableHead>Actual (min)</TableHead>
+                    <TableHead>Status</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -99,7 +122,6 @@ export function EpicList({ lists }: EpicListProps) {
                       <TableCell className="max-w-[18rem] whitespace-normal font-medium">
                         {epic.title}
                       </TableCell>
-                      <TableCell>{epic.status}</TableCell>
                       <TableCell>{epic.size}</TableCell>
                       <TableCell>{formatPoints(epic.points)}</TableCell>
                       <TableCell>
@@ -107,6 +129,11 @@ export function EpicList({ lists }: EpicListProps) {
                       </TableCell>
                       <TableCell>
                         {formatMinutes(epic.actualMinutes)}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={statusBadgeVariant(epic.status)}>
+                          {formatStatusLabel(epic.status)}
+                        </Badge>
                       </TableCell>
                     </TableRow>
                   ))}

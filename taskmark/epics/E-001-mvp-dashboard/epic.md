@@ -20,7 +20,7 @@ blocked: false
 cancelled: false
 tags: [mvp, dashboard, frontend]
 created: 2026-07-21
-updated: 2026-07-21T17:09:16Z
+updated: 2026-07-21T17:12:10Z
 started_at: 2026-07-21T16:35:18Z
 completed_at: 2026-07-21T17:02:25Z
 ---
@@ -66,6 +66,8 @@ Ship an MVP dashboard that reads Taskmark markdown boards from a local **master 
 
 | SHA | Repo | Date (UTC) | Message |
 |-----|------|------------|---------|
+| 5735f0b | taskmark-frontend | 2026-07-21T17:11:35Z | add app bar and project accumulate |
+| 3389ae7 | taskmark-cursor | 2026-07-21T17:11:35Z | sync taskmark board |
 | cc992dc | taskmark-frontend | 2026-07-21T16:58:32Z | add epic list and fix frontmatter parse |
 | 8f1a801 | taskmark-cursor | 2026-07-21T16:58:32Z | sync taskmark board |
 | 1fcb25f | taskmark-frontend | 2026-07-21T16:48:57Z | add native folder picker to setup |

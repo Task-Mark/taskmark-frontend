@@ -20,7 +20,7 @@ blocked: false
 cancelled: false
 tags: [mvp, cookie, navigation]
 created: 2026-07-21
-updated: 2026-07-21T17:02:25Z
+updated: 2026-07-21T17:12:10Z
 started_at: 2026-07-21T16:59:31Z
 completed_at: 2026-07-21T17:02:25Z
 ---
@@ -54,6 +54,7 @@ Cookie name: `taskmark_active_project` (project id / folder name under discovery
 
 | SHA | Repo | Date (UTC) | Message |
 |-----|------|------------|---------|
+| 5735f0b | taskmark-frontend | 2026-07-21T17:11:35Z | add app bar and project accumulate |
 
 ## Work log
 
