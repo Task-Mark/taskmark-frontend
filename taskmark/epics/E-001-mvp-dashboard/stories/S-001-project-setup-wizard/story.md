@@ -20,7 +20,7 @@ blocked: false
 cancelled: false
 tags: [mvp, wizard, setup]
 created: 2026-07-21
-updated: 2026-07-21T16:37:18Z
+updated: 2026-07-21T16:41:11Z
 started_at: 2026-07-21T16:35:18Z
 completed_at: 2026-07-21T16:37:18Z
 ---
@@ -62,6 +62,8 @@ As a user, I want a setup wizard that lets me select a local **master folder** s
 
 | SHA | Repo | Date (UTC) | Message |
 |-----|------|------------|---------|
+| 9c3c5c5 | taskmark-frontend | 2026-07-21T16:40:53Z | add setup wizard and taskmark board |
+| 489cdff | taskmark-cursor | 2026-07-21T16:40:54Z | add taskmark board and update plugin |
 
 ## Work log
 
