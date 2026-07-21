@@ -20,7 +20,7 @@ blocked: false
 cancelled: false
 tags: [parser, stories]
 created: 2026-07-21
-updated: 2026-07-21T17:48:46Z
+updated: 2026-07-21T17:59:56Z
 started_at: 2026-07-21T17:45:49Z
 completed_at: 2026-07-21T17:48:46Z
 ---
@@ -52,6 +52,7 @@ Mirror the epic parser pattern from T-005; keep the API consistent for later tas
 
 | SHA | Repo | Date (UTC) | Message |
 |-----|------|------------|---------|
+| 0c104cd | taskmark-frontend | 2026-07-21T17:59:56Z | add story list for selected epic |
 
 ## Work log
 

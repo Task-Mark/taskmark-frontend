@@ -20,7 +20,7 @@ blocked: false
 cancelled: false
 tags: [dashboard, stories, frontend]
 created: 2026-07-21
-updated: 2026-07-21T17:48:46Z
+updated: 2026-07-21T17:59:56Z
 started_at: 2026-07-21T17:45:49Z
 completed_at: null
 ---
@@ -62,6 +62,8 @@ Let users drill from an epic into its user stories, then from a selected story i
 |-----|------|------------|---------|
 | a940d8b | taskmark-frontend | 2026-07-21T17:43:42Z | add e-002 user stories view board |
 | 10d1691 | taskmark-cursor | 2026-07-21T17:43:42Z | add e-002 user stories view board |
+| 0c104cd | taskmark-frontend | 2026-07-21T17:59:56Z | add story list for selected epic |
+| 2aef6ba | taskmark-cursor | 2026-07-21T17:59:56Z | sync taskmark board |
 
 ## Work log
 
