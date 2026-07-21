@@ -20,7 +20,7 @@ blocked: false
 cancelled: false
 tags: [ui, tasks, dashboard]
 created: 2026-07-21
-updated: 2026-07-21T18:02:46Z
+updated: 2026-07-21T22:21:39Z
 started_at: 2026-07-21T18:00:53Z
 completed_at: 2026-07-21T18:02:46Z
 ---
@@ -54,6 +54,7 @@ Reuse shared list/row patterns from T-006 / T-012.
 
 | SHA | Repo | Date (UTC) | Message |
 |-----|------|------------|---------|
+| 4e49022 | taskmark-frontend | 2026-07-21T22:21:39Z | add task list for selected story |
 
 ## Work log
 

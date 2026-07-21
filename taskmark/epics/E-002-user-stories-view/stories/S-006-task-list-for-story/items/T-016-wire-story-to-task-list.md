@@ -20,7 +20,7 @@ blocked: false
 cancelled: false
 tags: [wiring, tasks, stories]
 created: 2026-07-21
-updated: 2026-07-21T18:02:46Z
+updated: 2026-07-21T22:21:39Z
 started_at: 2026-07-21T18:00:53Z
 completed_at: 2026-07-21T18:02:46Z
 ---
@@ -53,6 +53,7 @@ Completes the epic → story → task drill-down for E-002.
 
 | SHA | Repo | Date (UTC) | Message |
 |-----|------|------------|---------|
+| 4e49022 | taskmark-frontend | 2026-07-21T22:21:39Z | add task list for selected story |
 
 ## Work log
 

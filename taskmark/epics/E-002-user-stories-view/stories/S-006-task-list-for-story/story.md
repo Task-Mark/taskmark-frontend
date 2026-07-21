@@ -20,7 +20,7 @@ blocked: false
 cancelled: false
 tags: [dashboard, tasks, stories]
 created: 2026-07-21
-updated: 2026-07-21T18:02:46Z
+updated: 2026-07-21T22:21:39Z
 started_at: 2026-07-21T18:00:53Z
 completed_at: 2026-07-21T18:02:46Z
 ---
@@ -57,6 +57,8 @@ As a user, I want to select a user story and see the tasks (and bugs) connected 
 
 | SHA | Repo | Date (UTC) | Message |
 |-----|------|------------|---------|
+| 4e49022 | taskmark-frontend | 2026-07-21T22:21:39Z | add task list for selected story |
+| ca69fce | taskmark-cursor | 2026-07-21T22:21:39Z | sync taskmark board |
 
 ## Work log
 
