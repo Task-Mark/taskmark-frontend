@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import { Archivo_Black, Space_Grotesk } from "next/font/google"
-
+import { Toaster } from "@/components/ui/sonner"
 import "./globals.css"
 
 const archivoBlack = Archivo_Black({
@@ -31,6 +31,7 @@ export default function RootLayout({
       <body
         className={`${archivoBlack.variable} ${spaceGrotesk.variable} font-sans antialiased`}
       >
+        <Toaster />
         {children}
       </body>
     </html>
