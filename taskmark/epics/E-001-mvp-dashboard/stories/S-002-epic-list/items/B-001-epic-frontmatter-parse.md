@@ -20,7 +20,7 @@ blocked: false
 cancelled: false
 tags: [mvp, parser, bug]
 created: 2026-07-21
-updated: 2026-07-21T16:56:26Z
+updated: 2026-07-21T16:58:32Z
 started_at: 2026-07-21T16:56:26Z
 completed_at: 2026-07-21T16:56:26Z
 ---
@@ -57,6 +57,8 @@ Root cause: board status updates concatenated `---` onto the last frontmatter li
 
 | SHA | Repo | Date (UTC) | Message |
 |-----|------|------------|---------|
+| cc992dc | taskmark-frontend | 2026-07-21T16:58:32Z | add epic list and fix frontmatter parse |
+| 8f1a801 | taskmark-cursor | 2026-07-21T16:58:32Z | sync taskmark board |
 
 ## Work log
 
