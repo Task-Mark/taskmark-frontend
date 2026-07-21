@@ -13,6 +13,7 @@ import {
   asStringArray,
   extractFrontmatter,
 } from "@/lib/taskmark/frontmatter"
+import { readTimingFields } from "@/lib/taskmark/timing"
 
 function listEpicMarkdownFiles(boardPath: string): string[] {
   const epicsDir = path.join(boardPath, "epics")
@@ -100,8 +101,7 @@ function parseEpicFile(
       priority: asString(frontmatter.priority, "medium"),
       size: asString(frontmatter.size, "—"),
       points: asNumberOrNull(frontmatter.points),
-      estimateMinutes: asNumberOrNull(frontmatter.estimate_minutes),
-      actualMinutes: asNumberOrNull(frontmatter.actual_minutes),
+      ...readTimingFields(frontmatter),
       tags: asStringArray(frontmatter.tags),
       filePath,
       project: {
@@ -114,7 +114,7 @@ function parseEpicFile(
   }
 }
 
-/** Parse all epics under a single project's taskmark/ board. */
+/** Parse all epics under a project's board root (nested taskmark/ or flat *-taskmark). */
 export function parseEpicsForProject(
   project: DiscoveredProject
 ): ProjectEpicList {

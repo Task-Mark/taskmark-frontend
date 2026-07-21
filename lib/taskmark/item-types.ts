@@ -12,6 +12,7 @@ export type ItemSummary = {
   points: number | null
   estimateMinutes: number | null
   actualMinutes: number | null
+  effortMinutes: number | null
   tags: string[]
   parent: string
   epic: string

@@ -15,6 +15,7 @@ import {
   extractFrontmatter,
 } from "@/lib/taskmark/frontmatter"
 import { findEpicFolder } from "@/lib/taskmark/parse-stories"
+import { readTimingFields } from "@/lib/taskmark/timing"
 
 type StoryFolder = {
   dirName: string
@@ -184,8 +185,7 @@ function parseItemFile(
       priority: asString(frontmatter.priority, "medium"),
       size: asString(frontmatter.size, "—"),
       points: asNumberOrNull(frontmatter.points),
-      estimateMinutes: asNumberOrNull(frontmatter.estimate_minutes),
-      actualMinutes: asNumberOrNull(frontmatter.actual_minutes),
+      ...readTimingFields(frontmatter),
       tags: asStringArray(frontmatter.tags),
       parent: asString(frontmatter.parent, storyId),
       epic: asString(frontmatter.epic, epicId),
@@ -201,7 +201,7 @@ function parseItemFile(
 }
 
 /**
- * Parse all tasks/bugs under a selected story for a project's taskmark/ board.
+ * Parse all tasks/bugs under a selected story for a project's board root.
  */
 export function parseItemsForStory(
   project: DiscoveredProject,

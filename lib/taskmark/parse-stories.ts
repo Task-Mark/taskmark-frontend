@@ -13,6 +13,7 @@ import {
   asStringArray,
   extractFrontmatter,
 } from "@/lib/taskmark/frontmatter"
+import { readTimingFields } from "@/lib/taskmark/timing"
 
 type EpicFolder = {
   dirName: string
@@ -161,8 +162,7 @@ function parseStoryFile(
       priority: asString(frontmatter.priority, "medium"),
       size: asString(frontmatter.size, "—"),
       points: asNumberOrNull(frontmatter.points),
-      estimateMinutes: asNumberOrNull(frontmatter.estimate_minutes),
-      actualMinutes: asNumberOrNull(frontmatter.actual_minutes),
+      ...readTimingFields(frontmatter),
       tags: asStringArray(frontmatter.tags),
       parent: asString(frontmatter.parent),
       epic: asString(frontmatter.epic, epicId),
@@ -178,7 +178,7 @@ function parseStoryFile(
 }
 
 /**
- * Parse all stories under a selected epic for a project's taskmark/ board.
+ * Parse all stories under a selected epic for a project's board root.
  * Returns an empty story list (with no errors) when the epic folder is missing.
  */
 export function parseStoriesForEpic(

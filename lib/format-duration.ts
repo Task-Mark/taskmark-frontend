@@ -1,5 +1,5 @@
 /**
- * Format billable/estimate minutes as a compact human duration.
+ * Format estimate/actual/effort minutes as a compact human duration.
  * Examples: `45m`, `2h`, `2h 30m`, `1d`, `1d 4h`, `3d 2h 15m`
  */
 export function formatDurationMinutes(value: number | null | undefined): string {

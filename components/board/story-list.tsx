@@ -18,6 +18,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import { formatDurationMinutes } from "@/lib/format-duration"
+import { hasEffortData } from "@/lib/taskmark/timing"
 import type { EpicStoryList } from "@/lib/taskmark/story-types"
 
 function formatPoints(value: number | null): string {
@@ -54,6 +55,7 @@ type StoryListProps = {
 export function StoryList({ list, selectedStoryId = null }: StoryListProps) {
   const { project, epicId, epicTitle, stories, errors } = list
   const heading = epicTitle ? `${epicId}: ${epicTitle}` : epicId
+  const showEffort = hasEffortData(stories)
 
   return (
     <Card>
@@ -97,6 +99,7 @@ export function StoryList({ list, selectedStoryId = null }: StoryListProps) {
                 <TableHead>Size</TableHead>
                 <TableHead>Points</TableHead>
                 <TableHead>Est</TableHead>
+                {showEffort ? <TableHead>Effort</TableHead> : null}
                 <TableHead>Actual</TableHead>
                 <TableHead>Status</TableHead>
               </TableRow>
@@ -136,6 +139,11 @@ export function StoryList({ list, selectedStoryId = null }: StoryListProps) {
                     <TableCell>
                       {formatDurationMinutes(story.estimateMinutes)}
                     </TableCell>
+                    {showEffort ? (
+                      <TableCell>
+                        {formatDurationMinutes(story.effortMinutes)}
+                      </TableCell>
+                    ) : null}
                     <TableCell>
                       {formatDurationMinutes(story.actualMinutes)}
                     </TableCell>

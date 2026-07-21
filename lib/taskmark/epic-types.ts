@@ -9,6 +9,7 @@ export type EpicSummary = {
   points: number | null
   estimateMinutes: number | null
   actualMinutes: number | null
+  effortMinutes: number | null
   tags: string[]
   /** Absolute path to epic.md */
   filePath: string

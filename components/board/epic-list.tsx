@@ -18,6 +18,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import { formatDurationMinutes } from "@/lib/format-duration"
+import { hasEffortData } from "@/lib/taskmark/timing"
 import type { ProjectEpicList } from "@/lib/taskmark/epic-types"
 
 function formatPoints(value: number | null): string {
@@ -108,6 +109,7 @@ export function EpicList({ lists, selectedEpicId = null }: EpicListProps) {
                     <TableHead>Size</TableHead>
                     <TableHead>Points</TableHead>
                     <TableHead>Est</TableHead>
+                    {hasEffortData(epics) ? <TableHead>Effort</TableHead> : null}
                     <TableHead>Actual</TableHead>
                     <TableHead>Status</TableHead>
                   </TableRow>
@@ -146,6 +148,11 @@ export function EpicList({ lists, selectedEpicId = null }: EpicListProps) {
                         <TableCell>
                           {formatDurationMinutes(epic.estimateMinutes)}
                         </TableCell>
+                        {hasEffortData(epics) ? (
+                          <TableCell>
+                            {formatDurationMinutes(epic.effortMinutes)}
+                          </TableCell>
+                        ) : null}
                         <TableCell>
                           {formatDurationMinutes(epic.actualMinutes)}
                         </TableCell>
