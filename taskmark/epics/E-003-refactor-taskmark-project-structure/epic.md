@@ -20,7 +20,7 @@ blocked: false
 cancelled: false
 tags: [architecture, multi-repo, plugin, board-layout]
 created: 2026-07-21
-updated: 2026-07-21T22:26:00Z
+updated: 2026-07-21T22:31:15Z
 started_at: null
 completed_at: null
 ---
@@ -63,6 +63,8 @@ Stop copying `taskmark/` into every product repo. Place the board where git owne
 
 | SHA | Repo | Date (UTC) | Message |
 |-----|------|------------|---------|
+| 87ec6aa | taskmark-frontend | 2026-07-21T22:31:15Z | add e-003 project structure epic |
+| 6962bd4 | taskmark-cursor | 2026-07-21T22:31:15Z | sync taskmark board |
 
 ## Work log
 
