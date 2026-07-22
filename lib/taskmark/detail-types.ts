@@ -44,6 +44,7 @@ export type WorkItemMeta = {
   points: number | null
   estimateMinutes: number | null
   actualMinutes: number | null
+  actualMs: number | null
   tags: string[]
   owner: string
   blocked: boolean

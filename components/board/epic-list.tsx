@@ -18,7 +18,7 @@ import {
 import { StatusBadge } from "@/components/board/status-badge"
 import { ViewWorkItemButton } from "@/components/board/work-item-sheet"
 import { cn } from "@/lib/utils"
-import { formatDurationMinutes } from "@/lib/format-duration"
+import { formatActualDuration, formatDurationMinutes } from "@/lib/format-duration"
 import type { ProjectEpicList } from "@/lib/taskmark/epic-types"
 
 function formatPoints(value: number | null): string {
@@ -136,7 +136,7 @@ export function EpicList({ lists, selectedEpicId = null }: EpicListProps) {
                           {formatDurationMinutes(epic.estimateMinutes)}
                         </TableCell>
                         <TableCell>
-                          {formatDurationMinutes(epic.actualMinutes)}
+                          {formatActualDuration(epic.actualMs, epic.actualMinutes)}
                         </TableCell>
                         <TableCell>
                           <StatusBadge status={epic.status} />

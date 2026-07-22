@@ -100,6 +100,7 @@ function buildMeta(
     points: asNumberOrNull(frontmatter.points),
     estimateMinutes: timing.estimateMinutes,
     actualMinutes: timing.actualMinutes,
+    actualMs: timing.actualMs,
     tags: asStringArray(frontmatter.tags),
     owner: asString(frontmatter.owner),
     blocked: asBool(frontmatter.blocked),

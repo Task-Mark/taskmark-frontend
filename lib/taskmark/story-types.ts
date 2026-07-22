@@ -9,6 +9,7 @@ export type StorySummary = {
   points: number | null
   estimateMinutes: number | null
   actualMinutes: number | null
+  actualMs: number | null
   tags: string[]
   parent: string
   epic: string

@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/card"
 import { StatusBadge, TypeBadge } from "@/components/board/status-badge"
 import { ViewWorkItemButton } from "@/components/board/work-item-sheet"
-import { formatDurationMinutes } from "@/lib/format-duration"
+import { formatActualDuration, formatDurationMinutes } from "@/lib/format-duration"
 import type { StoryItemList } from "@/lib/taskmark/item-types"
 
 function formatPoints(value: number | null): string {
@@ -108,7 +108,7 @@ export function TaskList({ list }: TaskListProps) {
                     {formatDurationMinutes(item.estimateMinutes)}
                   </TableCell>
                   <TableCell>
-                    {formatDurationMinutes(item.actualMinutes)}
+                    {formatActualDuration(item.actualMs, item.actualMinutes)}
                   </TableCell>
                   <TableCell>
                     <StatusBadge status={item.status} />

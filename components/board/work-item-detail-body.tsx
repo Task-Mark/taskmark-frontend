@@ -1,6 +1,6 @@
 import type { ReactNode } from "react"
 
-import { formatDurationMinutes } from "@/lib/format-duration"
+import { formatActualDuration, formatDurationMinutes } from "@/lib/format-duration"
 import type {
   ChecklistItem,
   CommitRow,
@@ -34,7 +34,7 @@ function MetaGrid({ detail }: { detail: WorkItemMeta }) {
     },
     {
       label: "Actual",
-      value: formatDurationMinutes(detail.actualMinutes),
+      value: formatActualDuration(detail.actualMs, detail.actualMinutes),
     },
     { label: "Parent", value: detail.parent || "—" },
     { label: "Epic", value: detail.epic || "—" },

@@ -4,23 +4,29 @@ import {
 
 export type TimingFields = {
   estimateMinutes: number | null
-  /** Billable work-log minutes from start-work → complete-work sessions. */
+  /** Billable work-log minutes (floor of actual_ms / 60000) for velocity. */
   actualMinutes: number | null
+  /** Precise billable work-log duration in milliseconds. */
+  actualMs: number | null
 }
 
 /**
  * Read estimate and actual from board frontmatter.
  * Est = planned minutes (velocity × points or seed).
- * Actual = session time spent (falls back to legacy effort_minutes if needed).
+ * Actual = session time spent (prefers actual_ms; falls back to minutes / effort).
  */
 export function readTimingFields(
   frontmatter: Record<string, unknown>
 ): TimingFields {
-  const actual =
+  const actualMinutes =
     asNumberOrNull(frontmatter.actual_minutes) ??
     asNumberOrNull(frontmatter.effort_minutes)
+  const actualMs =
+    asNumberOrNull(frontmatter.actual_ms) ??
+    (actualMinutes != null ? actualMinutes * 60_000 : null)
   return {
     estimateMinutes: asNumberOrNull(frontmatter.estimate_minutes),
-    actualMinutes: actual,
+    actualMinutes,
+    actualMs,
   }
 }
