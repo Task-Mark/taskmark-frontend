@@ -15,7 +15,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
+import { StatusBadge } from "@/components/board/status-badge"
+import { ViewWorkItemButton } from "@/components/board/work-item-sheet"
 import { cn } from "@/lib/utils"
 import { formatDurationMinutes } from "@/lib/format-duration"
 import type { EpicStoryList } from "@/lib/taskmark/story-types"
@@ -23,27 +24,6 @@ import type { EpicStoryList } from "@/lib/taskmark/story-types"
 function formatPoints(value: number | null): string {
   if (value === null) return "—"
   return String(value)
-}
-
-function statusBadgeClass(status: string): string {
-  switch (status) {
-    case "done":
-      return "border-black bg-[var(--chart-4)] text-black"
-    case "in_progress":
-      return "border-black bg-[var(--chart-1)] text-black"
-    case "blocked":
-      return "border-black bg-destructive text-destructive-foreground"
-    case "cancelled":
-      return "border-black bg-muted text-muted-foreground line-through"
-    case "backlog":
-      return "border-black bg-[var(--chart-3)] text-black"
-    default:
-      return "border-black bg-card text-foreground"
-  }
-}
-
-function formatStatusLabel(status: string): string {
-  return status.replaceAll("_", " ")
 }
 
 type StoryListProps = {
@@ -92,6 +72,7 @@ export function StoryList({ list, selectedStoryId = null }: StoryListProps) {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-10" />
                 <TableHead>ID</TableHead>
                 <TableHead>Title</TableHead>
                 <TableHead>Size</TableHead>
@@ -114,6 +95,16 @@ export function StoryList({ list, selectedStoryId = null }: StoryListProps) {
                       "hover:bg-muted/40"
                     )}
                   >
+                    <TableCell className="w-10 pr-0">
+                      <ViewWorkItemButton
+                        itemRef={{
+                          kind: "story",
+                          id: story.id,
+                          title: story.title,
+                          filePath: story.filePath,
+                        }}
+                      />
+                    </TableCell>
                     <TableCell className="font-mono text-xs">
                       <Link
                         href={href}
@@ -140,12 +131,7 @@ export function StoryList({ list, selectedStoryId = null }: StoryListProps) {
                       {formatDurationMinutes(story.actualMinutes)}
                     </TableCell>
                     <TableCell>
-                      <Badge
-                        variant="outline"
-                        className={cn(statusBadgeClass(story.status))}
-                      >
-                        {formatStatusLabel(story.status)}
-                      </Badge>
+                      <StatusBadge status={story.status} />
                     </TableCell>
                   </TableRow>
                 )

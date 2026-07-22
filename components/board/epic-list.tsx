@@ -15,7 +15,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
+import { StatusBadge } from "@/components/board/status-badge"
+import { ViewWorkItemButton } from "@/components/board/work-item-sheet"
 import { cn } from "@/lib/utils"
 import { formatDurationMinutes } from "@/lib/format-duration"
 import type { ProjectEpicList } from "@/lib/taskmark/epic-types"
@@ -23,27 +24,6 @@ import type { ProjectEpicList } from "@/lib/taskmark/epic-types"
 function formatPoints(value: number | null): string {
   if (value === null) return "—"
   return String(value)
-}
-
-function statusBadgeClass(status: string): string {
-  switch (status) {
-    case "done":
-      return "border-black bg-[var(--chart-4)] text-black"
-    case "in_progress":
-      return "border-black bg-[var(--chart-1)] text-black"
-    case "blocked":
-      return "border-black bg-destructive text-destructive-foreground"
-    case "cancelled":
-      return "border-black bg-muted text-muted-foreground line-through"
-    case "backlog":
-      return "border-black bg-[var(--chart-3)] text-black"
-    default:
-      return "border-black bg-card text-foreground"
-  }
-}
-
-function formatStatusLabel(status: string): string {
-  return status.replaceAll("_", " ")
 }
 
 type EpicListProps = {
@@ -103,6 +83,7 @@ export function EpicList({ lists, selectedEpicId = null }: EpicListProps) {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-10" />
                     <TableHead>ID</TableHead>
                     <TableHead>Title</TableHead>
                     <TableHead>Points</TableHead>
@@ -123,6 +104,16 @@ export function EpicList({ lists, selectedEpicId = null }: EpicListProps) {
                           "hover:bg-muted/40"
                         )}
                       >
+                        <TableCell className="w-10 pr-0">
+                          <ViewWorkItemButton
+                            itemRef={{
+                              kind: "epic",
+                              id: epic.id,
+                              title: epic.title,
+                              filePath: epic.filePath,
+                            }}
+                          />
+                        </TableCell>
                         <TableCell className="font-mono text-xs">
                           <Link
                             href={`/board?epic=${encodeURIComponent(epic.id)}`}
@@ -148,12 +139,7 @@ export function EpicList({ lists, selectedEpicId = null }: EpicListProps) {
                           {formatDurationMinutes(epic.actualMinutes)}
                         </TableCell>
                         <TableCell>
-                          <Badge
-                            variant="outline"
-                            className={cn(statusBadgeClass(epic.status))}
-                          >
-                            {formatStatusLabel(epic.status)}
-                          </Badge>
+                          <StatusBadge status={epic.status} />
                         </TableCell>
                       </TableRow>
                     )

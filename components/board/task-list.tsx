@@ -13,42 +13,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { cn } from "@/lib/utils"
+import { StatusBadge, TypeBadge } from "@/components/board/status-badge"
+import { ViewWorkItemButton } from "@/components/board/work-item-sheet"
 import { formatDurationMinutes } from "@/lib/format-duration"
 import type { StoryItemList } from "@/lib/taskmark/item-types"
 
 function formatPoints(value: number | null): string {
   if (value === null) return "—"
   return String(value)
-}
-
-function statusBadgeClass(status: string): string {
-  switch (status) {
-    case "done":
-      return "border-black bg-[var(--chart-4)] text-black"
-    case "in_progress":
-      return "border-black bg-[var(--chart-1)] text-black"
-    case "blocked":
-      return "border-black bg-destructive text-destructive-foreground"
-    case "cancelled":
-      return "border-black bg-muted text-muted-foreground line-through"
-    case "backlog":
-      return "border-black bg-[var(--chart-3)] text-black"
-    default:
-      return "border-black bg-card text-foreground"
-  }
-}
-
-function typeBadgeClass(type: string): string {
-  if (type === "bug") {
-    return "border-black bg-destructive/15 text-destructive"
-  }
-  return "border-black bg-[var(--chart-2)] text-black"
-}
-
-function formatStatusLabel(status: string): string {
-  return status.replaceAll("_", " ")
 }
 
 type TaskListProps = {
@@ -96,6 +68,7 @@ export function TaskList({ list }: TaskListProps) {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-10" />
                 <TableHead>ID</TableHead>
                 <TableHead>Type</TableHead>
                 <TableHead>Title</TableHead>
@@ -109,16 +82,22 @@ export function TaskList({ list }: TaskListProps) {
             <TableBody>
               {items.map((item) => (
                 <TableRow key={`${project.id}:${item.id}:${item.filePath}`}>
+                  <TableCell className="w-10 pr-0">
+                    <ViewWorkItemButton
+                      itemRef={{
+                        kind: "item",
+                        id: item.id,
+                        title: item.title,
+                        filePath: item.filePath,
+                        itemType: item.type,
+                      }}
+                    />
+                  </TableCell>
                   <TableCell className="font-mono text-xs">
                     {item.id}
                   </TableCell>
                   <TableCell>
-                    <Badge
-                      variant="outline"
-                      className={cn(typeBadgeClass(item.type))}
-                    >
-                      {item.type}
-                    </Badge>
+                    <TypeBadge type={item.type} />
                   </TableCell>
                   <TableCell className="max-w-[18rem] whitespace-normal font-medium">
                     {item.title}
@@ -132,12 +111,7 @@ export function TaskList({ list }: TaskListProps) {
                     {formatDurationMinutes(item.actualMinutes)}
                   </TableCell>
                   <TableCell>
-                    <Badge
-                      variant="outline"
-                      className={cn(statusBadgeClass(item.status))}
-                    >
-                      {formatStatusLabel(item.status)}
-                    </Badge>
+                    <StatusBadge status={item.status} />
                   </TableCell>
                 </TableRow>
               ))}
