@@ -129,8 +129,8 @@ function CommitsTable({ rows }: { rows: CommitRow[] }) {
     return <p className="text-sm text-muted-foreground">No commits logged.</p>
   }
   return (
-    <div className="overflow-x-auto rounded border-2 border-border">
-      <table className="w-full min-w-[28rem] text-left text-xs">
+    <div className="w-full overflow-x-auto rounded border-2 border-border">
+      <table className="w-full text-left text-xs">
         <thead className="bg-muted/50 font-head">
           <tr>
             <th className="px-2 py-1.5">SHA</th>
@@ -159,8 +159,8 @@ function WorkLogTable({ rows }: { rows: WorkLogRow[] }) {
     return <p className="text-sm text-muted-foreground">No work sessions logged.</p>
   }
   return (
-    <div className="overflow-x-auto rounded border-2 border-border">
-      <table className="w-full min-w-[28rem] text-left text-xs">
+    <div className="w-full overflow-x-auto rounded border-2 border-border">
+      <table className="w-full text-left text-xs">
         <thead className="bg-muted/50 font-head">
           <tr>
             <th className="px-2 py-1.5">#</th>
@@ -191,8 +191,8 @@ function PromptTable({ rows }: { rows: PromptFeedbackRow[] }) {
     return <p className="text-sm text-muted-foreground">No prompts logged.</p>
   }
   return (
-    <div className="overflow-x-auto rounded border-2 border-border">
-      <table className="w-full min-w-[28rem] text-left text-xs">
+    <div className="w-full overflow-x-auto rounded border-2 border-border">
+      <table className="w-full text-left text-xs">
         <thead className="bg-muted/50 font-head">
           <tr>
             <th className="px-2 py-1.5">#</th>
@@ -218,7 +218,7 @@ function PromptTable({ rows }: { rows: PromptFeedbackRow[] }) {
 
 function EpicDetailBody({ detail }: { detail: EpicDetail }) {
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex w-full min-w-0 flex-col gap-5">
       <MetaGrid detail={detail} />
       <Separator />
       <Section title="Goal">
@@ -251,7 +251,7 @@ function EpicDetailBody({ detail }: { detail: EpicDetail }) {
 
 function StoryDetailBody({ detail }: { detail: StoryDetail }) {
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex w-full min-w-0 flex-col gap-5">
       <MetaGrid detail={detail} />
       <Separator />
       <Section title="User story">
@@ -284,7 +284,7 @@ function StoryDetailBody({ detail }: { detail: StoryDetail }) {
 
 function ItemDetailBody({ detail }: { detail: ItemDetail }) {
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex w-full min-w-0 flex-col gap-5">
       <MetaGrid detail={detail} />
       <Separator />
       <Section title="Description">
