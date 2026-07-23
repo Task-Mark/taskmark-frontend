@@ -17,6 +17,8 @@ export type EpicSummary = {
   completedAt: string
   /** Stories + tasks + bugs under this epic (story children and epic-direct). */
   workItemCount: number
+  /** Done children among workItemCount (stories + tasks/bugs). */
+  doneWorkItemCount: number
   /** Absolute path to epic.md */
   filePath: string
   project: Pick<DiscoveredProject, "id" | "name" | "projectPath" | "boardPath">

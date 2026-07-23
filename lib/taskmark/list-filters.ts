@@ -72,12 +72,28 @@ export function isCompletedStatus(status: string): boolean {
   return status.trim().toLowerCase() === "done"
 }
 
+/** True when every child is done (and there is at least one child). */
+export function isChildProgressComplete(
+  done?: number,
+  total?: number
+): boolean {
+  if (total == null || done == null) return false
+  return total > 0 && done >= total
+}
+
+/**
+ * When hideCompleted is on, drop rows that are `done` **or** whose child
+ * progress bar is fully complete (epic/story with all children realized).
+ */
 export function passesHideCompleted(
   hideCompleted: boolean,
-  status: string
+  status: string,
+  progress?: { done?: number; total?: number }
 ): boolean {
   if (!hideCompleted) return true
-  return !isCompletedStatus(status)
+  if (isCompletedStatus(status)) return false
+  if (isChildProgressComplete(progress?.done, progress?.total)) return false
+  return true
 }
 
 /** Keep row if it includes any of the selected tags. Empty selection = pass. */
@@ -199,6 +215,9 @@ export type FilterableListRow = WorkItemSearchFields & {
   tags?: readonly string[]
   kind?: string
   epicId?: string
+  /** When set with doneWorkItemCount, used for hide-completed on progress rows. */
+  workItemCount?: number
+  doneWorkItemCount?: number
 }
 
 export function filterListRows<T extends FilterableListRow>(
@@ -214,7 +233,14 @@ export function filterListRows<T extends FilterableListRow>(
     (state.parentKey ? [state.parentKey] : [])
   return rows.filter((row) => {
     if (!matchesWorkItemSearch(state.query, row)) return false
-    if (!passesHideCompleted(state.hideCompleted, row.status)) return false
+    if (
+      !passesHideCompleted(state.hideCompleted, row.status, {
+        done: row.doneWorkItemCount,
+        total: row.workItemCount,
+      })
+    ) {
+      return false
+    }
     if (!matchesAnySelectedTag(state.selectedTags, row.tags)) return false
     if (parentKeys.length > 0) {
       if (!row.epicId) return false

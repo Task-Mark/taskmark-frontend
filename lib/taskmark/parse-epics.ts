@@ -15,7 +15,7 @@ import {
 } from "@/lib/taskmark/frontmatter"
 import { readTimingFields } from "@/lib/taskmark/timing"
 import { sortEpicsGeneralFirst } from "@/lib/taskmark/general-epic"
-import { countWorkItemsUnderEpic } from "@/lib/taskmark/count-leaves"
+import { progressUnderEpic } from "@/lib/taskmark/count-leaves"
 
 function listEpicMarkdownFiles(boardPath: string): string[] {
   const epicsDir = path.join(boardPath, "epics")
@@ -95,6 +95,8 @@ function parseEpicFile(
     }
   }
 
+  const progress = progressUnderEpic(project.boardPath, id)
+
   return {
     epic: {
       id,
@@ -107,7 +109,8 @@ function parseEpicFile(
       tags: asStringArray(frontmatter.tags),
       created: asString(frontmatter.created),
       completedAt: asString(frontmatter.completed_at),
-      workItemCount: countWorkItemsUnderEpic(project.boardPath, id),
+      workItemCount: progress.total,
+      doneWorkItemCount: progress.done,
       filePath,
       project: {
         id: project.id,

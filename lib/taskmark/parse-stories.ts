@@ -14,7 +14,7 @@ import {
   extractFrontmatter,
 } from "@/lib/taskmark/frontmatter"
 import { readTimingFields } from "@/lib/taskmark/timing"
-import { countWorkItemsUnderStory } from "@/lib/taskmark/count-leaves"
+import { progressUnderStory } from "@/lib/taskmark/count-leaves"
 
 type EpicFolder = {
   dirName: string
@@ -155,6 +155,8 @@ function parseStoryFile(
     }
   }
 
+  const progress = progressUnderStory(project.boardPath, epicId, id)
+
   return {
     story: {
       id,
@@ -169,7 +171,8 @@ function parseStoryFile(
       completedAt: asString(frontmatter.completed_at),
       parent: asString(frontmatter.parent),
       epic: asString(frontmatter.epic, epicId),
-      workItemCount: countWorkItemsUnderStory(project.boardPath, epicId, id),
+      workItemCount: progress.total,
+      doneWorkItemCount: progress.done,
       filePath,
       project: {
         id: project.id,

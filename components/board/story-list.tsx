@@ -22,6 +22,7 @@ import {
   IdCreatedTooltip,
   StatusWithSolvedTooltip,
 } from "@/components/board/date-tooltip"
+import { ChildProgressBar } from "@/components/board/child-progress-bar"
 import { ListFiltersBar } from "@/components/board/list-filters-bar"
 import { ListPagination } from "@/components/board/list-pagination"
 import { ViewWorkItemButton } from "@/components/board/work-item-sheet"
@@ -208,10 +209,17 @@ export function StoryList({ list, selectedStoryId = null }: StoryListProps) {
                             )}
                           </TableCell>
                           <TableCell>
-                            <StatusWithSolvedTooltip
-                              status={story.status}
-                              solvedAt={story.completedAt}
-                            />
+                            {story.workItemCount === 0 ? (
+                              <StatusWithSolvedTooltip
+                                status={story.status}
+                                solvedAt={story.completedAt}
+                              />
+                            ) : (
+                              <ChildProgressBar
+                                done={story.doneWorkItemCount}
+                                total={story.workItemCount}
+                              />
+                            )}
                           </TableCell>
                         </TableRow>
                       )

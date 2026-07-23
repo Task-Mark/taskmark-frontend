@@ -20,8 +20,8 @@ import {
 } from "@/components/ui/card"
 import {
   IdCreatedTooltip,
-  StatusWithSolvedTooltip,
 } from "@/components/board/date-tooltip"
+import { ChildProgressBar } from "@/components/board/child-progress-bar"
 import { ListFiltersBar } from "@/components/board/list-filters-bar"
 import { ListPagination } from "@/components/board/list-pagination"
 import { ViewWorkItemButton } from "@/components/board/work-item-sheet"
@@ -59,14 +59,22 @@ function ProjectEpicCard({
   const [query, setQuery] = useState("")
   const [hideCompleted, setHideCompleted] = useState(false)
 
+  const visibleEpics = useMemo(
+    () =>
+      epics.filter(
+        (epic) => !(isGeneralEpic(epic) && epic.workItemCount === 0)
+      ),
+    [epics]
+  )
+
   const filtered = useMemo(
     () =>
-      filterListRows(epics, {
+      filterListRows(visibleEpics, {
         query,
         hideCompleted,
         selectedTags: [],
       }),
-    [epics, query, hideCompleted]
+    [visibleEpics, query, hideCompleted]
   )
 
   const {
@@ -87,7 +95,7 @@ function ProjectEpicCard({
     })
   )
 
-  const hasSourceRows = epics.length > 0
+  const hasSourceRows = visibleEpics.length > 0
   const filtersActive = Boolean(query.trim()) || hideCompleted
 
   return (
@@ -150,7 +158,7 @@ function ProjectEpicCard({
                       <TableHead>Points</TableHead>
                       <TableHead>Est</TableHead>
                       <TableHead>Actual</TableHead>
-                      <TableHead>Status</TableHead>
+                      <TableHead>Progress</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -214,9 +222,9 @@ function ProjectEpicCard({
                             )}
                           </TableCell>
                           <TableCell>
-                            <StatusWithSolvedTooltip
-                              status={epic.status}
-                              solvedAt={epic.completedAt}
+                            <ChildProgressBar
+                              done={epic.doneWorkItemCount}
+                              total={epic.workItemCount}
                             />
                           </TableCell>
                         </TableRow>
