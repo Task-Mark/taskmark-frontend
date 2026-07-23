@@ -68,7 +68,7 @@ export function StoryList({ list, selectedStoryId = null }: StoryListProps) {
           <p className="text-sm text-muted-foreground">
             No stories under this epic yet
             {epicTitle?.toLowerCase() === "general"
-              ? " — unattached stories will appear here."
+              ? " — general user stories will appear here."
               : "."}
           </p>
         ) : (

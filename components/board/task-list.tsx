@@ -63,8 +63,8 @@ export function TaskList({ list }: TaskListProps) {
         {items.length === 0 ? (
           <p className="text-sm text-muted-foreground">
             No tasks or bugs under this story yet
-            {list.storyTitle?.toLowerCase() === "unattached"
-              ? " — orphan tasks will appear here."
+            {list.storyTitle?.toLowerCase() === "epic-direct"
+              ? " — general tasks will appear here."
               : "."}
           </p>
         ) : (

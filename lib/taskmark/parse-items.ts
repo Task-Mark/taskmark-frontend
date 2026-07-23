@@ -84,8 +84,8 @@ export function findStoryFolder(
   return null
 }
 
-function listItemMarkdownFiles(storyDir: string): string[] {
-  const itemsDir = path.join(storyDir, "items")
+function listItemMarkdownFiles(itemsParentDir: string): string[] {
+  const itemsDir = path.join(itemsParentDir, "items")
   let entries: fs.Dirent[]
   try {
     entries = fs.readdirSync(itemsDir, { withFileTypes: true })
@@ -116,7 +116,7 @@ function resolveItemType(
 function parseItemFile(
   filePath: string,
   project: DiscoveredProject,
-  storyId: string,
+  parentId: string,
   epicId: string
 ): { item?: ItemSummary; error?: ItemParseError } {
   let raw: string
@@ -128,7 +128,7 @@ function parseItemFile(
         filePath,
         projectId: project.id,
         projectName: project.name,
-        storyId,
+        storyId: parentId,
         message: err instanceof Error ? err.message : "Failed to read file",
       },
     }
@@ -143,7 +143,7 @@ function parseItemFile(
         filePath,
         projectId: project.id,
         projectName: project.name,
-        storyId,
+        storyId: parentId,
         message:
           err instanceof Error ? err.message : "Invalid YAML frontmatter",
       },
@@ -156,7 +156,7 @@ function parseItemFile(
         filePath,
         projectId: project.id,
         projectName: project.name,
-        storyId,
+        storyId: parentId,
         message: "Missing or invalid YAML frontmatter",
       },
     }
@@ -170,7 +170,7 @@ function parseItemFile(
         filePath,
         projectId: project.id,
         projectName: project.name,
-        storyId,
+        storyId: parentId,
         message: "Frontmatter requires id and title",
       },
     }
@@ -187,7 +187,7 @@ function parseItemFile(
       points: asNumberOrNull(frontmatter.points),
       ...readTimingFields(frontmatter),
       tags: asStringArray(frontmatter.tags),
-      parent: asString(frontmatter.parent, storyId),
+      parent: asString(frontmatter.parent, parentId),
       epic: asString(frontmatter.epic, epicId),
       filePath,
       project: {
@@ -257,6 +257,56 @@ export function parseItemsForStory(
     epicId,
     storyId,
     storyTitle: folder.title || null,
+    items,
+    errors,
+  }
+}
+
+/**
+ * Parse tasks/bugs living directly under an epic (epics/{E}/items/), no story.
+ */
+export function parseItemsForEpic(
+  project: DiscoveredProject,
+  epicId: string
+): StoryItemList {
+  const epic = findEpicFolder(project.boardPath, epicId)
+  if (!epic) {
+    return {
+      project,
+      epicId,
+      storyId: epicId,
+      storyTitle: null,
+      items: [],
+      errors: [
+        {
+          filePath: path.join(project.boardPath, "epics"),
+          projectId: project.id,
+          projectName: project.name,
+          storyId: epicId,
+          message: `Epic ${epicId} not found under this board`,
+        },
+      ],
+    }
+  }
+
+  const epicDir = path.join(project.boardPath, "epics", epic.dirName)
+  const files = listItemMarkdownFiles(epicDir)
+  const items: ItemSummary[] = []
+  const errors: ItemParseError[] = []
+
+  for (const filePath of files) {
+    const result = parseItemFile(filePath, project, epicId, epicId)
+    if (result.item) items.push(result.item)
+    if (result.error) errors.push(result.error)
+  }
+
+  items.sort((a, b) => a.id.localeCompare(b.id))
+
+  return {
+    project,
+    epicId,
+    storyId: epicId,
+    storyTitle: "Epic-direct",
     items,
     errors,
   }

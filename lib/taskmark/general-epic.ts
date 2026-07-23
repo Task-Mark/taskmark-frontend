@@ -1,4 +1,4 @@
-/** Reserved default epic for unattached stories/tasks. */
+/** Reserved default epic for general tasks and user stories. */
 export function isGeneralEpic(epic: {
   id: string
   title: string

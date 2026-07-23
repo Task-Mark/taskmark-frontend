@@ -12,7 +12,7 @@ import {
   getMasterFoldersCookie,
 } from "@/lib/taskmark/cookies"
 import { parseEpicsForProject } from "@/lib/taskmark/parse-epics"
-import { parseItemsForStory } from "@/lib/taskmark/parse-items"
+import { parseItemsForEpic, parseItemsForStory } from "@/lib/taskmark/parse-items"
 import { parseStoriesForEpic } from "@/lib/taskmark/parse-stories"
 import { loadConfiguredWorkspace } from "@/lib/taskmark/workspace"
 
@@ -75,6 +75,11 @@ export default async function BoardPage({ searchParams }: BoardPageProps) {
       ? parseItemsForStory(activeProject, selectedEpicId, selectedStoryId)
       : null
 
+  const epicItemList =
+    selectedEpicId != null && selectedStoryId == null
+      ? parseItemsForEpic(activeProject, selectedEpicId)
+      : null
+
   return (
     <WorkItemSheetProvider>
       <div className="min-h-svh bg-[linear-gradient(180deg,_#fff_0%,_#f7f4ff_100%)]">
@@ -130,9 +135,38 @@ export default async function BoardPage({ searchParams }: BoardPageProps) {
                 {storyList.errors.length > 0
                   ? ` · ${storyList.errors.length} issue${storyList.errors.length === 1 ? "" : "s"}`
                   : ""}
-                {!selectedStoryId ? " · select a story to view tasks" : ""}
+                {!selectedStoryId
+                  ? " · select a story for its tasks, or use general tasks below"
+                  : ""}
               </p>
               <StoryList list={storyList} selectedStoryId={selectedStoryId} />
+            </div>
+          ) : null}
+
+          {epicItemList ? (
+            <div className="flex flex-col gap-3">
+              <div className="flex items-baseline justify-between gap-3">
+                <h2 className="font-head text-2xl tracking-tight">
+                  Tasks for {epicItemList.epicId}
+                  {list.epics.find((e) => e.id === epicItemList.epicId)?.title.toLowerCase() ===
+                  "general"
+                    ? " (general tasks)"
+                    : " (no story)"}
+                </h2>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                {epicItemList.items.length}{" "}
+                {list.epics
+                  .find((e) => e.id === epicItemList.epicId)
+                  ?.title.toLowerCase() === "general"
+                  ? "general task"
+                  : "epic-direct item"}
+                {epicItemList.items.length === 1 ? "" : "s"}
+                {epicItemList.errors.length > 0
+                  ? ` · ${epicItemList.errors.length} issue${epicItemList.errors.length === 1 ? "" : "s"}`
+                  : ""}
+              </p>
+              <TaskList list={epicItemList} />
             </div>
           ) : null}
 

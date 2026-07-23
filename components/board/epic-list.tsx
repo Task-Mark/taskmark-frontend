@@ -79,7 +79,7 @@ export function EpicList({ lists, selectedEpicId = null }: EpicListProps) {
             {epics.length === 0 ? (
               <p className="text-sm text-muted-foreground">
                 No epics in this board yet. Init should seed a General epic for
-                unattached work.
+                general tasks and user stories.
               </p>
             ) : (
               <Table>
@@ -134,7 +134,7 @@ export function EpicList({ lists, selectedEpicId = null }: EpicListProps) {
                             {epic.title}
                             {general ? (
                               <span className="ml-2 text-xs font-normal text-muted-foreground">
-                                unattached work
+                                general tasks and user stories
                               </span>
                             ) : null}
                           </Link>
