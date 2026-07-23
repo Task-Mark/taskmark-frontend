@@ -1,3 +1,5 @@
+"use client"
+
 import {
   Table,
   TableBody,
@@ -18,7 +20,9 @@ import {
   IdCreatedTooltip,
   StatusWithSolvedTooltip,
 } from "@/components/board/date-tooltip"
+import { ListPagination } from "@/components/board/list-pagination"
 import { ViewWorkItemButton } from "@/components/board/work-item-sheet"
+import { usePaginatedRows } from "@/hooks/use-paginated-rows"
 import { formatActualDuration, formatDurationMinutes } from "@/lib/format-duration"
 import type { StoryItemList } from "@/lib/taskmark/item-types"
 
@@ -34,6 +38,15 @@ type TaskListProps = {
 export function TaskList({ list }: TaskListProps) {
   const { project, storyId, storyTitle, items, errors } = list
   const heading = storyTitle ? `${storyId}: ${storyTitle}` : storyId
+  const {
+    pageRows,
+    page,
+    pageSize,
+    totalCount,
+    totalPages,
+    setPage,
+    setPageSize,
+  } = usePaginatedRows(items, storyId)
 
   return (
     <Card>
@@ -72,61 +85,71 @@ export function TaskList({ list }: TaskListProps) {
               : "."}
           </p>
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-10" />
-                <TableHead>ID</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Title</TableHead>
-                <TableHead>Size</TableHead>
-                <TableHead>Points</TableHead>
-                <TableHead>Est</TableHead>
-                <TableHead>Actual</TableHead>
-                <TableHead>Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {items.map((item) => (
-                <TableRow key={`${project.id}:${item.id}:${item.filePath}`}>
-                  <TableCell className="w-10 pr-0">
-                    <ViewWorkItemButton
-                      itemRef={{
-                        kind: "item",
-                        id: item.id,
-                        title: item.title,
-                        filePath: item.filePath,
-                        itemType: item.type,
-                      }}
-                    />
-                  </TableCell>
-                  <TableCell className="font-mono text-xs">
-                    <IdCreatedTooltip id={item.id} created={item.created} />
-                  </TableCell>
-                  <TableCell>
-                    <TypeBadge type={item.type} />
-                  </TableCell>
-                  <TableCell className="max-w-[18rem] whitespace-normal font-medium">
-                    {item.title}
-                  </TableCell>
-                  <TableCell>{item.size}</TableCell>
-                  <TableCell>{formatPoints(item.points)}</TableCell>
-                  <TableCell>
-                    {formatDurationMinutes(item.estimateMinutes)}
-                  </TableCell>
-                  <TableCell>
-                    {formatActualDuration(item.actualMs, item.actualMinutes)}
-                  </TableCell>
-                  <TableCell>
-                    <StatusWithSolvedTooltip
-                      status={item.status}
-                      solvedAt={item.completedAt}
-                    />
-                  </TableCell>
+          <>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-10" />
+                  <TableHead>ID</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Title</TableHead>
+                  <TableHead>Size</TableHead>
+                  <TableHead>Points</TableHead>
+                  <TableHead>Est</TableHead>
+                  <TableHead>Actual</TableHead>
+                  <TableHead>Status</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {pageRows.map((item) => (
+                  <TableRow key={`${project.id}:${item.id}:${item.filePath}`}>
+                    <TableCell className="w-10 pr-0">
+                      <ViewWorkItemButton
+                        itemRef={{
+                          kind: "item",
+                          id: item.id,
+                          title: item.title,
+                          filePath: item.filePath,
+                          itemType: item.type,
+                        }}
+                      />
+                    </TableCell>
+                    <TableCell className="font-mono text-xs">
+                      <IdCreatedTooltip id={item.id} created={item.created} />
+                    </TableCell>
+                    <TableCell>
+                      <TypeBadge type={item.type} />
+                    </TableCell>
+                    <TableCell className="max-w-[18rem] whitespace-normal font-medium">
+                      {item.title}
+                    </TableCell>
+                    <TableCell>{item.size}</TableCell>
+                    <TableCell>{formatPoints(item.points)}</TableCell>
+                    <TableCell>
+                      {formatDurationMinutes(item.estimateMinutes)}
+                    </TableCell>
+                    <TableCell>
+                      {formatActualDuration(item.actualMs, item.actualMinutes)}
+                    </TableCell>
+                    <TableCell>
+                      <StatusWithSolvedTooltip
+                        status={item.status}
+                        solvedAt={item.completedAt}
+                      />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+            <ListPagination
+              page={page}
+              totalPages={totalPages}
+              totalCount={totalCount}
+              pageSize={pageSize}
+              onPageChange={setPage}
+              onPageSizeChange={setPageSize}
+            />
+          </>
         )}
       </CardContent>
     </Card>

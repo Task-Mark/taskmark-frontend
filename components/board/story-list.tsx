@@ -1,3 +1,5 @@
+"use client"
+
 import Link from "next/link"
 
 import {
@@ -19,7 +21,9 @@ import {
   IdCreatedTooltip,
   StatusWithSolvedTooltip,
 } from "@/components/board/date-tooltip"
+import { ListPagination } from "@/components/board/list-pagination"
 import { ViewWorkItemButton } from "@/components/board/work-item-sheet"
+import { usePaginatedRows } from "@/hooks/use-paginated-rows"
 import { cn } from "@/lib/utils"
 import { formatActualDuration, formatDurationMinutes } from "@/lib/format-duration"
 import type { EpicStoryList } from "@/lib/taskmark/story-types"
@@ -37,6 +41,15 @@ type StoryListProps = {
 export function StoryList({ list, selectedStoryId = null }: StoryListProps) {
   const { project, epicId, epicTitle, stories, errors } = list
   const heading = epicTitle ? `${epicId}: ${epicTitle}` : epicId
+  const {
+    pageRows,
+    page,
+    pageSize,
+    totalCount,
+    totalPages,
+    setPage,
+    setPageSize,
+  } = usePaginatedRows(stories, epicId)
 
   return (
     <Card>
@@ -75,84 +88,94 @@ export function StoryList({ list, selectedStoryId = null }: StoryListProps) {
               : "."}
           </p>
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-10" />
-                <TableHead>ID</TableHead>
-                <TableHead>Title</TableHead>
-                <TableHead>Work items</TableHead>
-                <TableHead>Size</TableHead>
-                <TableHead>Points</TableHead>
-                <TableHead>Est</TableHead>
-                <TableHead>Actual</TableHead>
-                <TableHead>Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {stories.map((story) => {
-                const selected = selectedStoryId === story.id
-                const href = `/board?epic=${encodeURIComponent(epicId)}&story=${encodeURIComponent(story.id)}`
-                return (
-                  <TableRow
-                    key={`${project.id}:${story.id}:${story.filePath}`}
-                    data-state={selected ? "selected" : undefined}
-                    className={cn(
-                      selected && "bg-muted/60",
-                      "hover:bg-muted/40"
-                    )}
-                  >
-                    <TableCell className="w-10 pr-0">
-                      <ViewWorkItemButton
-                        itemRef={{
-                          kind: "story",
-                          id: story.id,
-                          title: story.title,
-                          filePath: story.filePath,
-                        }}
-                      />
-                    </TableCell>
-                    <TableCell className="font-mono text-xs">
-                      <IdCreatedTooltip id={story.id} created={story.created}>
+          <>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-10" />
+                  <TableHead>ID</TableHead>
+                  <TableHead>Title</TableHead>
+                  <TableHead>Work items</TableHead>
+                  <TableHead>Size</TableHead>
+                  <TableHead>Points</TableHead>
+                  <TableHead>Est</TableHead>
+                  <TableHead>Actual</TableHead>
+                  <TableHead>Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {pageRows.map((story) => {
+                  const selected = selectedStoryId === story.id
+                  const href = `/board?epic=${encodeURIComponent(epicId)}&story=${encodeURIComponent(story.id)}`
+                  return (
+                    <TableRow
+                      key={`${project.id}:${story.id}:${story.filePath}`}
+                      data-state={selected ? "selected" : undefined}
+                      className={cn(
+                        selected && "bg-muted/60",
+                        "hover:bg-muted/40"
+                      )}
+                    >
+                      <TableCell className="w-10 pr-0">
+                        <ViewWorkItemButton
+                          itemRef={{
+                            kind: "story",
+                            id: story.id,
+                            title: story.title,
+                            filePath: story.filePath,
+                          }}
+                        />
+                      </TableCell>
+                      <TableCell className="font-mono text-xs">
+                        <IdCreatedTooltip id={story.id} created={story.created}>
+                          <Link
+                            href={href}
+                            className="underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                            aria-current={selected ? "true" : undefined}
+                          >
+                            {story.id}
+                          </Link>
+                        </IdCreatedTooltip>
+                      </TableCell>
+                      <TableCell className="max-w-[18rem] whitespace-normal font-medium">
                         <Link
                           href={href}
                           className="underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-                          aria-current={selected ? "true" : undefined}
                         >
-                          {story.id}
+                          {story.title}
                         </Link>
-                      </IdCreatedTooltip>
-                    </TableCell>
-                    <TableCell className="max-w-[18rem] whitespace-normal font-medium">
-                      <Link
-                        href={href}
-                        className="underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-                      >
-                        {story.title}
-                      </Link>
-                    </TableCell>
-                    <TableCell className="tabular-nums">
-                      {story.workItemCount}
-                    </TableCell>
-                    <TableCell>{story.size}</TableCell>
-                    <TableCell>{formatPoints(story.points)}</TableCell>
-                    <TableCell>
-                      {formatDurationMinutes(story.estimateMinutes)}
-                    </TableCell>
-                    <TableCell>
-                      {formatActualDuration(story.actualMs, story.actualMinutes)}
-                    </TableCell>
-                    <TableCell>
-                      <StatusWithSolvedTooltip
-                        status={story.status}
-                        solvedAt={story.completedAt}
-                      />
-                    </TableCell>
-                  </TableRow>
-                )
-              })}
-            </TableBody>
-          </Table>
+                      </TableCell>
+                      <TableCell className="tabular-nums">
+                        {story.workItemCount}
+                      </TableCell>
+                      <TableCell>{story.size}</TableCell>
+                      <TableCell>{formatPoints(story.points)}</TableCell>
+                      <TableCell>
+                        {formatDurationMinutes(story.estimateMinutes)}
+                      </TableCell>
+                      <TableCell>
+                        {formatActualDuration(story.actualMs, story.actualMinutes)}
+                      </TableCell>
+                      <TableCell>
+                        <StatusWithSolvedTooltip
+                          status={story.status}
+                          solvedAt={story.completedAt}
+                        />
+                      </TableCell>
+                    </TableRow>
+                  )
+                })}
+              </TableBody>
+            </Table>
+            <ListPagination
+              page={page}
+              totalPages={totalPages}
+              totalCount={totalCount}
+              pageSize={pageSize}
+              onPageChange={setPage}
+              onPageSizeChange={setPageSize}
+            />
+          </>
         )}
       </CardContent>
     </Card>

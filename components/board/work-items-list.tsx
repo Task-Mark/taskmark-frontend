@@ -1,3 +1,5 @@
+"use client"
+
 import {
   Table,
   TableBody,
@@ -22,7 +24,9 @@ import {
   IdCreatedTooltip,
   StatusWithSolvedTooltip,
 } from "@/components/board/date-tooltip"
+import { ListPagination } from "@/components/board/list-pagination"
 import { ViewWorkItemButton } from "@/components/board/work-item-sheet"
+import { usePaginatedRows } from "@/hooks/use-paginated-rows"
 import { formatActualDuration, formatDurationMinutes } from "@/lib/format-duration"
 import type { WorkItemsViewList } from "@/lib/taskmark/flat-work-item-types"
 
@@ -37,6 +41,15 @@ type WorkItemsListProps = {
 
 export function WorkItemsList({ list }: WorkItemsListProps) {
   const { project, rows, errors } = list
+  const {
+    pageRows,
+    page,
+    pageSize,
+    totalCount,
+    totalPages,
+    setPage,
+    setPageSize,
+  } = usePaginatedRows(rows, project.id)
 
   return (
     <Card>
@@ -76,75 +89,87 @@ export function WorkItemsList({ list }: WorkItemsListProps) {
             No stories or epic-direct tasks on this board yet.
           </p>
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-10" />
-                <TableHead>ID</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Title</TableHead>
-                <TableHead>Epic</TableHead>
-                <TableHead>Size</TableHead>
-                <TableHead>Points</TableHead>
-                <TableHead>Est</TableHead>
-                <TableHead>Actual</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Priority</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {rows.map((row) => {
-                const sheetKind = row.kind === "story" ? "story" : "item"
-                return (
-                  <TableRow key={`${project.id}:${row.kind}:${row.id}:${row.filePath}`}>
-                    <TableCell className="w-10 pr-0">
-                      <ViewWorkItemButton
-                        itemRef={{
-                          kind: sheetKind,
-                          id: row.id,
-                          title: row.title,
-                          filePath: row.filePath,
-                          itemType:
-                            row.kind === "task" || row.kind === "bug"
-                              ? row.kind
-                              : undefined,
-                        }}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <IdCreatedTooltip id={row.id} created={row.created} />
-                    </TableCell>
-                    <TableCell>
-                      <TypeBadge type={row.kind} />
-                    </TableCell>
-                    <TableCell className="max-w-[16rem] whitespace-normal font-medium">
-                      {row.title}
-                    </TableCell>
-                    <TableCell>
-                      <ParentTagBadge id={row.epicId} title={row.epicTitle} />
-                    </TableCell>
-                    <TableCell>{row.size}</TableCell>
-                    <TableCell>{formatPoints(row.points)}</TableCell>
-                    <TableCell>
-                      {formatDurationMinutes(row.estimateMinutes)}
-                    </TableCell>
-                    <TableCell>
-                      {formatActualDuration(row.actualMs, row.actualMinutes)}
-                    </TableCell>
-                    <TableCell>
-                      <StatusWithSolvedTooltip
-                        status={row.status}
-                        solvedAt={row.completedAt}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <PriorityBadge priority={row.priority} />
-                    </TableCell>
-                  </TableRow>
-                )
-              })}
-            </TableBody>
-          </Table>
+          <>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-10" />
+                  <TableHead>ID</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Title</TableHead>
+                  <TableHead>Epic</TableHead>
+                  <TableHead>Size</TableHead>
+                  <TableHead>Points</TableHead>
+                  <TableHead>Est</TableHead>
+                  <TableHead>Actual</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Priority</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {pageRows.map((row) => {
+                  const sheetKind = row.kind === "story" ? "story" : "item"
+                  return (
+                    <TableRow
+                      key={`${project.id}:${row.kind}:${row.id}:${row.filePath}`}
+                    >
+                      <TableCell className="w-10 pr-0">
+                        <ViewWorkItemButton
+                          itemRef={{
+                            kind: sheetKind,
+                            id: row.id,
+                            title: row.title,
+                            filePath: row.filePath,
+                            itemType:
+                              row.kind === "task" || row.kind === "bug"
+                                ? row.kind
+                                : undefined,
+                          }}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <IdCreatedTooltip id={row.id} created={row.created} />
+                      </TableCell>
+                      <TableCell>
+                        <TypeBadge type={row.kind} />
+                      </TableCell>
+                      <TableCell className="max-w-[16rem] whitespace-normal font-medium">
+                        {row.title}
+                      </TableCell>
+                      <TableCell>
+                        <ParentTagBadge id={row.epicId} title={row.epicTitle} />
+                      </TableCell>
+                      <TableCell>{row.size}</TableCell>
+                      <TableCell>{formatPoints(row.points)}</TableCell>
+                      <TableCell>
+                        {formatDurationMinutes(row.estimateMinutes)}
+                      </TableCell>
+                      <TableCell>
+                        {formatActualDuration(row.actualMs, row.actualMinutes)}
+                      </TableCell>
+                      <TableCell>
+                        <StatusWithSolvedTooltip
+                          status={row.status}
+                          solvedAt={row.completedAt}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <PriorityBadge priority={row.priority} />
+                      </TableCell>
+                    </TableRow>
+                  )
+                })}
+              </TableBody>
+            </Table>
+            <ListPagination
+              page={page}
+              totalPages={totalPages}
+              totalCount={totalCount}
+              pageSize={pageSize}
+              onPageChange={setPage}
+              onPageSizeChange={setPageSize}
+            />
+          </>
         )}
       </CardContent>
     </Card>
