@@ -275,6 +275,7 @@ export function parseWorkItemsViewForProject(
         epicId: epic.id,
         epicTitle: epic.title,
         created: story.created,
+        completedAt: story.completedAt,
         filePath: story.filePath,
         project: story.project,
       })
@@ -299,6 +300,7 @@ export function parseWorkItemsViewForProject(
         epicId: epic.id,
         epicTitle: epic.title,
         created: item.created,
+        completedAt: item.completedAt,
         filePath: item.filePath,
         project: item.project,
       })

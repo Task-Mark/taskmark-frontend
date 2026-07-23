@@ -13,7 +13,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { StatusBadge, TypeBadge } from "@/components/board/status-badge"
+import { TypeBadge } from "@/components/board/status-badge"
+import {
+  IdCreatedTooltip,
+  StatusWithSolvedTooltip,
+} from "@/components/board/date-tooltip"
 import { ViewWorkItemButton } from "@/components/board/work-item-sheet"
 import { formatActualDuration, formatDurationMinutes } from "@/lib/format-duration"
 import type { StoryItemList } from "@/lib/taskmark/item-types"
@@ -97,7 +101,7 @@ export function TaskList({ list }: TaskListProps) {
                     />
                   </TableCell>
                   <TableCell className="font-mono text-xs">
-                    {item.id}
+                    <IdCreatedTooltip id={item.id} created={item.created} />
                   </TableCell>
                   <TableCell>
                     <TypeBadge type={item.type} />
@@ -114,7 +118,10 @@ export function TaskList({ list }: TaskListProps) {
                     {formatActualDuration(item.actualMs, item.actualMinutes)}
                   </TableCell>
                   <TableCell>
-                    <StatusBadge status={item.status} />
+                    <StatusWithSolvedTooltip
+                      status={item.status}
+                      solvedAt={item.completedAt}
+                    />
                   </TableCell>
                 </TableRow>
               ))}

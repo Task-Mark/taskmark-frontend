@@ -105,6 +105,8 @@ function parseEpicFile(
       points: asNumberOrNull(frontmatter.points),
       ...readTimingFields(frontmatter),
       tags: asStringArray(frontmatter.tags),
+      created: asString(frontmatter.created),
+      completedAt: asString(frontmatter.completed_at),
       workItemCount: countWorkItemsUnderEpic(project.boardPath, id),
       filePath,
       project: {

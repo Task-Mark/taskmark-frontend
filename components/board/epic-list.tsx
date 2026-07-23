@@ -15,7 +15,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { StatusBadge } from "@/components/board/status-badge"
+import {
+  IdCreatedTooltip,
+  StatusWithSolvedTooltip,
+} from "@/components/board/date-tooltip"
 import { ViewWorkItemButton } from "@/components/board/work-item-sheet"
 import { cn } from "@/lib/utils"
 import { formatActualDuration, formatDurationMinutes } from "@/lib/format-duration"
@@ -119,13 +122,15 @@ export function EpicList({ lists, selectedEpicId = null }: EpicListProps) {
                           />
                         </TableCell>
                         <TableCell className="font-mono text-xs">
-                          <Link
-                            href={`/board?epic=${encodeURIComponent(epic.id)}`}
-                            className="underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-                            aria-current={selected ? "true" : undefined}
-                          >
-                            {epic.id}
-                          </Link>
+                          <IdCreatedTooltip id={epic.id} created={epic.created}>
+                            <Link
+                              href={`/board?epic=${encodeURIComponent(epic.id)}`}
+                              className="underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                              aria-current={selected ? "true" : undefined}
+                            >
+                              {epic.id}
+                            </Link>
+                          </IdCreatedTooltip>
                         </TableCell>
                         <TableCell className="max-w-[18rem] whitespace-normal font-medium">
                           <Link
@@ -151,7 +156,10 @@ export function EpicList({ lists, selectedEpicId = null }: EpicListProps) {
                           {formatActualDuration(epic.actualMs, epic.actualMinutes)}
                         </TableCell>
                         <TableCell>
-                          <StatusBadge status={epic.status} />
+                          <StatusWithSolvedTooltip
+                            status={epic.status}
+                            solvedAt={epic.completedAt}
+                          />
                         </TableCell>
                       </TableRow>
                     )

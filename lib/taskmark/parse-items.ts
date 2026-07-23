@@ -188,6 +188,7 @@ function parseItemFile(
       ...readTimingFields(frontmatter),
       tags: asStringArray(frontmatter.tags),
       created: asString(frontmatter.created),
+      completedAt: asString(frontmatter.completed_at),
       parent: asString(frontmatter.parent, parentId),
       epic: asString(frontmatter.epic, epicId),
       filePath,

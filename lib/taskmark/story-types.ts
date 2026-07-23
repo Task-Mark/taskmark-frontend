@@ -13,6 +13,8 @@ export type StorySummary = {
   tags: string[]
   /** Frontmatter created date (YYYY-MM-DD or ISO). */
   created: string
+  /** Frontmatter completed_at (ISO) when solved; empty if open. */
+  completedAt: string
   parent: string
   epic: string
   /** Tasks + bugs under this story. */

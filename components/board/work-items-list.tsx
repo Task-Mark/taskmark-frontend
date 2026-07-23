@@ -16,9 +16,12 @@ import {
 import { ParentTagBadge } from "@/components/board/parent-tag-badge"
 import {
   PriorityBadge,
-  StatusBadge,
   TypeBadge,
 } from "@/components/board/status-badge"
+import {
+  IdCreatedTooltip,
+  StatusWithSolvedTooltip,
+} from "@/components/board/date-tooltip"
 import { ViewWorkItemButton } from "@/components/board/work-item-sheet"
 import { formatActualDuration, formatDurationMinutes } from "@/lib/format-duration"
 import type { WorkItemsViewList } from "@/lib/taskmark/flat-work-item-types"
@@ -108,7 +111,9 @@ export function WorkItemsList({ list }: WorkItemsListProps) {
                         }}
                       />
                     </TableCell>
-                    <TableCell className="font-mono text-xs">{row.id}</TableCell>
+                    <TableCell>
+                      <IdCreatedTooltip id={row.id} created={row.created} />
+                    </TableCell>
                     <TableCell>
                       <TypeBadge type={row.kind} />
                     </TableCell>
@@ -127,7 +132,10 @@ export function WorkItemsList({ list }: WorkItemsListProps) {
                       {formatActualDuration(row.actualMs, row.actualMinutes)}
                     </TableCell>
                     <TableCell>
-                      <StatusBadge status={row.status} />
+                      <StatusWithSolvedTooltip
+                        status={row.status}
+                        solvedAt={row.completedAt}
+                      />
                     </TableCell>
                     <TableCell>
                       <PriorityBadge priority={row.priority} />

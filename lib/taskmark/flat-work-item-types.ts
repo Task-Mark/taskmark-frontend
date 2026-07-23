@@ -92,6 +92,8 @@ export type WorkItemsViewRow = {
   epicId: string
   epicTitle: string
   created: string
+  /** Frontmatter completed_at when solved; empty if open. */
+  completedAt: string
   filePath: string
   project: Pick<DiscoveredProject, "id" | "name" | "projectPath" | "boardPath">
 }

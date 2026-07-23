@@ -166,6 +166,7 @@ function parseStoryFile(
       ...readTimingFields(frontmatter),
       tags: asStringArray(frontmatter.tags),
       created: asString(frontmatter.created),
+      completedAt: asString(frontmatter.completed_at),
       parent: asString(frontmatter.parent),
       epic: asString(frontmatter.epic, epicId),
       workItemCount: countWorkItemsUnderStory(project.boardPath, epicId, id),

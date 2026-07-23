@@ -15,7 +15,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { StatusBadge } from "@/components/board/status-badge"
+import {
+  IdCreatedTooltip,
+  StatusWithSolvedTooltip,
+} from "@/components/board/date-tooltip"
 import { ViewWorkItemButton } from "@/components/board/work-item-sheet"
 import { cn } from "@/lib/utils"
 import { formatActualDuration, formatDurationMinutes } from "@/lib/format-duration"
@@ -110,13 +113,15 @@ export function StoryList({ list, selectedStoryId = null }: StoryListProps) {
                       />
                     </TableCell>
                     <TableCell className="font-mono text-xs">
-                      <Link
-                        href={href}
-                        className="underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-                        aria-current={selected ? "true" : undefined}
-                      >
-                        {story.id}
-                      </Link>
+                      <IdCreatedTooltip id={story.id} created={story.created}>
+                        <Link
+                          href={href}
+                          className="underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                          aria-current={selected ? "true" : undefined}
+                        >
+                          {story.id}
+                        </Link>
+                      </IdCreatedTooltip>
                     </TableCell>
                     <TableCell className="max-w-[18rem] whitespace-normal font-medium">
                       <Link
@@ -138,7 +143,10 @@ export function StoryList({ list, selectedStoryId = null }: StoryListProps) {
                       {formatActualDuration(story.actualMs, story.actualMinutes)}
                     </TableCell>
                     <TableCell>
-                      <StatusBadge status={story.status} />
+                      <StatusWithSolvedTooltip
+                        status={story.status}
+                        solvedAt={story.completedAt}
+                      />
                     </TableCell>
                   </TableRow>
                 )
