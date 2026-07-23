@@ -101,8 +101,8 @@ export function WorkItemsList({ list }: WorkItemsListProps) {
         <CardDescription>
           <span className="font-medium text-foreground">{project.name}</span>
           <span className="mt-1 block text-xs text-muted-foreground">
-            Stories and epic-direct tasks/bugs · ordered by status, priority,
-            then newest created
+            Stories and epic-direct tasks/bugs · open by status/priority/created;
+            done by newest solved date
           </span>
           <span className="mt-1 block font-mono text-xs">{project.boardPath}</span>
         </CardDescription>

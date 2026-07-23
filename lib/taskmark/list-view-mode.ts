@@ -64,27 +64,71 @@ export function prioritySortRank(priority: string): number {
 
 /**
  * Primary: status (backlog → in_progress → done);
- * secondary: priority (highest first);
- * tertiary: created date (newest first);
+ * For open statuses: priority (highest first), then created (newest first);
+ * For done/cancelled: solved date only (completedAt newest first; no priority);
  * then id.
  */
 export function compareByStatusThenPriority(
-  a: { status: string; priority: string; created?: string; id: string },
-  b: { status: string; priority: string; created?: string; id: string }
+  a: {
+    status: string
+    priority: string
+    created?: string
+    completedAt?: string
+    id: string
+  },
+  b: {
+    status: string
+    priority: string
+    created?: string
+    completedAt?: string
+    id: string
+  }
 ): number {
   const byStatus = statusSortRank(a.status) - statusSortRank(b.status)
   if (byStatus !== 0) return byStatus
+
+  // Solved cohort: newest completed first; ignore priority.
+  if (usesCompletedDate(a.status)) {
+    return compareByDateThenId(a, b, /*preferCompleted*/ true)
+  }
+
   const byPriority =
     prioritySortRank(a.priority) - prioritySortRank(b.priority)
   if (byPriority !== 0) return byPriority
-  const createdA = a.created?.trim() ?? ""
-  const createdB = b.created?.trim() ?? ""
-  if (createdA && createdB) {
-    const byCreated = createdB.localeCompare(createdA)
-    if (byCreated !== 0) return byCreated
-  } else if (createdA !== createdB) {
-    // Missing created sorts after dated items
-    return createdA ? -1 : 1
+
+  return compareByDateThenId(a, b, /*preferCompleted*/ false)
+}
+
+function usesCompletedDate(status: string): boolean {
+  const s = status.trim().toLowerCase()
+  return s === "done" || s === "cancelled"
+}
+
+function compareByDateThenId(
+  a: { created?: string; completedAt?: string; id: string; status: string },
+  b: { created?: string; completedAt?: string; id: string; status: string },
+  preferCompleted: boolean
+): number {
+  const dateA = preferCompleted
+    ? completedOrCreated(a)
+    : (a.created?.trim() ?? "")
+  const dateB = preferCompleted
+    ? completedOrCreated(b)
+    : (b.created?.trim() ?? "")
+  if (dateA && dateB) {
+    const byDate = dateB.localeCompare(dateA)
+    if (byDate !== 0) return byDate
+  } else if (dateA !== dateB) {
+    return dateA ? -1 : 1
   }
   return a.id.localeCompare(b.id)
+}
+
+function completedOrCreated(row: {
+  created?: string
+  completedAt?: string
+}): string {
+  const done = row.completedAt?.trim() ?? ""
+  if (done) return done
+  return row.created?.trim() ?? ""
 }
