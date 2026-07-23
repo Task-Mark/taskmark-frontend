@@ -91,6 +91,7 @@ export type WorkItemsViewRow = {
   actualMs: number | null
   epicId: string
   epicTitle: string
+  tags: string[]
   created: string
   /** Frontmatter completed_at when solved; empty if open. */
   completedAt: string

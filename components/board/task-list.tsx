@@ -1,5 +1,7 @@
 "use client"
 
+import { useMemo, useState } from "react"
+
 import {
   Table,
   TableBody,
@@ -20,11 +22,16 @@ import {
   IdCreatedTooltip,
   StatusWithSolvedTooltip,
 } from "@/components/board/date-tooltip"
+import { ListFiltersBar } from "@/components/board/list-filters-bar"
 import { ListPagination } from "@/components/board/list-pagination"
 import { ViewWorkItemButton } from "@/components/board/work-item-sheet"
 import { usePaginatedRows } from "@/hooks/use-paginated-rows"
 import { formatActualDuration, formatDurationMinutes } from "@/lib/format-duration"
 import type { StoryItemList } from "@/lib/taskmark/item-types"
+import {
+  filterListRows,
+  listFilterResetKey,
+} from "@/lib/taskmark/list-filters"
 
 function formatPoints(value: number | null): string {
   if (value === null) return "—"
@@ -38,6 +45,19 @@ type TaskListProps = {
 export function TaskList({ list }: TaskListProps) {
   const { project, storyId, storyTitle, items, errors } = list
   const heading = storyTitle ? `${storyId}: ${storyTitle}` : storyId
+  const [query, setQuery] = useState("")
+  const [hideCompleted, setHideCompleted] = useState(false)
+
+  const filtered = useMemo(
+    () =>
+      filterListRows(items, {
+        query,
+        hideCompleted,
+        selectedTags: [],
+      }),
+    [items, query, hideCompleted]
+  )
+
   const {
     pageRows,
     page,
@@ -46,7 +66,18 @@ export function TaskList({ list }: TaskListProps) {
     totalPages,
     setPage,
     setPageSize,
-  } = usePaginatedRows(items, storyId)
+  } = usePaginatedRows(
+    filtered,
+    listFilterResetKey(storyId, {
+      query,
+      hideCompleted,
+      parentKey: null,
+      selectedTags: [],
+    })
+  )
+
+  const hasSourceRows = items.length > 0
+  const filtersActive = Boolean(query.trim()) || hideCompleted
 
   return (
     <Card>
@@ -77,7 +108,7 @@ export function TaskList({ list }: TaskListProps) {
           </div>
         ) : null}
 
-        {items.length === 0 ? (
+        {!hasSourceRows ? (
           <p className="text-sm text-muted-foreground">
             No tasks or bugs under this story yet
             {list.storyTitle?.toLowerCase() === "epic-direct"
@@ -86,69 +117,94 @@ export function TaskList({ list }: TaskListProps) {
           </p>
         ) : (
           <>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-10" />
-                  <TableHead>ID</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Title</TableHead>
-                  <TableHead>Size</TableHead>
-                  <TableHead>Points</TableHead>
-                  <TableHead>Est</TableHead>
-                  <TableHead>Actual</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {pageRows.map((item) => (
-                  <TableRow key={`${project.id}:${item.id}:${item.filePath}`}>
-                    <TableCell className="w-10 pr-0">
-                      <ViewWorkItemButton
-                        itemRef={{
-                          kind: "item",
-                          id: item.id,
-                          title: item.title,
-                          filePath: item.filePath,
-                          itemType: item.type,
-                        }}
-                      />
-                    </TableCell>
-                    <TableCell className="font-mono text-xs">
-                      <IdCreatedTooltip id={item.id} created={item.created} />
-                    </TableCell>
-                    <TableCell>
-                      <TypeBadge type={item.type} />
-                    </TableCell>
-                    <TableCell className="max-w-[18rem] whitespace-normal font-medium">
-                      {item.title}
-                    </TableCell>
-                    <TableCell>{item.size}</TableCell>
-                    <TableCell>{formatPoints(item.points)}</TableCell>
-                    <TableCell>
-                      {formatDurationMinutes(item.estimateMinutes)}
-                    </TableCell>
-                    <TableCell>
-                      {formatActualDuration(item.actualMs, item.actualMinutes)}
-                    </TableCell>
-                    <TableCell>
-                      <StatusWithSolvedTooltip
-                        status={item.status}
-                        solvedAt={item.completedAt}
-                      />
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-            <ListPagination
-              page={page}
-              totalPages={totalPages}
-              totalCount={totalCount}
-              pageSize={pageSize}
-              onPageChange={setPage}
-              onPageSizeChange={setPageSize}
+            <ListFiltersBar
+              searchId={`task-search-${storyId}`}
+              query={query}
+              onQueryChange={setQuery}
+              hideCompleted={hideCompleted}
+              onHideCompletedChange={setHideCompleted}
             />
+            {filtered.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                {filtersActive
+                  ? "No tasks match the current search or filters."
+                  : "No tasks or bugs under this story yet."}
+              </p>
+            ) : (
+              <>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-10" />
+                      <TableHead>ID</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Title</TableHead>
+                      <TableHead>Size</TableHead>
+                      <TableHead>Points</TableHead>
+                      <TableHead>Est</TableHead>
+                      <TableHead>Actual</TableHead>
+                      <TableHead>Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {pageRows.map((item) => (
+                      <TableRow
+                        key={`${project.id}:${item.id}:${item.filePath}`}
+                      >
+                        <TableCell className="w-10 pr-0">
+                          <ViewWorkItemButton
+                            itemRef={{
+                              kind: "item",
+                              id: item.id,
+                              title: item.title,
+                              filePath: item.filePath,
+                              itemType: item.type,
+                            }}
+                          />
+                        </TableCell>
+                        <TableCell className="font-mono text-xs">
+                          <IdCreatedTooltip
+                            id={item.id}
+                            created={item.created}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <TypeBadge type={item.type} />
+                        </TableCell>
+                        <TableCell className="max-w-[18rem] whitespace-normal font-medium">
+                          {item.title}
+                        </TableCell>
+                        <TableCell>{item.size}</TableCell>
+                        <TableCell>{formatPoints(item.points)}</TableCell>
+                        <TableCell>
+                          {formatDurationMinutes(item.estimateMinutes)}
+                        </TableCell>
+                        <TableCell>
+                          {formatActualDuration(
+                            item.actualMs,
+                            item.actualMinutes
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <StatusWithSolvedTooltip
+                            status={item.status}
+                            solvedAt={item.completedAt}
+                          />
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+                <ListPagination
+                  page={page}
+                  totalPages={totalPages}
+                  totalCount={totalCount}
+                  pageSize={pageSize}
+                  onPageChange={setPage}
+                  onPageSizeChange={setPageSize}
+                />
+              </>
+            )}
           </>
         )}
       </CardContent>
