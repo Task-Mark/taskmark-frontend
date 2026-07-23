@@ -165,6 +165,7 @@ function parseStoryFile(
       points: asNumberOrNull(frontmatter.points),
       ...readTimingFields(frontmatter),
       tags: asStringArray(frontmatter.tags),
+      created: asString(frontmatter.created),
       parent: asString(frontmatter.parent),
       epic: asString(frontmatter.epic, epicId),
       workItemCount: countWorkItemsUnderStory(project.boardPath, epicId, id),

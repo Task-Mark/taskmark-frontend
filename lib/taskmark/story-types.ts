@@ -11,6 +11,8 @@ export type StorySummary = {
   actualMinutes: number | null
   actualMs: number | null
   tags: string[]
+  /** Frontmatter created date (YYYY-MM-DD or ISO). */
+  created: string
   parent: string
   epic: string
   /** Tasks + bugs under this story. */

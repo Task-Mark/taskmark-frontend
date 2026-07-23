@@ -35,6 +35,25 @@ export function typeBadgeClass(type: string): string {
   return "border-black bg-[var(--chart-2)] text-black"
 }
 
+export function formatPriorityLabel(priority: string): string {
+  return priority.replaceAll("_", " ")
+}
+
+export function priorityBadgeClass(priority: string): string {
+  switch (priority.toLowerCase()) {
+    case "critical":
+      return "border-black bg-destructive text-destructive-foreground"
+    case "high":
+      return "border-black bg-[var(--chart-1)] text-black"
+    case "medium":
+      return "border-black bg-[var(--chart-3)] text-black"
+    case "low":
+      return "border-black bg-muted text-muted-foreground"
+    default:
+      return "border-black bg-card text-foreground"
+  }
+}
+
 export function StatusBadge({ status }: { status: string }) {
   return (
     <Badge variant="outline" className={cn(statusBadgeClass(status))}>
@@ -47,6 +66,17 @@ export function TypeBadge({ type }: { type: string }) {
   return (
     <Badge variant="outline" className={cn(typeBadgeClass(type))}>
       {type}
+    </Badge>
+  )
+}
+
+export function PriorityBadge({ priority }: { priority: string }) {
+  return (
+    <Badge
+      variant="outline"
+      className={cn("capitalize", priorityBadgeClass(priority))}
+    >
+      {formatPriorityLabel(priority)}
     </Badge>
   )
 }
