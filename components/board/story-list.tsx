@@ -78,6 +78,7 @@ export function StoryList({ list, selectedStoryId = null }: StoryListProps) {
                 <TableHead className="w-10" />
                 <TableHead>ID</TableHead>
                 <TableHead>Title</TableHead>
+                <TableHead>Work items</TableHead>
                 <TableHead>Size</TableHead>
                 <TableHead>Points</TableHead>
                 <TableHead>Est</TableHead>
@@ -124,6 +125,9 @@ export function StoryList({ list, selectedStoryId = null }: StoryListProps) {
                       >
                         {story.title}
                       </Link>
+                    </TableCell>
+                    <TableCell className="tabular-nums">
+                      {story.workItemCount}
                     </TableCell>
                     <TableCell>{story.size}</TableCell>
                     <TableCell>{formatPoints(story.points)}</TableCell>

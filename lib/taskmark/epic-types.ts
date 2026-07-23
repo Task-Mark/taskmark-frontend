@@ -11,6 +11,8 @@ export type EpicSummary = {
   actualMinutes: number | null
   actualMs: number | null
   tags: string[]
+  /** Stories + tasks + bugs under this epic (story children and epic-direct). */
+  workItemCount: number
   /** Absolute path to epic.md */
   filePath: string
   project: Pick<DiscoveredProject, "id" | "name" | "projectPath" | "boardPath">

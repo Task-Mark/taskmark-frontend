@@ -88,6 +88,7 @@ export function EpicList({ lists, selectedEpicId = null }: EpicListProps) {
                     <TableHead className="w-10" />
                     <TableHead>ID</TableHead>
                     <TableHead>Title</TableHead>
+                    <TableHead>Work items</TableHead>
                     <TableHead>Points</TableHead>
                     <TableHead>Est</TableHead>
                     <TableHead>Actual</TableHead>
@@ -138,6 +139,9 @@ export function EpicList({ lists, selectedEpicId = null }: EpicListProps) {
                               </span>
                             ) : null}
                           </Link>
+                        </TableCell>
+                        <TableCell className="tabular-nums">
+                          {epic.workItemCount}
                         </TableCell>
                         <TableCell>{formatPoints(epic.points)}</TableCell>
                         <TableCell>
