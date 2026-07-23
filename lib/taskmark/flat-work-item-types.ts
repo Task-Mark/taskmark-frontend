@@ -1,5 +1,6 @@
 import type { DiscoveredProject } from "@/lib/taskmark/types"
 import type { ItemType } from "@/lib/taskmark/item-types"
+import type { ContributorIdentity } from "@/lib/taskmark/identity"
 
 export type FlatWorkItemKind = "epic" | "story" | ItemType
 
@@ -92,6 +93,8 @@ export type WorkItemsViewRow = {
   epicId: string
   epicTitle: string
   tags: string[]
+  reporters: ContributorIdentity[]
+  resolvers: ContributorIdentity[]
   created: string
   /** Frontmatter completed_at when solved; empty if open. */
   completedAt: string

@@ -14,6 +14,7 @@ import type {
   WorkLogRow,
 } from "@/lib/taskmark/detail-types"
 import { StatusBadge, TypeBadge, PriorityBadge } from "@/components/board/status-badge"
+import { AttributionPeopleList } from "@/components/board/attribution-avatars"
 import { DetailChildrenList } from "@/components/board/detail-children-list"
 import { MarkdownContent } from "@/components/board/markdown-content"
 import { Badge } from "@/components/ui/badge"
@@ -68,6 +69,13 @@ function MetaGrid({ detail }: { detail: WorkItemMeta }) {
           </dd>
         </div>
       ) : null}
+      <div className="col-span-full mt-1">
+        <AttributionPeopleList
+          reporters={detail.reporters}
+          resolvers={detail.resolvers}
+          empty={null}
+        />
+      </div>
     </dl>
   )
 }
@@ -137,6 +145,7 @@ function CommitsTable({ rows }: { rows: CommitRow[] }) {
             <th className="px-2 py-1.5">SHA</th>
             <th className="px-2 py-1.5">Repo</th>
             <th className="px-2 py-1.5">Date</th>
+            <th className="px-2 py-1.5">Author</th>
             <th className="px-2 py-1.5">Message</th>
           </tr>
         </thead>
@@ -148,6 +157,7 @@ function CommitsTable({ rows }: { rows: CommitRow[] }) {
               <td className="px-2 py-1.5 whitespace-nowrap">
                 {formatTaskmarkDate(row.date)}
               </td>
+              <td className="px-2 py-1.5">{row.author || "—"}</td>
               <td className="px-2 py-1.5">{row.message || "—"}</td>
             </tr>
           ))}
@@ -205,6 +215,7 @@ function PromptTable({ rows }: { rows: PromptFeedbackRow[] }) {
             <th className="px-2 py-1.5">#</th>
             <th className="px-2 py-1.5">When</th>
             <th className="px-2 py-1.5">Kind</th>
+            <th className="px-2 py-1.5">Author</th>
             <th className="px-2 py-1.5">Summary</th>
           </tr>
         </thead>
@@ -216,6 +227,7 @@ function PromptTable({ rows }: { rows: PromptFeedbackRow[] }) {
                 {formatTaskmarkDate(row.when)}
               </td>
               <td className="px-2 py-1.5">{row.kind || "—"}</td>
+              <td className="px-2 py-1.5">{row.author || "—"}</td>
               <td className="px-2 py-1.5">{row.summary || "—"}</td>
             </tr>
           ))}

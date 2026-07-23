@@ -13,6 +13,7 @@ import {
   asStringArray,
   extractFrontmatter,
 } from "@/lib/taskmark/frontmatter"
+import { asContributorList } from "@/lib/taskmark/identity"
 import { readTimingFields } from "@/lib/taskmark/timing"
 import { progressUnderStory } from "@/lib/taskmark/count-leaves"
 
@@ -167,6 +168,8 @@ function parseStoryFile(
       points: asNumberOrNull(frontmatter.points),
       ...readTimingFields(frontmatter),
       tags: asStringArray(frontmatter.tags),
+      reporters: asContributorList(frontmatter.reporters),
+      resolvers: asContributorList(frontmatter.resolvers),
       created: asString(frontmatter.created),
       completedAt: asString(frontmatter.completed_at),
       parent: asString(frontmatter.parent),

@@ -25,6 +25,7 @@ import {
 import { ListFiltersBar } from "@/components/board/list-filters-bar"
 import { ListPagination } from "@/components/board/list-pagination"
 import { ViewWorkItemButton } from "@/components/board/work-item-sheet"
+import { AttributionAvatarGroup } from "@/components/board/attribution-avatars"
 import { usePaginatedRows } from "@/hooks/use-paginated-rows"
 import { formatActualDuration, formatDurationMinutes } from "@/lib/format-duration"
 import type { StoryItemList } from "@/lib/taskmark/item-types"
@@ -143,6 +144,7 @@ export function TaskList({ list }: TaskListProps) {
                       <TableHead>Points</TableHead>
                       <TableHead>Est</TableHead>
                       <TableHead>Actual</TableHead>
+                      <TableHead className="w-16 text-center">People</TableHead>
                       <TableHead>Status</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -184,6 +186,14 @@ export function TaskList({ list }: TaskListProps) {
                             item.actualMs,
                             item.actualMinutes
                           )}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <div className="flex justify-center">
+                            <AttributionAvatarGroup
+                              reporters={item.reporters}
+                              resolvers={item.resolvers}
+                            />
+                          </div>
                         </TableCell>
                         <TableCell>
                           <StatusWithSolvedTooltip

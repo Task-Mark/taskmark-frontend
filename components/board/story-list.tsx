@@ -26,6 +26,7 @@ import { ChildProgressBar } from "@/components/board/child-progress-bar"
 import { ListFiltersBar } from "@/components/board/list-filters-bar"
 import { ListPagination } from "@/components/board/list-pagination"
 import { ViewWorkItemButton } from "@/components/board/work-item-sheet"
+import { AttributionAvatarGroup } from "@/components/board/attribution-avatars"
 import { usePaginatedRows } from "@/hooks/use-paginated-rows"
 import { cn } from "@/lib/utils"
 import { formatActualDuration, formatDurationMinutes } from "@/lib/format-duration"
@@ -146,6 +147,7 @@ export function StoryList({ list, selectedStoryId = null }: StoryListProps) {
                       <TableHead>Points</TableHead>
                       <TableHead>Est</TableHead>
                       <TableHead>Actual</TableHead>
+                      <TableHead className="w-16 text-center">People</TableHead>
                       <TableHead>Status</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -207,6 +209,14 @@ export function StoryList({ list, selectedStoryId = null }: StoryListProps) {
                               story.actualMs,
                               story.actualMinutes
                             )}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <div className="flex justify-center">
+                              <AttributionAvatarGroup
+                                reporters={story.reporters}
+                                resolvers={story.resolvers}
+                              />
+                            </div>
                           </TableCell>
                           <TableCell>
                             {story.workItemCount === 0 ? (

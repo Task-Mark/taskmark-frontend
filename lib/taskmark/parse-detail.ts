@@ -4,6 +4,7 @@ import {
   asStringArray,
   extractFrontmatter,
 } from "@/lib/taskmark/frontmatter"
+import { asContributorList } from "@/lib/taskmark/identity"
 import { readTimingFields } from "@/lib/taskmark/timing"
 import type {
   CommitRow,
@@ -38,6 +39,7 @@ function parseCommits(section: string): CommitRow[] {
     sha: cell(row, "sha"),
     repo: cell(row, "repo"),
     date: cell(row, "date (utc)", "date"),
+    author: cell(row, "author"),
     message: cell(row, "message"),
   }))
 }
@@ -59,6 +61,7 @@ function parsePromptFeedback(section: string): PromptFeedbackRow[] {
     index: cell(row, "#", "index"),
     when: cell(row, "when (utc)", "when"),
     kind: cell(row, "kind"),
+    author: cell(row, "author"),
     summary: cell(row, "summary"),
   }))
 }
@@ -103,6 +106,8 @@ function buildMeta(
     actualMs: timing.actualMs,
     tags: asStringArray(frontmatter.tags),
     owner: asString(frontmatter.owner),
+    reporters: asContributorList(frontmatter.reporters),
+    resolvers: asContributorList(frontmatter.resolvers),
     blocked: asBool(frontmatter.blocked),
     cancelled: asBool(frontmatter.cancelled),
     parent: asString(frontmatter.parent),

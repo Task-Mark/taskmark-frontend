@@ -14,6 +14,7 @@ import {
   asStringArray,
   extractFrontmatter,
 } from "@/lib/taskmark/frontmatter"
+import { asContributorList } from "@/lib/taskmark/identity"
 import { findEpicFolder } from "@/lib/taskmark/parse-stories"
 import { readTimingFields } from "@/lib/taskmark/timing"
 
@@ -187,6 +188,8 @@ function parseItemFile(
       points: asNumberOrNull(frontmatter.points),
       ...readTimingFields(frontmatter),
       tags: asStringArray(frontmatter.tags),
+      reporters: asContributorList(frontmatter.reporters),
+      resolvers: asContributorList(frontmatter.resolvers),
       created: asString(frontmatter.created),
       completedAt: asString(frontmatter.completed_at),
       parent: asString(frontmatter.parent, parentId),

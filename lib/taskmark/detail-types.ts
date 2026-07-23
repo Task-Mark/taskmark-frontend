@@ -1,4 +1,5 @@
 import type { TimingFields } from "@/lib/taskmark/timing"
+import type { ContributorIdentity } from "@/lib/taskmark/identity"
 
 export type WorkItemKind = "epic" | "story" | "task" | "bug"
 
@@ -16,6 +17,7 @@ export type PromptFeedbackRow = {
   index: string
   when: string
   kind: string
+  author: string
   summary: string
 }
 
@@ -23,6 +25,7 @@ export type CommitRow = {
   sha: string
   repo: string
   date: string
+  author: string
   message: string
 }
 
@@ -47,6 +50,8 @@ export type WorkItemMeta = {
   actualMs: number | null
   tags: string[]
   owner: string
+  reporters: ContributorIdentity[]
+  resolvers: ContributorIdentity[]
   blocked: boolean
   cancelled: boolean
   parent: string

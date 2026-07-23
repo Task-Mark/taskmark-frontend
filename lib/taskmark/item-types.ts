@@ -1,4 +1,5 @@
 import type { DiscoveredProject } from "@/lib/taskmark/types"
+import type { ContributorIdentity } from "@/lib/taskmark/identity"
 
 export type ItemType = "task" | "bug"
 
@@ -14,6 +15,8 @@ export type ItemSummary = {
   actualMinutes: number | null
   actualMs: number | null
   tags: string[]
+  reporters: ContributorIdentity[]
+  resolvers: ContributorIdentity[]
   /** Frontmatter created date (YYYY-MM-DD or ISO). */
   created: string
   /** Frontmatter completed_at (ISO) when solved; empty if open. */

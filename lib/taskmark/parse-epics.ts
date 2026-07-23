@@ -13,6 +13,7 @@ import {
   asStringArray,
   extractFrontmatter,
 } from "@/lib/taskmark/frontmatter"
+import { asContributorList } from "@/lib/taskmark/identity"
 import { readTimingFields } from "@/lib/taskmark/timing"
 import { sortEpicsGeneralFirst } from "@/lib/taskmark/general-epic"
 import { progressUnderEpic } from "@/lib/taskmark/count-leaves"
@@ -107,6 +108,8 @@ function parseEpicFile(
       points: asNumberOrNull(frontmatter.points),
       ...readTimingFields(frontmatter),
       tags: asStringArray(frontmatter.tags),
+      reporters: asContributorList(frontmatter.reporters),
+      resolvers: asContributorList(frontmatter.resolvers),
       created: asString(frontmatter.created),
       completedAt: asString(frontmatter.completed_at),
       workItemCount: progress.total,
