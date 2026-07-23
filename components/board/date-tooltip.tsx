@@ -8,7 +8,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { formatListDate } from "@/lib/format-list-date"
+import { formatTaskmarkDate } from "@/lib/format-date"
 
 type DateTooltipProps = {
   label: string
@@ -17,14 +17,14 @@ type DateTooltipProps = {
   className?: string
 }
 
-/** Tooltip showing "Label YYYY-MM-DD" (or "Label —" when missing). */
+/** Tooltip showing "Label <formatted date>" (or "Label —" when missing). */
 export function DateTooltip({
   label,
   date,
   children,
   className,
 }: DateTooltipProps) {
-  const text = `${label} ${formatListDate(date)}`
+  const text = `${label} ${formatTaskmarkDate(date)}`
   return (
     <TooltipProvider>
       <Tooltip>

@@ -1,6 +1,7 @@
 import type { ReactNode } from "react"
 
 import { formatActualDuration, formatDurationMinutes } from "@/lib/format-duration"
+import { formatTaskmarkDate } from "@/lib/format-date"
 import type {
   ChecklistItem,
   CommitRow,
@@ -41,10 +42,10 @@ function MetaGrid({ detail }: { detail: WorkItemMeta }) {
     { label: "Parent", value: detail.parent || "—" },
     { label: "Epic", value: detail.epic || "—" },
     { label: "Owner", value: detail.owner || "—" },
-    { label: "Created", value: detail.created || "—" },
-    { label: "Updated", value: detail.updated || "—" },
-    { label: "Started", value: detail.startedAt || "—" },
-    { label: "Completed", value: detail.completedAt || "—" },
+    { label: "Created", value: formatTaskmarkDate(detail.created) },
+    { label: "Updated", value: formatTaskmarkDate(detail.updated) },
+    { label: "Started", value: formatTaskmarkDate(detail.startedAt) },
+    { label: "Completed", value: formatTaskmarkDate(detail.completedAt) },
   ]
 
   return (
@@ -144,7 +145,9 @@ function CommitsTable({ rows }: { rows: CommitRow[] }) {
             <tr key={`${row.sha}:${i}`} className="border-t border-border">
               <td className="px-2 py-1.5 font-mono">{row.sha || "—"}</td>
               <td className="px-2 py-1.5">{row.repo || "—"}</td>
-              <td className="px-2 py-1.5 whitespace-nowrap">{row.date || "—"}</td>
+              <td className="px-2 py-1.5 whitespace-nowrap">
+                {formatTaskmarkDate(row.date)}
+              </td>
               <td className="px-2 py-1.5">{row.message || "—"}</td>
             </tr>
           ))}
@@ -175,8 +178,12 @@ function WorkLogTable({ rows }: { rows: WorkLogRow[] }) {
             <tr key={`${row.session}:${i}`} className="border-t border-border">
               <td className="px-2 py-1.5 font-mono">{row.session || "—"}</td>
               <td className="px-2 py-1.5">{row.actor || "—"}</td>
-              <td className="px-2 py-1.5 whitespace-nowrap">{row.started || "—"}</td>
-              <td className="px-2 py-1.5 whitespace-nowrap">{row.ended || "—"}</td>
+              <td className="px-2 py-1.5 whitespace-nowrap">
+                {formatTaskmarkDate(row.started)}
+              </td>
+              <td className="px-2 py-1.5 whitespace-nowrap">
+                {formatTaskmarkDate(row.ended)}
+              </td>
               <td className="px-2 py-1.5">{row.summary || "—"}</td>
             </tr>
           ))}
@@ -205,7 +212,9 @@ function PromptTable({ rows }: { rows: PromptFeedbackRow[] }) {
           {rows.map((row, i) => (
             <tr key={`${row.index}:${i}`} className="border-t border-border">
               <td className="px-2 py-1.5 font-mono">{row.index || "—"}</td>
-              <td className="px-2 py-1.5 whitespace-nowrap">{row.when || "—"}</td>
+              <td className="px-2 py-1.5 whitespace-nowrap">
+                {formatTaskmarkDate(row.when)}
+              </td>
               <td className="px-2 py-1.5">{row.kind || "—"}</td>
               <td className="px-2 py-1.5">{row.summary || "—"}</td>
             </tr>
