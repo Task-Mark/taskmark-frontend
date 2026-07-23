@@ -95,10 +95,10 @@ export function WorkItemSheetProvider({
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent
           side="right"
-          className="w-full gap-0 overflow-hidden p-0 sm:max-w-xl"
+          className="w-full gap-0 overflow-hidden p-0 data-[side=right]:w-full data-[side=right]:sm:max-w-4xl data-[side=right]:lg:max-w-5xl data-[side=right]:xl:max-w-6xl"
           showCloseButton
         >
-          <SheetHeader className="border-b-2 border-border pr-12">
+          <SheetHeader className="w-full border-b-2 border-border pr-12">
             <div className="flex flex-wrap items-center gap-2">
               <span className="font-mono text-xs text-muted-foreground">
                 {titleId}
@@ -114,7 +114,7 @@ export function WorkItemSheetProvider({
                 />
               ) : null}
             </div>
-            <SheetTitle className="text-left text-lg leading-snug">
+            <SheetTitle className="w-full text-left text-lg leading-snug">
               {titleText}
             </SheetTitle>
             <SheetDescription className="sr-only">
@@ -122,7 +122,7 @@ export function WorkItemSheetProvider({
             </SheetDescription>
           </SheetHeader>
 
-          <div className="min-h-0 flex-1 overflow-y-auto p-4">
+          <div className="flex min-h-0 w-full flex-1 flex-col overflow-y-auto p-4">
             {state.status === "loading" ? (
               <div
                 role="status"
@@ -136,7 +136,7 @@ export function WorkItemSheetProvider({
             {state.status === "error" ? (
               <div
                 role="alert"
-                className="rounded border-2 border-destructive/40 bg-destructive/10 px-3 py-3 text-sm"
+                className="w-full rounded border-2 border-destructive/40 bg-destructive/10 px-3 py-3 text-sm"
               >
                 <p className="font-medium text-destructive">
                   Could not load {state.ref.id}
@@ -149,7 +149,9 @@ export function WorkItemSheetProvider({
             ) : null}
 
             {state.status === "ready" ? (
-              <WorkItemDetailBody detail={state.detail} />
+              <div className="w-full min-w-0">
+                <WorkItemDetailBody detail={state.detail} />
+              </div>
             ) : null}
 
             {state.status === "idle" ? (

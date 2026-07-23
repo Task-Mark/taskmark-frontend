@@ -81,12 +81,12 @@ export function WorkItemsList({ list }: WorkItemsListProps) {
                 <TableHead>Type</TableHead>
                 <TableHead>Title</TableHead>
                 <TableHead>Epic</TableHead>
-                <TableHead>Priority</TableHead>
                 <TableHead>Size</TableHead>
                 <TableHead>Points</TableHead>
                 <TableHead>Est</TableHead>
                 <TableHead>Actual</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Priority</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -118,9 +118,6 @@ export function WorkItemsList({ list }: WorkItemsListProps) {
                     <TableCell>
                       <ParentTagBadge id={row.epicId} title={row.epicTitle} />
                     </TableCell>
-                    <TableCell>
-                      <PriorityBadge priority={row.priority} />
-                    </TableCell>
                     <TableCell>{row.size}</TableCell>
                     <TableCell>{formatPoints(row.points)}</TableCell>
                     <TableCell>
@@ -131,6 +128,9 @@ export function WorkItemsList({ list }: WorkItemsListProps) {
                     </TableCell>
                     <TableCell>
                       <StatusBadge status={row.status} />
+                    </TableCell>
+                    <TableCell>
+                      <PriorityBadge priority={row.priority} />
                     </TableCell>
                   </TableRow>
                 )

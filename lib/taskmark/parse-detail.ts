@@ -163,6 +163,7 @@ export function parseWorkItemDetailFromRaw(
       outOfScope: getSection(sections, "Out of scope"),
       successMetrics: getSection(sections, "Success metrics"),
       storiesMarkdown: getSection(sections, "Stories"),
+      children: [],
       commits: parseCommits(getSection(sections, "Commits")),
       workLog: parseWorkLog(getSection(sections, "Work log")),
     }
@@ -178,6 +179,7 @@ export function parseWorkItemDetailFromRaw(
       acceptanceCriteria: parseChecklist(acRaw),
       acceptanceCriteriaRaw: acRaw,
       tasksMarkdown: getSection(sections, "Tasks"),
+      children: [],
       promptFeedback: parsePromptFeedback(
         getSection(sections, "Prompt & feedback log", "Prompt & feedback")
       ),

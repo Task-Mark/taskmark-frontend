@@ -58,6 +58,16 @@ export type WorkItemMeta = {
   filePath: string
 }
 
+/** Child row shown on epic/story detail (stories, tasks, bugs). */
+export type DetailChildItem = {
+  id: string
+  title: string
+  type: "story" | "task" | "bug"
+  status: string
+  priority: string
+  filePath: string
+}
+
 export type EpicDetail = WorkItemMeta & {
   type: "epic"
   goal: string
@@ -65,6 +75,8 @@ export type EpicDetail = WorkItemMeta & {
   outOfScope: string
   successMetrics: string
   storiesMarkdown: string
+  /** Stories + epic-direct tasks/bugs under this epic. */
+  children: DetailChildItem[]
   commits: CommitRow[]
   workLog: WorkLogRow[]
 }
@@ -75,6 +87,8 @@ export type StoryDetail = WorkItemMeta & {
   acceptanceCriteria: ChecklistItem[]
   acceptanceCriteriaRaw: string
   tasksMarkdown: string
+  /** Tasks/bugs under this story. */
+  children: DetailChildItem[]
   promptFeedback: PromptFeedbackRow[]
   commits: CommitRow[]
   workLog: WorkLogRow[]

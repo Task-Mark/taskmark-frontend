@@ -12,14 +12,15 @@ import type {
   WorkItemMeta,
   WorkLogRow,
 } from "@/lib/taskmark/detail-types"
-import { StatusBadge, TypeBadge } from "@/components/board/status-badge"
+import { StatusBadge, TypeBadge, PriorityBadge } from "@/components/board/status-badge"
+import { DetailChildrenList } from "@/components/board/detail-children-list"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 
 function MetaGrid({ detail }: { detail: WorkItemMeta }) {
   const rows: { label: string; value: ReactNode }[] = [
     { label: "Status", value: <StatusBadge status={detail.status} /> },
-    { label: "Priority", value: detail.priority || "—" },
+    { label: "Priority", value: <PriorityBadge priority={detail.priority} /> },
     {
       label: "Size",
       value: detail.type === "epic" ? "—" : detail.size || "—",
@@ -119,31 +120,6 @@ function Checklist({ items, raw }: { items: ChecklistItem[]; raw: string }) {
           </span>
         </li>
       ))}
-    </ul>
-  )
-}
-
-function MarkdownLinkList({ markdown }: { markdown: string }) {
-  if (!markdown.trim()) {
-    return <p className="text-sm text-muted-foreground">None yet.</p>
-  }
-  const lines = markdown
-    .split(/\r?\n/)
-    .map((l) => l.trim())
-    .filter((l) => l.startsWith("-") || l.startsWith("*"))
-  if (lines.length === 0) {
-    return <ProseBlock text={markdown} />
-  }
-  return (
-    <ul className="flex flex-col gap-1 text-sm">
-      {lines.map((line, i) => {
-        const text = line.replace(/^[-*]\s+/, "").replace(/^\[([^\]]+)\]\([^)]+\)/, "$1")
-        return (
-          <li key={`${i}:${text}`} className="font-medium">
-            {text}
-          </li>
-        )
-      })}
     </ul>
   )
 }
@@ -257,8 +233,11 @@ function EpicDetailBody({ detail }: { detail: EpicDetail }) {
       <Section title="Success metrics">
         <ProseBlock text={detail.successMetrics} />
       </Section>
-      <Section title="Stories">
-        <MarkdownLinkList markdown={detail.storiesMarkdown} />
+      <Section title="Stories & tasks">
+        <DetailChildrenList
+          childrenItems={detail.children}
+          emptyLabel="No stories or epic-direct tasks yet."
+        />
       </Section>
       <Section title="Commits">
         <CommitsTable rows={detail.commits} />
@@ -285,7 +264,10 @@ function StoryDetailBody({ detail }: { detail: StoryDetail }) {
         />
       </Section>
       <Section title="Tasks">
-        <MarkdownLinkList markdown={detail.tasksMarkdown} />
+        <DetailChildrenList
+          childrenItems={detail.children}
+          emptyLabel="No tasks or bugs under this story yet."
+        />
       </Section>
       <Section title="Prompt & feedback">
         <PromptTable rows={detail.promptFeedback} />
