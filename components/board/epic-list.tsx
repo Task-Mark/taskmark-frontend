@@ -20,6 +20,7 @@ import { ViewWorkItemButton } from "@/components/board/work-item-sheet"
 import { cn } from "@/lib/utils"
 import { formatActualDuration, formatDurationMinutes } from "@/lib/format-duration"
 import type { ProjectEpicList } from "@/lib/taskmark/epic-types"
+import { isGeneralEpic } from "@/lib/taskmark/general-epic"
 
 function formatPoints(value: number | null): string {
   if (value === null) return "—"
@@ -77,7 +78,8 @@ export function EpicList({ lists, selectedEpicId = null }: EpicListProps) {
 
             {epics.length === 0 ? (
               <p className="text-sm text-muted-foreground">
-                No epics in this board yet.
+                No epics in this board yet. Init should seed a General epic for
+                unattached work.
               </p>
             ) : (
               <Table>
@@ -95,6 +97,7 @@ export function EpicList({ lists, selectedEpicId = null }: EpicListProps) {
                 <TableBody>
                   {epics.map((epic) => {
                     const selected = selectedEpicId === epic.id
+                    const general = isGeneralEpic(epic)
                     return (
                       <TableRow
                         key={`${project.id}:${epic.id}:${epic.filePath}`}
@@ -129,6 +132,11 @@ export function EpicList({ lists, selectedEpicId = null }: EpicListProps) {
                             className="underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                           >
                             {epic.title}
+                            {general ? (
+                              <span className="ml-2 text-xs font-normal text-muted-foreground">
+                                unattached work
+                              </span>
+                            ) : null}
                           </Link>
                         </TableCell>
                         <TableCell>{formatPoints(epic.points)}</TableCell>

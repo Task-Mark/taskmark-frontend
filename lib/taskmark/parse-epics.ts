@@ -14,6 +14,7 @@ import {
   extractFrontmatter,
 } from "@/lib/taskmark/frontmatter"
 import { readTimingFields } from "@/lib/taskmark/timing"
+import { sortEpicsGeneralFirst } from "@/lib/taskmark/general-epic"
 
 function listEpicMarkdownFiles(boardPath: string): string[] {
   const epicsDir = path.join(boardPath, "epics")
@@ -129,8 +130,9 @@ export function parseEpicsForProject(
   }
 
   epics.sort((a, b) => a.id.localeCompare(b.id))
+  const ordered = sortEpicsGeneralFirst(epics)
 
-  return { project, epics, errors }
+  return { project, epics: ordered, errors }
 }
 
 /** Parse epics for every discovered project under the master folder. */
