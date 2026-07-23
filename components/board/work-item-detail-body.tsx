@@ -47,11 +47,11 @@ function MetaGrid({ detail }: { detail: WorkItemMeta }) {
   ]
 
   return (
-    <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm sm:grid-cols-3">
+    <dl className="grid w-full grid-cols-2 gap-x-4 gap-y-2 text-sm sm:grid-cols-3 lg:grid-cols-4">
       {rows.map((row) => (
         <div key={row.label} className="min-w-0">
           <dt className="text-xs text-muted-foreground">{row.label}</dt>
-          <dd className="mt-0.5 truncate font-medium">{row.value}</dd>
+          <dd className="mt-0.5 font-medium break-words">{row.value}</dd>
         </div>
       ))}
       {detail.tags.length > 0 ? (
@@ -78,9 +78,9 @@ function Section({
   children: ReactNode
 }) {
   return (
-    <section className="flex flex-col gap-2">
+    <section className="flex w-full min-w-0 flex-col gap-2">
       <h3 className="font-head text-sm font-semibold tracking-tight">{title}</h3>
-      {children}
+      <div className="w-full min-w-0">{children}</div>
     </section>
   )
 }
