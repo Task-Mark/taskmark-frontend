@@ -14,6 +14,7 @@ import type {
 } from "@/lib/taskmark/detail-types"
 import { StatusBadge, TypeBadge, PriorityBadge } from "@/components/board/status-badge"
 import { DetailChildrenList } from "@/components/board/detail-children-list"
+import { MarkdownContent } from "@/components/board/markdown-content"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 
@@ -86,14 +87,7 @@ function Section({
 }
 
 function ProseBlock({ text }: { text: string }) {
-  if (!text.trim()) {
-    return <p className="text-sm text-muted-foreground">None noted.</p>
-  }
-  return (
-    <div className="whitespace-pre-wrap text-sm leading-relaxed text-foreground">
-      {text}
-    </div>
-  )
+  return <MarkdownContent text={text} />
 }
 
 function Checklist({ items, raw }: { items: ChecklistItem[]; raw: string }) {
@@ -115,8 +109,14 @@ function Checklist({ items, raw }: { items: ChecklistItem[]; raw: string }) {
                 : "mt-0.5 size-4 shrink-0 rounded border-2 border-black bg-card"
             }
           />
-          <span className={item.checked ? "text-muted-foreground line-through" : ""}>
-            {item.text}
+          <span
+            className={
+              item.checked
+                ? "min-w-0 flex-1 text-muted-foreground line-through"
+                : "min-w-0 flex-1"
+            }
+          >
+            <MarkdownContent text={item.text} inline />
           </span>
         </li>
       ))}
