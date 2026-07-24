@@ -100,8 +100,11 @@ export function isChildProgressComplete(
 }
 
 /**
- * When hideCompleted is on, drop rows that are `done` **or** whose child
- * progress bar is fully complete (epic/story with all children realized).
+ * When hideCompleted is on, drop completed rows.
+ *
+ * Prefer child progress when totals are present: a parent with open children
+ * stays visible even if frontmatter status is still `done` (e.g. epic-direct
+ * backlog under a previously completed epic). Otherwise fall back to status.
  */
 export function passesHideCompleted(
   hideCompleted: boolean,
@@ -109,9 +112,12 @@ export function passesHideCompleted(
   progress?: { done?: number; total?: number }
 ): boolean {
   if (!hideCompleted) return true
-  if (isCompletedStatus(status)) return false
-  if (isChildProgressComplete(progress?.done, progress?.total)) return false
-  return true
+  const total = progress?.total
+  const done = progress?.done
+  if (total != null && total > 0 && done != null) {
+    return !isChildProgressComplete(done, total)
+  }
+  return !isCompletedStatus(status)
 }
 
 /** Keep row if it includes any of the selected tags. Empty selection = pass. */
