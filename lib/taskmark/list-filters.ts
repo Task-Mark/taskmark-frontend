@@ -1,5 +1,12 @@
 /** Pure helpers for board list search and filters (client-side). */
 
+import {
+  DEFAULT_TIMEFRAME_FILTER,
+  passesTimeframeFilter,
+  timeframeResetKey,
+  type TimeframeFilterState,
+} from "@/lib/taskmark/timeframe-filters"
+
 export type WorkItemSearchFields = {
   id: string
   title: string
@@ -39,6 +46,7 @@ export type ListFilterState = {
   parentKeys: string[]
   /** Empty = no tag filter; otherwise match any selected tag. */
   selectedTags: string[]
+  timeframe: TimeframeFilterState
 }
 
 export const DEFAULT_LIST_FILTER_STATE: ListFilterState = {
@@ -46,7 +54,17 @@ export const DEFAULT_LIST_FILTER_STATE: ListFilterState = {
   hideCompleted: false,
   parentKeys: [],
   selectedTags: [],
+  timeframe: DEFAULT_TIMEFRAME_FILTER,
 }
+
+export type { TimeframeFilterState }
+export {
+  DEFAULT_TIMEFRAME_FILTER,
+  isTimeframeActive,
+  isWeekRangeSelection,
+  recentWeekRange,
+  timeframeResetKey,
+} from "@/lib/taskmark/timeframe-filters"
 
 export function normalizeSearchQuery(query: string): string {
   return query.trim().toLowerCase()
@@ -215,6 +233,8 @@ export type FilterableListRow = WorkItemSearchFields & {
   tags?: readonly string[]
   kind?: string
   epicId?: string
+  /** Solved date (`completed_at`); required for timeframe filtering. */
+  completedAt?: string
   /** When set with doneWorkItemCount, used for hide-completed on progress rows. */
   workItemCount?: number
   doneWorkItemCount?: number
@@ -222,15 +242,20 @@ export type FilterableListRow = WorkItemSearchFields & {
 
 export function filterListRows<T extends FilterableListRow>(
   rows: readonly T[],
-  state: Pick<ListFilterState, "query" | "hideCompleted" | "selectedTags"> & {
+  state: Pick<
+    ListFilterState,
+    "query" | "hideCompleted" | "selectedTags"
+  > & {
     parentKeys?: readonly string[]
     /** @deprecated Prefer parentKeys. */
     parentKey?: string | null
+    timeframe?: TimeframeFilterState
   }
 ): T[] {
   const parentKeys =
     state.parentKeys ??
     (state.parentKey ? [state.parentKey] : [])
+  const timeframe = state.timeframe ?? DEFAULT_TIMEFRAME_FILTER
   return rows.filter((row) => {
     if (!matchesWorkItemSearch(state.query, row)) return false
     if (
@@ -254,6 +279,7 @@ export function filterListRows<T extends FilterableListRow>(
         return false
       }
     }
+    if (!passesTimeframeFilter(timeframe, row.completedAt)) return false
     return true
   })
 }
@@ -268,6 +294,7 @@ export function listFilterResetKey(
     parentKeys?: readonly string[]
     /** @deprecated Prefer parentKeys. */
     parentKey?: string | null
+    timeframe?: TimeframeFilterState
   }
 ): string {
   const parentKeys =
@@ -275,12 +302,14 @@ export function listFilterResetKey(
     (state.parentKey ? [state.parentKey] : [])
   const tags = [...state.selectedTags].sort().join(",")
   const parents = [...parentKeys].sort().join(",")
+  const timeframe = state.timeframe ?? DEFAULT_TIMEFRAME_FILTER
   return [
     base,
     normalizeSearchQuery(state.query),
     state.hideCompleted ? "1" : "0",
     parents,
     tags,
+    timeframeResetKey(timeframe),
   ].join("|")
 }
 

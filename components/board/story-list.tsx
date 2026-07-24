@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/table"
 import {
   Card,
+  CardAction,
   CardContent,
   CardDescription,
   CardHeader,
@@ -25,6 +26,7 @@ import {
 import { ChildProgressBar } from "@/components/board/child-progress-bar"
 import { ListFiltersBar } from "@/components/board/list-filters-bar"
 import { ListPagination } from "@/components/board/list-pagination"
+import { TimeframeFilter } from "@/components/board/timeframe-filter"
 import { ViewWorkItemButton } from "@/components/board/work-item-sheet"
 import { AttributionAvatarGroup } from "@/components/board/attribution-avatars"
 import { usePaginatedRows } from "@/hooks/use-paginated-rows"
@@ -32,8 +34,11 @@ import { cn } from "@/lib/utils"
 import { formatActualDuration, formatDurationMinutes } from "@/lib/format-duration"
 import type { EpicStoryList } from "@/lib/taskmark/story-types"
 import {
+  DEFAULT_TIMEFRAME_FILTER,
   filterListRows,
+  isTimeframeActive,
   listFilterResetKey,
+  type TimeframeFilterState,
 } from "@/lib/taskmark/list-filters"
 
 function formatPoints(value: number | null): string {
@@ -44,13 +49,26 @@ function formatPoints(value: number | null): string {
 type StoryListProps = {
   list: EpicStoryList
   selectedStoryId?: string | null
+  countableCompletedAts?: readonly string[]
 }
 
-export function StoryList({ list, selectedStoryId = null }: StoryListProps) {
+export function StoryList({
+  list,
+  selectedStoryId = null,
+  countableCompletedAts = [],
+}: StoryListProps) {
   const { project, epicId, epicTitle, stories, errors } = list
   const heading = epicTitle ? `${epicId}: ${epicTitle}` : epicId
   const [query, setQuery] = useState("")
   const [hideCompleted, setHideCompleted] = useState(false)
+  const [timeframe, setTimeframe] = useState<TimeframeFilterState>(
+    DEFAULT_TIMEFRAME_FILTER
+  )
+
+  const completedAts = useMemo(
+    () => stories.map((story) => story.completedAt),
+    [stories]
+  )
 
   const filtered = useMemo(
     () =>
@@ -58,8 +76,9 @@ export function StoryList({ list, selectedStoryId = null }: StoryListProps) {
         query,
         hideCompleted,
         selectedTags: [],
+        timeframe,
       }),
-    [stories, query, hideCompleted]
+    [stories, query, hideCompleted, timeframe]
   )
 
   const {
@@ -77,11 +96,13 @@ export function StoryList({ list, selectedStoryId = null }: StoryListProps) {
       hideCompleted,
       parentKey: null,
       selectedTags: [],
+      timeframe,
     })
   )
 
   const hasSourceRows = stories.length > 0
-  const filtersActive = Boolean(query.trim()) || hideCompleted
+  const filtersActive =
+    Boolean(query.trim()) || hideCompleted || isTimeframeActive(timeframe)
 
   return (
     <Card>
@@ -91,6 +112,17 @@ export function StoryList({ list, selectedStoryId = null }: StoryListProps) {
           <span className="font-medium text-foreground">{heading}</span>
           <span className="mt-1 block font-mono text-xs">{project.name}</span>
         </CardDescription>
+        {hasSourceRows ? (
+          <CardAction>
+            <TimeframeFilter
+              id={`story-timeframe-${epicId}`}
+              value={timeframe}
+              onChange={setTimeframe}
+              completedAts={completedAts}
+              countableCompletedAts={countableCompletedAts}
+            />
+          </CardAction>
+        ) : null}
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
         {errors.length > 0 ? (

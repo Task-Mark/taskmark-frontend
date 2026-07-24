@@ -105,9 +105,15 @@ export default async function BoardPage({ searchParams }: BoardPageProps) {
       : null
 
   const workItemsList =
-    activeView === "workitems"
+    activeView === "overall" || activeView === "workitems"
       ? parseWorkItemsViewForProject(activeProject)
       : null
+
+  /** Stories + epic-direct tasks/bugs (excludes tasks under a story). */
+  const countableCompletedAts =
+    workItemsList?.rows
+      .map((row) => row.completedAt)
+      .filter((value) => Boolean(value?.trim())) ?? []
 
   return (
     <WorkItemSheetProvider>
@@ -161,7 +167,11 @@ export default async function BoardPage({ searchParams }: BoardPageProps) {
 
           {activeView === "overall" ? (
             <>
-              <EpicList lists={[list]} selectedEpicId={selectedEpicId} />
+              <EpicList
+                lists={[list]}
+                selectedEpicId={selectedEpicId}
+                countableCompletedAts={countableCompletedAts}
+              />
 
               {storyList ? (
                 <div className="flex flex-col gap-3">
@@ -186,7 +196,11 @@ export default async function BoardPage({ searchParams }: BoardPageProps) {
                       ? " · select a story for its tasks, or use general tasks below"
                       : ""}
                   </p>
-                  <StoryList list={storyList} selectedStoryId={selectedStoryId} />
+                  <StoryList
+                    list={storyList}
+                    selectedStoryId={selectedStoryId}
+                    countableCompletedAts={countableCompletedAts}
+                  />
                 </div>
               ) : null}
 
@@ -213,7 +227,10 @@ export default async function BoardPage({ searchParams }: BoardPageProps) {
                       ? ` · ${epicItemList.errors.length} issue${epicItemList.errors.length === 1 ? "" : "s"}`
                       : ""}
                   </p>
-                  <TaskList list={epicItemList} />
+                  <TaskList
+                    list={epicItemList}
+                    countableCompletedAts={countableCompletedAts}
+                  />
                 </div>
               ) : null}
 
@@ -240,14 +257,20 @@ export default async function BoardPage({ searchParams }: BoardPageProps) {
                       ? ` · ${itemList.errors.length} issue${itemList.errors.length === 1 ? "" : "s"}`
                       : ""}
                   </p>
-                  <TaskList list={itemList} />
+                  <TaskList
+                    list={itemList}
+                    countableCompletedAts={countableCompletedAts}
+                  />
                 </div>
               ) : null}
             </>
           ) : null}
 
           {activeView === "workitems" && workItemsList ? (
-            <WorkItemsList list={workItemsList} />
+            <WorkItemsList
+              list={workItemsList}
+              countableCompletedAts={countableCompletedAts}
+            />
           ) : null}
         </div>
       </div>

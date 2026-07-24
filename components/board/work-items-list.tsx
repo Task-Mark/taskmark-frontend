@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/table"
 import {
   Card,
+  CardAction,
   CardContent,
   CardDescription,
   CardHeader,
@@ -28,6 +29,7 @@ import {
 } from "@/components/board/date-tooltip"
 import { ListFiltersBar } from "@/components/board/list-filters-bar"
 import { ListPagination } from "@/components/board/list-pagination"
+import { TimeframeFilter } from "@/components/board/timeframe-filter"
 import { ViewWorkItemButton } from "@/components/board/work-item-sheet"
 import { AttributionAvatarGroup } from "@/components/board/attribution-avatars"
 import { usePaginatedRows } from "@/hooks/use-paginated-rows"
@@ -36,8 +38,11 @@ import type { WorkItemsViewList } from "@/lib/taskmark/flat-work-item-types"
 import {
   buildParentFilterOptions,
   collectUniqueTags,
+  DEFAULT_TIMEFRAME_FILTER,
   filterListRows,
+  isTimeframeActive,
   listFilterResetKey,
+  type TimeframeFilterState,
 } from "@/lib/taskmark/list-filters"
 
 function formatPoints(value: number | null): string {
@@ -47,17 +52,29 @@ function formatPoints(value: number | null): string {
 
 type WorkItemsListProps = {
   list: WorkItemsViewList
+  countableCompletedAts?: readonly string[]
 }
 
-export function WorkItemsList({ list }: WorkItemsListProps) {
+export function WorkItemsList({
+  list,
+  countableCompletedAts,
+}: WorkItemsListProps) {
   const { project, rows, errors } = list
   const [query, setQuery] = useState("")
   const [hideCompleted, setHideCompleted] = useState(false)
   const [parentKeys, setParentKeys] = useState<string[]>([])
   const [selectedTags, setSelectedTags] = useState<string[]>([])
+  const [timeframe, setTimeframe] = useState<TimeframeFilterState>(
+    DEFAULT_TIMEFRAME_FILTER
+  )
 
   const parentOptions = useMemo(() => buildParentFilterOptions(rows), [rows])
   const tagOptions = useMemo(() => collectUniqueTags(rows), [rows])
+  const completedAts = useMemo(
+    () => rows.map((row) => row.completedAt),
+    [rows]
+  )
+  const countAts = countableCompletedAts ?? completedAts
 
   const filtered = useMemo(
     () =>
@@ -66,8 +83,9 @@ export function WorkItemsList({ list }: WorkItemsListProps) {
         hideCompleted,
         parentKeys,
         selectedTags,
+        timeframe,
       }),
-    [rows, query, hideCompleted, parentKeys, selectedTags]
+    [rows, query, hideCompleted, parentKeys, selectedTags, timeframe]
   )
 
   const {
@@ -85,6 +103,7 @@ export function WorkItemsList({ list }: WorkItemsListProps) {
       hideCompleted,
       parentKeys,
       selectedTags,
+      timeframe,
     })
   )
 
@@ -93,7 +112,8 @@ export function WorkItemsList({ list }: WorkItemsListProps) {
     Boolean(query.trim()) ||
     hideCompleted ||
     parentKeys.length > 0 ||
-    selectedTags.length > 0
+    selectedTags.length > 0 ||
+    isTimeframeActive(timeframe)
 
   return (
     <Card>
@@ -107,6 +127,17 @@ export function WorkItemsList({ list }: WorkItemsListProps) {
           </span>
           <span className="mt-1 block font-mono text-xs">{project.boardPath}</span>
         </CardDescription>
+        {hasSourceRows ? (
+          <CardAction>
+            <TimeframeFilter
+              id={`workitems-timeframe-${project.id}`}
+              value={timeframe}
+              onChange={setTimeframe}
+              completedAts={completedAts}
+              countableCompletedAts={countAts}
+            />
+          </CardAction>
+        ) : null}
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
         {errors.length > 0 ? (

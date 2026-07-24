@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/table"
 import {
   Card,
+  CardAction,
   CardContent,
   CardDescription,
   CardHeader,
@@ -24,6 +25,7 @@ import {
 import { ChildProgressBar } from "@/components/board/child-progress-bar"
 import { ListFiltersBar } from "@/components/board/list-filters-bar"
 import { ListPagination } from "@/components/board/list-pagination"
+import { TimeframeFilter } from "@/components/board/timeframe-filter"
 import { ViewWorkItemButton } from "@/components/board/work-item-sheet"
 import { AttributionAvatarGroup } from "@/components/board/attribution-avatars"
 import { usePaginatedRows } from "@/hooks/use-paginated-rows"
@@ -32,8 +34,11 @@ import { formatActualDuration, formatDurationMinutes } from "@/lib/format-durati
 import type { EpicSummary, ProjectEpicList } from "@/lib/taskmark/epic-types"
 import { isGeneralEpic } from "@/lib/taskmark/general-epic"
 import {
+  DEFAULT_TIMEFRAME_FILTER,
   filterListRows,
+  isTimeframeActive,
   listFilterResetKey,
+  type TimeframeFilterState,
 } from "@/lib/taskmark/list-filters"
 
 function formatPoints(value: number | null): string {
@@ -44,6 +49,8 @@ function formatPoints(value: number | null): string {
 type EpicListProps = {
   lists: ProjectEpicList[]
   selectedEpicId?: string | null
+  /** Stories + epic-direct tasks/bugs completed_at for week/day counts. */
+  countableCompletedAts?: readonly string[]
 }
 
 function ProjectEpicCard({
@@ -51,14 +58,19 @@ function ProjectEpicCard({
   epics,
   errors,
   selectedEpicId,
+  countableCompletedAts = [],
 }: {
   project: ProjectEpicList["project"]
   epics: EpicSummary[]
   errors: ProjectEpicList["errors"]
   selectedEpicId: string | null
+  countableCompletedAts?: readonly string[]
 }) {
   const [query, setQuery] = useState("")
   const [hideCompleted, setHideCompleted] = useState(false)
+  const [timeframe, setTimeframe] = useState<TimeframeFilterState>(
+    DEFAULT_TIMEFRAME_FILTER
+  )
 
   const visibleEpics = useMemo(
     () =>
@@ -68,14 +80,20 @@ function ProjectEpicCard({
     [epics]
   )
 
+  const completedAts = useMemo(
+    () => visibleEpics.map((epic) => epic.completedAt),
+    [visibleEpics]
+  )
+
   const filtered = useMemo(
     () =>
       filterListRows(visibleEpics, {
         query,
         hideCompleted,
         selectedTags: [],
+        timeframe,
       }),
-    [visibleEpics, query, hideCompleted]
+    [visibleEpics, query, hideCompleted, timeframe]
   )
 
   const {
@@ -93,11 +111,13 @@ function ProjectEpicCard({
       hideCompleted,
       parentKey: null,
       selectedTags: [],
+      timeframe,
     })
   )
 
   const hasSourceRows = visibleEpics.length > 0
-  const filtersActive = Boolean(query.trim()) || hideCompleted
+  const filtersActive =
+    Boolean(query.trim()) || hideCompleted || isTimeframeActive(timeframe)
 
   return (
     <Card>
@@ -106,6 +126,17 @@ function ProjectEpicCard({
         <CardDescription className="font-mono text-xs">
           {project.boardPath}
         </CardDescription>
+        {hasSourceRows ? (
+          <CardAction>
+            <TimeframeFilter
+              id={`epic-timeframe-${project.id}`}
+              value={timeframe}
+              onChange={setTimeframe}
+              completedAts={completedAts}
+              countableCompletedAts={countableCompletedAts}
+            />
+          </CardAction>
+        ) : null}
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
         {errors.length > 0 ? (
@@ -259,7 +290,11 @@ function ProjectEpicCard({
   )
 }
 
-export function EpicList({ lists, selectedEpicId = null }: EpicListProps) {
+export function EpicList({
+  lists,
+  selectedEpicId = null,
+  countableCompletedAts = [],
+}: EpicListProps) {
   if (lists.length === 0) {
     return (
       <Card>
@@ -282,6 +317,7 @@ export function EpicList({ lists, selectedEpicId = null }: EpicListProps) {
           epics={epics}
           errors={errors}
           selectedEpicId={selectedEpicId}
+          countableCompletedAts={countableCompletedAts}
         />
       ))}
     </div>

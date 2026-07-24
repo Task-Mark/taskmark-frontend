@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/table"
 import {
   Card,
+  CardAction,
   CardContent,
   CardDescription,
   CardHeader,
@@ -24,14 +25,18 @@ import {
 } from "@/components/board/date-tooltip"
 import { ListFiltersBar } from "@/components/board/list-filters-bar"
 import { ListPagination } from "@/components/board/list-pagination"
+import { TimeframeFilter } from "@/components/board/timeframe-filter"
 import { ViewWorkItemButton } from "@/components/board/work-item-sheet"
 import { AttributionAvatarGroup } from "@/components/board/attribution-avatars"
 import { usePaginatedRows } from "@/hooks/use-paginated-rows"
 import { formatActualDuration, formatDurationMinutes } from "@/lib/format-duration"
 import type { StoryItemList } from "@/lib/taskmark/item-types"
 import {
+  DEFAULT_TIMEFRAME_FILTER,
   filterListRows,
+  isTimeframeActive,
   listFilterResetKey,
+  type TimeframeFilterState,
 } from "@/lib/taskmark/list-filters"
 
 function formatPoints(value: number | null): string {
@@ -41,13 +46,25 @@ function formatPoints(value: number | null): string {
 
 type TaskListProps = {
   list: StoryItemList
+  countableCompletedAts?: readonly string[]
 }
 
-export function TaskList({ list }: TaskListProps) {
+export function TaskList({
+  list,
+  countableCompletedAts = [],
+}: TaskListProps) {
   const { project, storyId, storyTitle, items, errors } = list
   const heading = storyTitle ? `${storyId}: ${storyTitle}` : storyId
   const [query, setQuery] = useState("")
   const [hideCompleted, setHideCompleted] = useState(false)
+  const [timeframe, setTimeframe] = useState<TimeframeFilterState>(
+    DEFAULT_TIMEFRAME_FILTER
+  )
+
+  const completedAts = useMemo(
+    () => items.map((item) => item.completedAt),
+    [items]
+  )
 
   const filtered = useMemo(
     () =>
@@ -55,8 +72,9 @@ export function TaskList({ list }: TaskListProps) {
         query,
         hideCompleted,
         selectedTags: [],
+        timeframe,
       }),
-    [items, query, hideCompleted]
+    [items, query, hideCompleted, timeframe]
   )
 
   const {
@@ -74,11 +92,13 @@ export function TaskList({ list }: TaskListProps) {
       hideCompleted,
       parentKey: null,
       selectedTags: [],
+      timeframe,
     })
   )
 
   const hasSourceRows = items.length > 0
-  const filtersActive = Boolean(query.trim()) || hideCompleted
+  const filtersActive =
+    Boolean(query.trim()) || hideCompleted || isTimeframeActive(timeframe)
 
   return (
     <Card>
@@ -88,6 +108,17 @@ export function TaskList({ list }: TaskListProps) {
           <span className="font-medium text-foreground">{heading}</span>
           <span className="mt-1 block font-mono text-xs">{project.name}</span>
         </CardDescription>
+        {hasSourceRows ? (
+          <CardAction>
+            <TimeframeFilter
+              id={`task-timeframe-${storyId}`}
+              value={timeframe}
+              onChange={setTimeframe}
+              completedAts={completedAts}
+              countableCompletedAts={countableCompletedAts}
+            />
+          </CardAction>
+        ) : null}
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
         {errors.length > 0 ? (
