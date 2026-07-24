@@ -19,13 +19,13 @@ export function AppBar({
   return (
     <header className="sticky top-0 z-40 border-b-2 border-border bg-card/95 shadow-sm backdrop-blur">
       <div className="mx-auto flex w-full max-w-5xl flex-wrap items-center gap-3 px-4 py-3">
-        <div className="group flex min-w-0 flex-1 items-center gap-2.5">
+        <div className="group flex min-w-0 flex-1 items-center gap-3 transition-[gap] duration-200 group-hover:gap-4">
           <img
             src="/logo.png"
             alt=""
             width={40}
             height={45}
-            className="h-10 w-auto shrink-0 select-none"
+            className="h-10 w-auto shrink-0 origin-center select-none transition-transform duration-200 group-hover:scale-110"
           />
           <div className="flex min-w-0 flex-col gap-0.5">
             <p className="w-fit cursor-default font-head text-2xl leading-none tracking-tight">
