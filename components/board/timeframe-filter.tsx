@@ -26,7 +26,6 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
-import { Slider } from "@/components/ui/slider"
 import { parseTaskmarkDate } from "@/lib/format-date"
 import {
   DEFAULT_TIMEFRAME_FILTER,
@@ -116,7 +115,7 @@ export function TimeframeFilter({
 
   const years = bounds.years
   const showYearSelect = years.length > 1
-  const showWeekSlider = isWeekRangeSelection(value)
+  const showWeekRange = isWeekRangeSelection(value)
 
   const todayParts = useMemo(() => recentWeekRange(), [])
   const currentWeek = useMemo(() => isoWeekParts(new Date()), [])
@@ -220,14 +219,23 @@ export function TimeframeFilter({
     setWeekPopoverOpen(false)
   }
 
-  function handleWeekSlider(values: number | readonly number[]) {
-    const arr = Array.isArray(values) ? values : [values]
-    if (arr.length < 2) return
-    const [a, b] = arr
-    activateWeeks(weekYear, a!, b!)
+  function handleWeekFromChange(next: string | null) {
+    if (next == null) return
+    const from = Number(next)
+    if (!Number.isFinite(from)) return
+    const to = Math.max(from, weekTo)
+    activateWeeks(weekYear, from, to)
   }
 
-  function handleSliderYearChange(next: string | null) {
+  function handleWeekToChange(next: string | null) {
+    if (next == null) return
+    const to = Number(next)
+    if (!Number.isFinite(to)) return
+    const from = Math.min(weekFrom, to)
+    activateWeeks(weekYear, from, to)
+  }
+
+  function handleRangeYearChange(next: string | null) {
     if (next == null) return
     const year = Number(next)
     if (!Number.isFinite(year)) return
@@ -296,12 +304,12 @@ export function TimeframeFilter({
       role="group"
       aria-label="Solved timeframe"
     >
-      {showWeekSlider ? (
+      {showWeekRange ? (
         <>
           {showSliderYear ? (
             <Select
               value={String(weekYear)}
-              onValueChange={handleSliderYearChange}
+              onValueChange={handleRangeYearChange}
             >
               <SelectTrigger
                 id={`${id}-year`}
@@ -321,24 +329,76 @@ export function TimeframeFilter({
             </Select>
           ) : null}
 
-          <div className="flex w-[18rem] shrink-0 items-center gap-2 sm:w-[22rem]">
-            <span
-              className="shrink-0 font-mono text-xs tabular-nums text-muted-foreground"
-              aria-live="polite"
+          <div
+            className="inline-flex h-8 shrink-0 items-center overflow-hidden rounded border-2 border-black bg-input shadow-sm"
+            role="group"
+            aria-label="ISO week range"
+          >
+            <Select
+              value={String(weekFrom)}
+              onValueChange={handleWeekFromChange}
             >
-              {formatWeekLabel(weekFrom, weekTo)}
+              <SelectTrigger
+                id={`${id}-week-from`}
+                size="sm"
+                className="h-full min-w-[4.25rem] rounded-none border-0 bg-transparent shadow-none focus-visible:ring-0"
+                aria-label="From ISO week"
+              >
+                <SelectValue>
+                  {(value: string | null) =>
+                    value != null ? `W${value}` : "From"
+                  }
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {Array.from({ length: weekSpan.max }, (_, i) => {
+                  const week = i + 1
+                  return (
+                    <SelectItem
+                      key={week}
+                      value={String(week)}
+                      disabled={week > weekTo}
+                    >
+                      W{week}
+                    </SelectItem>
+                  )
+                })}
+              </SelectContent>
+            </Select>
+            <span
+              className="shrink-0 px-0.5 font-mono text-xs text-muted-foreground"
+              aria-hidden
+            >
+              –
             </span>
-            <Slider
-              id={`${id}-weeks`}
-              className="min-w-0 flex-1"
-              min={weekSpan.min}
-              max={weekSpan.max}
-              step={1}
-              minStepsBetweenValues={1}
-              value={[weekFrom, weekTo]}
-              onValueChange={handleWeekSlider}
-              aria-label="ISO week range"
-            />
+            <Select value={String(weekTo)} onValueChange={handleWeekToChange}>
+              <SelectTrigger
+                id={`${id}-week-to`}
+                size="sm"
+                className="h-full min-w-[4.25rem] rounded-none border-0 bg-transparent shadow-none focus-visible:ring-0"
+                aria-label="To ISO week"
+              >
+                <SelectValue>
+                  {(value: string | null) =>
+                    value != null ? `W${value}` : "To"
+                  }
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {Array.from({ length: weekSpan.max }, (_, i) => {
+                  const week = i + 1
+                  return (
+                    <SelectItem
+                      key={week}
+                      value={String(week)}
+                      disabled={week < weekFrom}
+                    >
+                      W{week}
+                    </SelectItem>
+                  )
+                })}
+              </SelectContent>
+            </Select>
           </div>
         </>
       ) : (
