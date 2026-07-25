@@ -25,6 +25,8 @@ export function boardHref(opts: {
   view?: ListViewMode
   epic?: string | null
   story?: string | null
+  /** Open work item detail sheet (E-/S-/T-/B- id). */
+  item?: string | null
 }): string {
   const params = new URLSearchParams()
   const view = opts.view ?? DEFAULT_LIST_VIEW_MODE
@@ -35,6 +37,7 @@ export function boardHref(opts: {
     if (opts.epic) params.set("epic", opts.epic)
     if (opts.epic && opts.story) params.set("story", opts.story)
   }
+  if (opts.item) params.set("item", opts.item)
   const qs = params.toString()
   return qs ? `/board?${qs}` : "/board"
 }

@@ -103,7 +103,7 @@ export function TaskList({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="font-head text-xl">Tasks</CardTitle>
+        <CardTitle className="font-head text-xl">Sub Tasks</CardTitle>
         <CardDescription>
           <span className="font-medium text-foreground">{heading}</span>
           <span className="mt-1 block font-mono text-xs">{project.name}</span>
@@ -142,10 +142,7 @@ export function TaskList({
 
         {!hasSourceRows ? (
           <p className="text-sm text-muted-foreground">
-            No tasks or bugs under this story yet
-            {list.storyTitle?.toLowerCase() === "epic-direct"
-              ? " — general tasks will appear here."
-              : "."}
+            No sub tasks under this story yet.
           </p>
         ) : (
           <>
@@ -159,8 +156,8 @@ export function TaskList({
             {filtered.length === 0 ? (
               <p className="text-sm text-muted-foreground">
                 {filtersActive
-                  ? "No tasks match the current search or filters."
-                  : "No tasks or bugs under this story yet."}
+                  ? "No sub tasks match the current search or filters."
+                  : "No sub tasks under this story yet."}
               </p>
             ) : (
               <>

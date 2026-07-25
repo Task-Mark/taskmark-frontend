@@ -1,15 +1,28 @@
 "use client"
 
 import * as React from "react"
-import { EyeIcon } from "lucide-react"
+import { ArrowLeftIcon, EyeIcon, XIcon } from "lucide-react"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
 
-import { loadWorkItemDetail } from "@/app/board/actions"
+import {
+  loadWorkItemDetail,
+  resolveWorkItemById,
+} from "@/app/board/actions"
 import { WorkItemDetailBody, WorkItemDetailHeaderBadges } from "@/components/board/work-item-detail-body"
 import { TypeBadge } from "@/components/board/status-badge"
 import { Button } from "@/components/ui/button"
 import { Spinner } from "@/components/ui/spinner"
 import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb"
+import {
   Sheet,
+  SheetClose,
   SheetContent,
   SheetDescription,
   SheetHeader,
@@ -17,6 +30,7 @@ import {
 } from "@/components/ui/sheet"
 import type {
   WorkItemDetail,
+  WorkItemMeta,
   WorkItemRef,
 } from "@/lib/taskmark/detail-types"
 
@@ -26,13 +40,26 @@ type LoadState =
   | { status: "ready"; ref: WorkItemRef; detail: WorkItemDetail }
   | { status: "error"; ref: WorkItemRef; message: string; filePath: string }
 
+type OpenDetailOptions = {
+  /** Default `push` so Back restores the previous detail / list URL. */
+  history?: "push" | "replace"
+}
+
+type SheetHistoryEntry = {
+  id: string
+  title: string
+}
+
 type WorkItemSheetContextValue = {
-  openDetail: (ref: WorkItemRef) => void
+  openDetail: (ref: WorkItemRef, options?: OpenDetailOptions) => void
+  openDetailById: (itemId: string, options?: OpenDetailOptions) => void
 }
 
 const WorkItemSheetContext = React.createContext<WorkItemSheetContextValue | null>(
   null
 )
+
+const DETAIL_ITEM_PARAM = "item"
 
 export function useWorkItemSheet(): WorkItemSheetContextValue {
   const ctx = React.useContext(WorkItemSheetContext)
@@ -42,21 +69,183 @@ export function useWorkItemSheet(): WorkItemSheetContextValue {
   return ctx
 }
 
-export function WorkItemSheetProvider({
+/** Epic → story → leaf (or epic → epic-direct leaf). */
+export function hierarchyIdsForDetail(
+  detail: Pick<WorkItemMeta, "id" | "type" | "parent" | "epic">
+): string[] {
+  const id = detail.id.trim()
+  if (!id) return []
+  if (detail.type === "epic") return [id]
+
+  const epic = (detail.epic || "").trim()
+  const parent = (detail.parent || "").trim()
+  const crumbs: string[] = []
+
+  if (epic) crumbs.push(epic)
+  else if (parent.startsWith("E-")) crumbs.push(parent)
+
+  if (detail.type === "story") {
+    if (!crumbs.includes(id)) crumbs.push(id)
+    return crumbs
+  }
+
+  // task / bug: insert story parent when it differs from epic
+  if (parent && parent !== epic && parent !== id && !crumbs.includes(parent)) {
+    crumbs.push(parent)
+  }
+  if (!crumbs.includes(id)) crumbs.push(id)
+  return crumbs
+}
+
+/** Immediate parent id for hierarchy navigation (null for epics). */
+export function parentIdForDetail(
+  detail: Pick<WorkItemMeta, "id" | "type" | "parent" | "epic">
+): string | null {
+  if (detail.type === "epic") return null
+  const id = detail.id.trim()
+  const parent = (detail.parent || "").trim()
+  if (parent && parent !== id) return parent
+  const epic = (detail.epic || "").trim()
+  if (epic && epic !== id) return epic
+  return null
+}
+
+function buildBoardUrl(
+  pathname: string,
+  searchParams: URLSearchParams,
+  itemId: string | null
+): string {
+  const params = new URLSearchParams(searchParams.toString())
+  if (itemId) params.set(DETAIL_ITEM_PARAM, itemId)
+  else params.delete(DETAIL_ITEM_PARAM)
+  const qs = params.toString()
+  return qs ? `${pathname}?${qs}` : pathname
+}
+
+function placeholderRef(id: string): WorkItemRef {
+  return {
+    kind: id.startsWith("E-")
+      ? "epic"
+      : id.startsWith("S-")
+        ? "story"
+        : "item",
+    id,
+    title: id,
+    filePath: "",
+    itemType: id.startsWith("B-")
+      ? "bug"
+      : id.startsWith("T-")
+        ? "task"
+        : undefined,
+  }
+}
+
+function currentSheetEntry(state: LoadState): SheetHistoryEntry | null {
+  if (state.status === "idle") return null
+  if (state.status === "ready") {
+    return { id: state.detail.id, title: state.detail.title }
+  }
+  return { id: state.ref.id, title: state.ref.title || state.ref.id }
+}
+
+function DetailHierarchyBreadcrumb({
+  crumbs,
+  onNavigate,
+}: {
+  crumbs: string[]
+  onNavigate: (id: string) => void
+}) {
+  if (crumbs.length === 0) return null
+  return (
+    <Breadcrumb>
+      <BreadcrumbList className="font-mono text-xs gap-1">
+        {crumbs.map((id, index) => {
+          const isLast = index === crumbs.length - 1
+          return (
+            <React.Fragment key={`${id}-${index}`}>
+              {index > 0 ? (
+                <BreadcrumbSeparator className="[&>svg]:size-3" />
+              ) : null}
+              <BreadcrumbItem>
+                {isLast ? (
+                  <BreadcrumbPage className="font-mono text-xs">
+                    {id}
+                  </BreadcrumbPage>
+                ) : (
+                  <BreadcrumbLink
+                    className="font-mono text-xs"
+                    href={`#${id}`}
+                    onClick={(e) => {
+                      e.preventDefault()
+                      onNavigate(id)
+                    }}
+                  >
+                    {id}
+                  </BreadcrumbLink>
+                )}
+              </BreadcrumbItem>
+            </React.Fragment>
+          )
+        })}
+      </BreadcrumbList>
+    </Breadcrumb>
+  )
+}
+
+function WorkItemSheetProviderInner({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+  const itemId = searchParams.get(DETAIL_ITEM_PARAM)?.trim() || null
+
   const [open, setOpen] = React.useState(false)
   const [state, setState] = React.useState<LoadState>({ status: "idle" })
+  const [sheetHistory, setSheetHistory] = React.useState<SheetHistoryEntry[]>(
+    []
+  )
   const requestId = React.useRef(0)
+  /** Id currently shown / loading (skip re-fetch when URL matches). */
+  const activeItemId = React.useRef<string | null>(null)
+  /** Skip writing URL when reacting to URL (back/forward / shared link). */
+  const syncingFromUrl = React.useRef(false)
+  const stateRef = React.useRef(state)
+  stateRef.current = state
+  const openRef = React.useRef(open)
+  openRef.current = open
 
-  const openDetail = React.useCallback((ref: WorkItemRef) => {
-    const id = ++requestId.current
+  const writeItemUrl = React.useCallback(
+    (nextItemId: string | null, history: "push" | "replace") => {
+      const current = searchParams.get(DETAIL_ITEM_PARAM)?.trim() || null
+      if (current === nextItemId) return
+      const url = buildBoardUrl(pathname, searchParams, nextItemId)
+      if (history === "replace") router.replace(url, { scroll: false })
+      else router.push(url, { scroll: false })
+    },
+    [pathname, router, searchParams]
+  )
+
+  const rememberCurrentForBack = React.useCallback(
+    (nextId: string, history: "push" | "replace") => {
+      if (history !== "push") return
+      if (syncingFromUrl.current) return
+      if (!openRef.current) return
+      const current = currentSheetEntry(stateRef.current)
+      if (!current || current.id === nextId) return
+      setSheetHistory((stack) => [...stack, current])
+    },
+    []
+  )
+
+  const loadFromRef = React.useCallback((ref: WorkItemRef, req: number) => {
+    activeItemId.current = ref.id
     setOpen(true)
     setState({ status: "loading", ref })
     void loadWorkItemDetail(ref.filePath, ref.kind).then((result) => {
-      if (id !== requestId.current) return
+      if (req !== requestId.current) return
       if (result.ok) {
         setState({ status: "ready", ref, detail: result.detail })
       } else {
@@ -70,12 +259,90 @@ export function WorkItemSheetProvider({
     })
   }, [])
 
-  const onOpenChange = (next: boolean) => {
-    setOpen(next)
-    if (!next) {
-      requestId.current += 1
-      setState({ status: "idle" })
+  const openDetail = React.useCallback(
+    (ref: WorkItemRef, options?: OpenDetailOptions) => {
+      const history = options?.history ?? "push"
+      rememberCurrentForBack(ref.id, history)
+      const req = ++requestId.current
+      loadFromRef(ref, req)
+      if (!syncingFromUrl.current) {
+        writeItemUrl(ref.id, history)
+      }
+    },
+    [loadFromRef, rememberCurrentForBack, writeItemUrl]
+  )
+
+  const openDetailById = React.useCallback(
+    (rawId: string, options?: OpenDetailOptions) => {
+      const id = rawId.trim()
+      if (!id) return
+      const history = options?.history ?? "push"
+      rememberCurrentForBack(id, history)
+      const placeholder = placeholderRef(id)
+      const req = ++requestId.current
+      activeItemId.current = id
+      setOpen(true)
+      setState({ status: "loading", ref: placeholder })
+      if (!syncingFromUrl.current) {
+        writeItemUrl(id, history)
+      }
+      void resolveWorkItemById(id).then((resolved) => {
+        if (req !== requestId.current) return
+        if (!resolved.ok) {
+          setState({
+            status: "error",
+            ref: placeholder,
+            message: resolved.message,
+            filePath: "",
+          })
+          return
+        }
+        loadFromRef(resolved.ref, req)
+      })
+    },
+    [loadFromRef, rememberCurrentForBack, writeItemUrl]
+  )
+
+  const clearSheet = React.useCallback(() => {
+    requestId.current += 1
+    activeItemId.current = null
+    setOpen(false)
+    setState({ status: "idle" })
+    setSheetHistory([])
+  }, [])
+
+  // Hydrate / react to URL (shared links, back/forward, close).
+  React.useEffect(() => {
+    if (!itemId) {
+      if (activeItemId.current != null) {
+        clearSheet()
+      }
+      return
     }
+    if (activeItemId.current === itemId) return
+
+    // Browser back/forward landed on a prior detail — align stack.
+    setSheetHistory((stack) => {
+      if (stack.length > 0 && stack[stack.length - 1]?.id === itemId) {
+        return stack.slice(0, -1)
+      }
+      return stack
+    })
+
+    syncingFromUrl.current = true
+    openDetailById(itemId, { history: "replace" })
+    queueMicrotask(() => {
+      syncingFromUrl.current = false
+    })
+  }, [itemId, openDetailById, clearSheet])
+
+  const onOpenChange = (next: boolean) => {
+    if (next) {
+      setOpen(true)
+      return
+    }
+    clearSheet()
+    writeItemUrl(null, "replace")
   }
 
   const titleId =
@@ -89,20 +356,68 @@ export function WorkItemSheetProvider({
         ? state.ref.title
         : "Work item detail"
 
+  const hierarchyCrumbs =
+    state.status === "ready"
+      ? hierarchyIdsForDetail(state.detail)
+      : state.status === "loading" || state.status === "error"
+        ? [state.ref.id]
+        : []
+
+  const parentId =
+    state.status === "ready"
+      ? parentIdForDetail(state.detail)
+      : hierarchyCrumbs.length > 1
+        ? hierarchyCrumbs[hierarchyCrumbs.length - 2]!
+        : null
+
   return (
-    <WorkItemSheetContext.Provider value={{ openDetail }}>
+    <WorkItemSheetContext.Provider value={{ openDetail, openDetailById }}>
       {children}
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent
           side="right"
           className="w-full gap-0 overflow-hidden p-0 data-[side=right]:w-full data-[side=right]:sm:max-w-4xl data-[side=right]:lg:max-w-5xl data-[side=right]:xl:max-w-6xl"
-          showCloseButton
+          showCloseButton={false}
         >
-          <SheetHeader className="w-full border-b-2 border-border pr-12">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="font-mono text-xs text-muted-foreground">
-                {titleId}
-              </span>
+          <div className="flex shrink-0 items-center justify-between px-3 pt-3">
+            {parentId ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                onClick={() => openDetailById(parentId)}
+                aria-label={`Go to parent ${parentId}`}
+              >
+                <ArrowLeftIcon />
+                <span className="sr-only">Go to parent {parentId}</span>
+              </Button>
+            ) : (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                className="invisible pointer-events-none"
+                tabIndex={-1}
+                aria-hidden
+              >
+                <ArrowLeftIcon />
+              </Button>
+            )}
+            <SheetClose
+              render={
+                <Button type="button" variant="ghost" size="icon-sm" />
+              }
+            >
+              <XIcon />
+              <span className="sr-only">Close</span>
+            </SheetClose>
+          </div>
+          <SheetHeader className="w-full border-b-2 border-border pt-2">
+            <div className="flex w-full min-w-0 flex-wrap items-center gap-2">
+              <DetailHierarchyBreadcrumb
+                crumbs={hierarchyCrumbs}
+                onNavigate={(id) => openDetailById(id)}
+              />
               {state.status === "ready" ? (
                 <WorkItemDetailHeaderBadges detail={state.detail} />
               ) : state.status === "loading" || state.status === "error" ? (
@@ -142,9 +457,11 @@ export function WorkItemSheetProvider({
                   Could not load {state.ref.id}
                 </p>
                 <p className="mt-1 text-muted-foreground">{state.message}</p>
-                <p className="mt-2 break-all font-mono text-xs text-muted-foreground">
-                  {state.filePath}
-                </p>
+                {state.filePath ? (
+                  <p className="mt-2 break-all font-mono text-xs text-muted-foreground">
+                    {state.filePath}
+                  </p>
+                ) : null}
               </div>
             ) : null}
 
@@ -163,6 +480,18 @@ export function WorkItemSheetProvider({
         </SheetContent>
       </Sheet>
     </WorkItemSheetContext.Provider>
+  )
+}
+
+export function WorkItemSheetProvider({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <React.Suspense fallback={children}>
+      <WorkItemSheetProviderInner>{children}</WorkItemSheetProviderInner>
+    </React.Suspense>
   )
 }
 

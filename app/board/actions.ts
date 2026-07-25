@@ -9,10 +9,12 @@ import type {
   DetailChildItem,
   WorkItemDetail,
   WorkItemDetailResult,
+  WorkItemRef,
 } from "@/lib/taskmark/detail-types"
 import { parseItemsForEpic, parseItemsForStory } from "@/lib/taskmark/parse-items"
 import { parseStoriesForEpic } from "@/lib/taskmark/parse-stories"
 import type { DiscoveredProject } from "@/lib/taskmark/types"
+import { findWorkItemInProjects } from "@/lib/taskmark/resolve-work-item"
 import { loadConfiguredWorkspace } from "@/lib/taskmark/workspace"
 
 function isPathInside(parent: string, child: string): boolean {
@@ -81,6 +83,41 @@ function attachChildren(
   }
 
   return detail
+}
+
+export type ResolveWorkItemResult =
+  | { ok: true; ref: WorkItemRef }
+  | { ok: false; itemId: string; message: string }
+
+/**
+ * Resolve a shareable work item id (E-/S-/T-/B-) to a WorkItemRef under
+ * configured boards.
+ */
+export async function resolveWorkItemById(
+  itemId: string
+): Promise<ResolveWorkItemResult> {
+  const id = typeof itemId === "string" ? itemId.trim() : ""
+  if (!id) {
+    return { ok: false, itemId: "", message: "Missing work item id" }
+  }
+
+  const masters = await getMasterFoldersCookie()
+  if (masters.length === 0) {
+    return { ok: false, itemId: id, message: "No workspace configured" }
+  }
+
+  const workspace = loadConfiguredWorkspace(masters)
+  const resolved = findWorkItemInProjects(workspace.projects, id)
+  if (!resolved) {
+    return {
+      ok: false,
+      itemId: id,
+      message: `Work item ${id} was not found on configured boards`,
+    }
+  }
+
+  const { boardPath: _boardPath, projectId: _projectId, ...ref } = resolved
+  return { ok: true, ref }
 }
 
 /**

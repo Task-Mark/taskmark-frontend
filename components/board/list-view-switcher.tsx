@@ -1,6 +1,7 @@
 "use client"
 
-import { useRouter } from "next/navigation"
+import * as React from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
@@ -16,12 +17,14 @@ type ListViewSwitcherProps = {
   selectedStoryId?: string | null
 }
 
-export function ListViewSwitcher({
+function ListViewSwitcherInner({
   activeView,
   selectedEpicId = null,
   selectedStoryId = null,
 }: ListViewSwitcherProps) {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const itemId = searchParams.get("item")
 
   return (
     <Tabs
@@ -34,6 +37,7 @@ export function ListViewSwitcher({
             view: next,
             epic: next === "overall" ? selectedEpicId : null,
             story: next === "overall" ? selectedStoryId : null,
+            item: itemId,
           })
         )
       }}
@@ -46,5 +50,25 @@ export function ListViewSwitcher({
         ))}
       </TabsList>
     </Tabs>
+  )
+}
+
+export function ListViewSwitcher(props: ListViewSwitcherProps) {
+  return (
+    <React.Suspense
+      fallback={
+        <Tabs value={props.activeView}>
+          <TabsList aria-label="Board list view">
+            {LIST_VIEW_MODES.map((mode) => (
+              <TabsTrigger key={mode} value={mode} disabled>
+                {LIST_VIEW_LABELS[mode]}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
+      }
+    >
+      <ListViewSwitcherInner {...props} />
+    </React.Suspense>
   )
 }

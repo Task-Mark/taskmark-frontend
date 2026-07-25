@@ -1,3 +1,5 @@
+"use client"
+
 import type { ReactNode } from "react"
 
 import { formatActualDuration, formatDurationMinutes } from "@/lib/format-duration"
@@ -17,8 +19,25 @@ import { StatusBadge, TypeBadge, PriorityBadge } from "@/components/board/status
 import { AttributionPeopleList } from "@/components/board/attribution-avatars"
 import { DetailChildrenList } from "@/components/board/detail-children-list"
 import { MarkdownContent } from "@/components/board/markdown-content"
+import { useWorkItemSheet } from "@/components/board/work-item-sheet"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
+
+function RelatedItemButton({ itemId }: { itemId: string }) {
+  const { openDetailById } = useWorkItemSheet()
+  if (!itemId.trim()) return "—"
+  return (
+    <Button
+      type="button"
+      variant="link"
+      className="h-auto p-0 font-medium text-foreground underline-offset-2 hover:underline"
+      onClick={() => openDetailById(itemId)}
+    >
+      {itemId}
+    </Button>
+  )
+}
 
 function MetaGrid({ detail }: { detail: WorkItemMeta }) {
   const rows: { label: string; value: ReactNode }[] = [
@@ -40,8 +59,14 @@ function MetaGrid({ detail }: { detail: WorkItemMeta }) {
       label: "Actual",
       value: formatActualDuration(detail.actualMs, detail.actualMinutes),
     },
-    { label: "Parent", value: detail.parent || "—" },
-    { label: "Epic", value: detail.epic || "—" },
+    {
+      label: "Parent",
+      value: detail.parent ? <RelatedItemButton itemId={detail.parent} /> : "—",
+    },
+    {
+      label: "Epic",
+      value: detail.epic ? <RelatedItemButton itemId={detail.epic} /> : "—",
+    },
     { label: "Owner", value: detail.owner || "—" },
     { label: "Created", value: formatTaskmarkDate(detail.created) },
     { label: "Updated", value: formatTaskmarkDate(detail.updated) },

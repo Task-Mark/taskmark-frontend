@@ -1,5 +1,6 @@
 import type { DiscoveredProject } from "@/lib/taskmark/types"
 import type {
+  EpicWorkItemsList,
   FlatWorkItemList,
   FlatWorkItemRow,
   ProjectStoriesFlatList,
@@ -242,6 +243,90 @@ export function parseAllTasksForProject(
 }
 
 /**
+ * Overall / Work items: stories + epic-direct tasks/bugs under one epic
+ * (excludes tasks/bugs that live under a story). Sorted by status then priority.
+ */
+export function parseWorkItemsForEpic(
+  project: DiscoveredProject,
+  epicId: string,
+  epicTitle?: string | null
+): EpicWorkItemsList {
+  const rows: WorkItemsViewRow[] = []
+  const errors: EpicWorkItemsList["errors"] = []
+  const title = epicTitle ?? null
+
+  const storyList = parseStoriesForEpic(project, epicId)
+  for (const err of storyList.errors) {
+    errors.push({ filePath: err.filePath, message: err.message })
+  }
+  const resolvedTitle = title ?? storyList.epicTitle
+  for (const story of storyList.stories) {
+    rows.push({
+      kind: "story",
+      id: story.id,
+      title: story.title,
+      status: story.status,
+      priority: story.priority,
+      size: story.size,
+      points: story.points,
+      estimateMinutes: story.estimateMinutes,
+      actualMinutes: story.actualMinutes,
+      actualMs: story.actualMs,
+      epicId,
+      epicTitle: resolvedTitle ?? epicId,
+      tags: story.tags,
+      reporters: story.reporters,
+      resolvers: story.resolvers,
+      created: story.created,
+      completedAt: story.completedAt,
+      workItemCount: story.workItemCount,
+      doneWorkItemCount: story.doneWorkItemCount,
+      filePath: story.filePath,
+      project: story.project,
+    })
+  }
+
+  const epicItems = parseItemsForEpic(project, epicId)
+  for (const err of epicItems.errors) {
+    errors.push({ filePath: err.filePath, message: err.message })
+  }
+  for (const item of epicItems.items) {
+    rows.push({
+      kind: item.type,
+      id: item.id,
+      title: item.title,
+      status: item.status,
+      priority: item.priority,
+      size: item.size,
+      points: item.points,
+      estimateMinutes: item.estimateMinutes,
+      actualMinutes: item.actualMinutes,
+      actualMs: item.actualMs,
+      epicId,
+      epicTitle: resolvedTitle ?? epicId,
+      tags: item.tags,
+      reporters: item.reporters,
+      resolvers: item.resolvers,
+      created: item.created,
+      completedAt: item.completedAt,
+      workItemCount: 0,
+      doneWorkItemCount: 0,
+      filePath: item.filePath,
+      project: item.project,
+    })
+  }
+
+  rows.sort(compareByStatusThenPriority)
+  return {
+    project,
+    epicId,
+    epicTitle: resolvedTitle,
+    rows,
+    errors,
+  }
+}
+
+/**
  * Work items tab: all stories + epic-direct tasks/bugs only
  * (excludes tasks/bugs that live under a story). Sorted by status then priority.
  */
@@ -256,61 +341,11 @@ export function parseWorkItemsViewForProject(
   }))
 
   for (const epic of epicList.epics) {
-    const storyList = parseStoriesForEpic(project, epic.id)
-    for (const err of storyList.errors) {
+    const epicWorkItems = parseWorkItemsForEpic(project, epic.id, epic.title)
+    for (const err of epicWorkItems.errors) {
       errors.push({ filePath: err.filePath, message: err.message })
     }
-    for (const story of storyList.stories) {
-      rows.push({
-        kind: "story",
-        id: story.id,
-        title: story.title,
-        status: story.status,
-        priority: story.priority,
-        size: story.size,
-        points: story.points,
-        estimateMinutes: story.estimateMinutes,
-        actualMinutes: story.actualMinutes,
-        actualMs: story.actualMs,
-        epicId: epic.id,
-        epicTitle: epic.title,
-        tags: story.tags,
-        reporters: story.reporters,
-        resolvers: story.resolvers,
-        created: story.created,
-        completedAt: story.completedAt,
-        filePath: story.filePath,
-        project: story.project,
-      })
-    }
-
-    const epicItems = parseItemsForEpic(project, epic.id)
-    for (const err of epicItems.errors) {
-      errors.push({ filePath: err.filePath, message: err.message })
-    }
-    for (const item of epicItems.items) {
-      rows.push({
-        kind: item.type,
-        id: item.id,
-        title: item.title,
-        status: item.status,
-        priority: item.priority,
-        size: item.size,
-        points: item.points,
-        estimateMinutes: item.estimateMinutes,
-        actualMinutes: item.actualMinutes,
-        actualMs: item.actualMs,
-        epicId: epic.id,
-        epicTitle: epic.title,
-        tags: item.tags,
-        reporters: item.reporters,
-        resolvers: item.resolvers,
-        created: item.created,
-        completedAt: item.completedAt,
-        filePath: item.filePath,
-        project: item.project,
-      })
-    }
+    rows.push(...epicWorkItems.rows)
   }
 
   rows.sort(compareByStatusThenPriority)
