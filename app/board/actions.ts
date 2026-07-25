@@ -3,7 +3,8 @@
 import fs from "node:fs"
 import path from "node:path"
 
-import { getMasterFoldersCookie } from "@/lib/taskmark/cookies"
+import { getActiveProjectCookie, getMasterFoldersCookie } from "@/lib/taskmark/cookies"
+import { resolveActiveProject } from "@/lib/taskmark/active-project"
 import { parseWorkItemDetailFromRaw } from "@/lib/taskmark/parse-detail"
 import type {
   DetailChildItem,
@@ -14,7 +15,10 @@ import type {
 import { parseItemsForEpic, parseItemsForStory } from "@/lib/taskmark/parse-items"
 import { parseStoriesForEpic } from "@/lib/taskmark/parse-stories"
 import type { DiscoveredProject } from "@/lib/taskmark/types"
-import { findWorkItemInProjects } from "@/lib/taskmark/resolve-work-item"
+import {
+  findWorkItemInProjects,
+  findWorkItemOnBoard,
+} from "@/lib/taskmark/resolve-work-item"
 import { loadConfiguredWorkspace } from "@/lib/taskmark/workspace"
 
 function isPathInside(parent: string, child: string): boolean {
@@ -90,11 +94,14 @@ export type ResolveWorkItemResult =
   | { ok: false; itemId: string; message: string }
 
 /**
- * Resolve a shareable work item id (E-/S-/T-/B-) to a WorkItemRef under
- * configured boards.
+ * Resolve a shareable work item id (E-/S-/T-/B-) to a WorkItemRef.
+ *
+ * - `withinFilePath`: only search the board that contains that file (in-sheet nav).
+ * - otherwise: only search the **active** project board (shared `?item=` links).
  */
 export async function resolveWorkItemById(
-  itemId: string
+  itemId: string,
+  options?: { withinFilePath?: string | null }
 ): Promise<ResolveWorkItemResult> {
   const id = typeof itemId === "string" ? itemId.trim() : ""
   if (!id) {
@@ -107,12 +114,46 @@ export async function resolveWorkItemById(
   }
 
   const workspace = loadConfiguredWorkspace(masters)
-  const resolved = findWorkItemInProjects(workspace.projects, id)
+  const within = options?.withinFilePath?.trim() || null
+
+  if (within) {
+    const project = findProjectForFile(workspace.projects, within)
+    if (!project) {
+      return {
+        ok: false,
+        itemId: id,
+        message: "File is outside configured Taskmark boards",
+      }
+    }
+    const ref = findWorkItemOnBoard(project.boardPath, id)
+    if (!ref) {
+      return {
+        ok: false,
+        itemId: id,
+        message: `Work item ${id} was not found on this project board`,
+      }
+    }
+    return { ok: true, ref }
+  }
+
+  const savedActiveId = await getActiveProjectCookie()
+  const active = resolveActiveProject(workspace.projects, savedActiveId)
+  if (!active) {
+    return {
+      ok: false,
+      itemId: id,
+      message: "No active Taskmark project selected",
+    }
+  }
+
+  const resolved = findWorkItemInProjects(workspace.projects, id, {
+    boardPath: active.boardPath,
+  })
   if (!resolved) {
     return {
       ok: false,
       itemId: id,
-      message: `Work item ${id} was not found on configured boards`,
+      message: `Work item ${id} was not found on the active board`,
     }
   }
 

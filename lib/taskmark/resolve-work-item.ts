@@ -140,12 +140,72 @@ export function findWorkItemOnBoard(
   return null
 }
 
-/** Search configured projects for a work item id (first match wins). */
+/** Search configured projects for a work item id.
+ * Prefer `preferBoardPath` / `preferProjectId` when set; otherwise first match.
+ */
 export function findWorkItemInProjects(
   projects: DiscoveredProject[],
-  itemId: string
+  itemId: string,
+  options?: {
+    /** Only search this board (cross-project id collisions). */
+    boardPath?: string | null
+    /** Prefer this project id when scanning multiple boards. */
+    preferProjectId?: string | null
+  }
 ): ResolvedWorkItem | null {
-  for (const project of projects) {
+  const boardPath = options?.boardPath?.trim() || null
+  if (boardPath) {
+    const project =
+      projects.find(
+        (p) =>
+          path.resolve(p.boardPath) === path.resolve(boardPath) ||
+          p.boardPath === boardPath
+      ) ?? null
+    const ref = findWorkItemOnBoard(
+      project?.boardPath ?? boardPath,
+      itemId
+    )
+    if (!ref) return null
+    return {
+      ...ref,
+      boardPath: project?.boardPath ?? boardPath,
+      projectId: project?.id ?? boardPath,
+    }
+  }
+
+  const preferId = options?.preferProjectId?.trim() || null
+  const ordered = preferId
+    ? [
+        ...projects.filter(
+          (p) => p.id === preferId || p.boardPath === preferId
+        ),
+        ...projects.filter(
+          (p) => p.id !== preferId && p.boardPath !== preferId
+        ),
+      ]
+    : projects
+
+  // When an active/preferred project is set, only resolve on that board so
+  // shared ids cannot jump to another project.
+  if (preferId) {
+    const preferred = ordered[0]
+    if (
+      preferred &&
+      (preferred.id === preferId || preferred.boardPath === preferId)
+    ) {
+      const ref = findWorkItemOnBoard(preferred.boardPath, itemId)
+      if (ref) {
+        return {
+          ...ref,
+          boardPath: preferred.boardPath,
+          projectId: preferred.id,
+        }
+      }
+      return null
+    }
+  }
+
+  for (const project of ordered) {
     const ref = findWorkItemOnBoard(project.boardPath, itemId)
     if (ref) {
       return {

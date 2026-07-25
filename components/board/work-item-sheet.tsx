@@ -22,12 +22,17 @@ import {
 } from "@/components/ui/breadcrumb"
 import {
   Sheet,
-  SheetClose,
   SheetContent,
   SheetDescription,
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import type {
   WorkItemDetail,
   WorkItemMeta,
@@ -43,6 +48,11 @@ type LoadState =
 type OpenDetailOptions = {
   /** Default `push` so Back restores the previous detail / list URL. */
   history?: "push" | "replace"
+  /**
+   * Scope id lookup to the board containing this file.
+   * Defaults to the currently open item’s file (avoids cross-project id hits).
+   */
+  withinFilePath?: string | null
 }
 
 type SheetHistoryEntry = {
@@ -210,6 +220,8 @@ function WorkItemSheetProviderInner({
   const requestId = React.useRef(0)
   /** Id currently shown / loading (skip re-fetch when URL matches). */
   const activeItemId = React.useRef<string | null>(null)
+  /** Board file for the open item — scopes parent/breadcrumb id resolution. */
+  const scopeFilePathRef = React.useRef<string | null>(null)
   /** Skip writing URL when reacting to URL (back/forward / shared link). */
   const syncingFromUrl = React.useRef(false)
   const stateRef = React.useRef(state)
@@ -217,6 +229,18 @@ function WorkItemSheetProviderInner({
   const openRef = React.useRef(open)
   openRef.current = open
 
+  React.useEffect(() => {
+    if (state.status === "ready" && state.detail.filePath) {
+      scopeFilePathRef.current = state.detail.filePath
+    } else if (
+      (state.status === "loading" || state.status === "error") &&
+      state.ref.filePath
+    ) {
+      scopeFilePathRef.current = state.ref.filePath
+    } else if (state.status === "idle") {
+      scopeFilePathRef.current = null
+    }
+  }, [state])
   const writeItemUrl = React.useCallback(
     (nextItemId: string | null, history: "push" | "replace") => {
       const current = searchParams.get(DETAIL_ITEM_PARAM)?.trim() || null
@@ -242,11 +266,13 @@ function WorkItemSheetProviderInner({
 
   const loadFromRef = React.useCallback((ref: WorkItemRef, req: number) => {
     activeItemId.current = ref.id
+    if (ref.filePath) scopeFilePathRef.current = ref.filePath
     setOpen(true)
     setState({ status: "loading", ref })
     void loadWorkItemDetail(ref.filePath, ref.kind).then((result) => {
       if (req !== requestId.current) return
       if (result.ok) {
+        scopeFilePathRef.current = result.detail.filePath || ref.filePath
         setState({ status: "ready", ref, detail: result.detail })
       } else {
         setState({
@@ -277,6 +303,10 @@ function WorkItemSheetProviderInner({
       const id = rawId.trim()
       if (!id) return
       const history = options?.history ?? "push"
+      const withinFilePath =
+        options?.withinFilePath?.trim() ||
+        scopeFilePathRef.current ||
+        null
       rememberCurrentForBack(id, history)
       const placeholder = placeholderRef(id)
       const req = ++requestId.current
@@ -286,7 +316,7 @@ function WorkItemSheetProviderInner({
       if (!syncingFromUrl.current) {
         writeItemUrl(id, history)
       }
-      void resolveWorkItemById(id).then((resolved) => {
+      void resolveWorkItemById(id, { withinFilePath }).then((resolved) => {
         if (req !== requestId.current) return
         if (!resolved.ok) {
           setState({
@@ -306,6 +336,7 @@ function WorkItemSheetProviderInner({
   const clearSheet = React.useCallback(() => {
     requestId.current += 1
     activeItemId.current = null
+    scopeFilePathRef.current = null
     setOpen(false)
     setState({ status: "idle" })
     setSheetHistory([])
@@ -370,6 +401,37 @@ function WorkItemSheetProviderInner({
         ? hierarchyCrumbs[hierarchyCrumbs.length - 2]!
         : null
 
+  const [parentTitle, setParentTitle] = React.useState<string | null>(null)
+
+  React.useEffect(() => {
+    if (!parentId) {
+      setParentTitle(null)
+      return
+    }
+    let cancelled = false
+    setParentTitle(null)
+    void resolveWorkItemById(parentId, {
+      withinFilePath: scopeFilePathRef.current,
+    }).then((resolved) => {
+      if (cancelled) return
+      if (resolved.ok) {
+        setParentTitle(resolved.ref.title || null)
+      } else {
+        setParentTitle(null)
+      }
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [parentId])
+
+  const parentTooltip =
+    parentTitle && parentTitle !== parentId
+      ? `${parentId} · ${parentTitle}`
+      : parentId
+        ? `Go to ${parentId}`
+        : ""
+
   return (
     <WorkItemSheetContext.Provider value={{ openDetail, openDetailById }}>
       {children}
@@ -380,37 +442,57 @@ function WorkItemSheetProviderInner({
           showCloseButton={false}
         >
           <div className="flex shrink-0 items-center justify-between px-3 pt-3">
-            {parentId ? (
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon-sm"
-                onClick={() => openDetailById(parentId)}
-                aria-label={`Go to parent ${parentId}`}
-              >
-                <ArrowLeftIcon />
-                <span className="sr-only">Go to parent {parentId}</span>
-              </Button>
-            ) : (
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon-sm"
-                className="invisible pointer-events-none"
-                tabIndex={-1}
-                aria-hidden
-              >
-                <ArrowLeftIcon />
-              </Button>
-            )}
-            <SheetClose
-              render={
-                <Button type="button" variant="ghost" size="icon-sm" />
-              }
-            >
-              <XIcon />
-              <span className="sr-only">Close</span>
-            </SheetClose>
+            <TooltipProvider delay={200}>
+              {parentId ? (
+                <Tooltip>
+                  <TooltipTrigger
+                    render={
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-sm"
+                        aria-label={
+                          parentTitle
+                            ? `Go to ${parentId}: ${parentTitle}`
+                            : `Go to parent ${parentId}`
+                        }
+                        onClick={() => openDetailById(parentId)}
+                      />
+                    }
+                  >
+                    <ArrowLeftIcon />
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">{parentTooltip}</TooltipContent>
+                </Tooltip>
+              ) : (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  className="invisible pointer-events-none"
+                  tabIndex={-1}
+                  aria-hidden
+                >
+                  <ArrowLeftIcon />
+                </Button>
+              )}
+              <Tooltip>
+                <TooltipTrigger
+                  render={
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon-sm"
+                      aria-label="Close"
+                      onClick={() => onOpenChange(false)}
+                    />
+                  }
+                >
+                  <XIcon />
+                </TooltipTrigger>
+                <TooltipContent side="bottom">Close</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
           <SheetHeader className="w-full border-b-2 border-border pt-2">
             <div className="flex w-full min-w-0 flex-wrap items-center gap-2">
