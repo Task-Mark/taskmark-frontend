@@ -25,11 +25,13 @@ import {
 import { ChildProgressBar } from "@/components/board/child-progress-bar"
 import { ListFiltersBar } from "@/components/board/list-filters-bar"
 import { ListPagination } from "@/components/board/list-pagination"
+import { SortableTableHead } from "@/components/board/sortable-table-head"
 import { TimeframeFilter } from "@/components/board/timeframe-filter"
 import { ViewWorkItemButton } from "@/components/board/work-item-sheet"
 import { AttributionAvatarGroup } from "@/components/board/attribution-avatars"
 import { usePaginatedRows } from "@/hooks/use-paginated-rows"
 import { usePersistedHideCompleted } from "@/hooks/use-persisted-hide-completed"
+import { useTableSort } from "@/hooks/use-table-sort"
 import { cn } from "@/lib/utils"
 import { formatActualDuration, formatDurationMinutes } from "@/lib/format-duration"
 import type { EpicSummary, ProjectEpicList } from "@/lib/taskmark/epic-types"
@@ -41,6 +43,10 @@ import {
   listFilterResetKey,
   type TimeframeFilterState,
 } from "@/lib/taskmark/list-filters"
+import {
+  sortRowsByTableSort,
+  tableSortResetKey,
+} from "@/lib/taskmark/table-sort"
 
 function formatPoints(value: number | null): string {
   if (value === null) return "—"
@@ -75,6 +81,7 @@ function ProjectEpicCard({
     "epics",
     initialHideCompleted
   )
+  const { sort, onSort } = useTableSort()
   const [timeframe, setTimeframe] = useState<TimeframeFilterState>(
     DEFAULT_TIMEFRAME_FILTER
   )
@@ -103,6 +110,11 @@ function ProjectEpicCard({
     [visibleEpics, query, hideCompleted, timeframe]
   )
 
+  const sorted = useMemo(
+    () => sortRowsByTableSort(filtered, sort),
+    [filtered, sort]
+  )
+
   const {
     pageRows,
     page,
@@ -112,14 +124,17 @@ function ProjectEpicCard({
     setPage,
     setPageSize,
   } = usePaginatedRows(
-    filtered,
-    listFilterResetKey(project.id, {
-      query,
-      hideCompleted,
-      parentKey: null,
-      selectedTags: [],
-      timeframe,
-    })
+    sorted,
+    [
+      listFilterResetKey(project.id, {
+        query,
+        hideCompleted,
+        parentKey: null,
+        selectedTags: [],
+        timeframe,
+      }),
+      tableSortResetKey(sort),
+    ].join("|")
   )
 
   const hasSourceRows = visibleEpics.length > 0
@@ -191,13 +206,38 @@ function ProjectEpicCard({
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-10" />
-                      <TableHead>ID</TableHead>
-                      <TableHead>Title</TableHead>
+                      <SortableTableHead
+                        label="ID"
+                        sortKey="id"
+                        activeKey={sort?.key ?? null}
+                        direction={sort?.direction ?? null}
+                        onSort={onSort}
+                      />
+                      <SortableTableHead
+                        label="Title"
+                        sortKey="title"
+                        activeKey={sort?.key ?? null}
+                        direction={sort?.direction ?? null}
+                        onSort={onSort}
+                      />
                       <TableHead>Work items</TableHead>
-                      <TableHead>Points</TableHead>
+                      <SortableTableHead
+                        label="Points"
+                        sortKey="points"
+                        activeKey={sort?.key ?? null}
+                        direction={sort?.direction ?? null}
+                        onSort={onSort}
+                      />
                       <TableHead>Est</TableHead>
                       <TableHead>Actual</TableHead>
-                      <TableHead className="w-16 text-center">People</TableHead>
+                      <SortableTableHead
+                        label="People"
+                        sortKey="people"
+                        activeKey={sort?.key ?? null}
+                        direction={sort?.direction ?? null}
+                        onSort={onSort}
+                        className="w-16 text-center"
+                      />
                       <TableHead>Progress</TableHead>
                     </TableRow>
                   </TableHeader>

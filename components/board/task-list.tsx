@@ -25,11 +25,13 @@ import {
 } from "@/components/board/date-tooltip"
 import { ListFiltersBar } from "@/components/board/list-filters-bar"
 import { ListPagination } from "@/components/board/list-pagination"
+import { SortableTableHead } from "@/components/board/sortable-table-head"
 import { TimeframeFilter } from "@/components/board/timeframe-filter"
 import { ViewWorkItemButton } from "@/components/board/work-item-sheet"
 import { AttributionAvatarGroup } from "@/components/board/attribution-avatars"
 import { usePaginatedRows } from "@/hooks/use-paginated-rows"
 import { usePersistedHideCompleted } from "@/hooks/use-persisted-hide-completed"
+import { useTableSort } from "@/hooks/use-table-sort"
 import { formatActualDuration, formatDurationMinutes } from "@/lib/format-duration"
 import type { StoryItemList } from "@/lib/taskmark/item-types"
 import {
@@ -39,6 +41,10 @@ import {
   listFilterResetKey,
   type TimeframeFilterState,
 } from "@/lib/taskmark/list-filters"
+import {
+  sortRowsByTableSort,
+  tableSortResetKey,
+} from "@/lib/taskmark/table-sort"
 
 function formatPoints(value: number | null): string {
   if (value === null) return "—"
@@ -66,6 +72,7 @@ export function TaskList({
   const [timeframe, setTimeframe] = useState<TimeframeFilterState>(
     DEFAULT_TIMEFRAME_FILTER
   )
+  const { sort, onSort } = useTableSort()
 
   const completedAts = useMemo(
     () => items.map((item) => item.completedAt),
@@ -83,6 +90,11 @@ export function TaskList({
     [items, query, hideCompleted, timeframe]
   )
 
+  const sorted = useMemo(
+    () => sortRowsByTableSort(filtered, sort),
+    [filtered, sort]
+  )
+
   const {
     pageRows,
     page,
@@ -92,14 +104,17 @@ export function TaskList({
     setPage,
     setPageSize,
   } = usePaginatedRows(
-    filtered,
-    listFilterResetKey(storyId, {
-      query,
-      hideCompleted,
-      parentKey: null,
-      selectedTags: [],
-      timeframe,
-    })
+    sorted,
+    [
+      listFilterResetKey(storyId, {
+        query,
+        hideCompleted,
+        parentKey: null,
+        selectedTags: [],
+        timeframe,
+      }),
+      tableSortResetKey(sort),
+    ].join("|")
   )
 
   const hasSourceRows = items.length > 0
@@ -171,15 +186,58 @@ export function TaskList({
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-10" />
-                      <TableHead>ID</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead>Title</TableHead>
-                      <TableHead>Size</TableHead>
-                      <TableHead>Points</TableHead>
+                      <SortableTableHead
+                        label="ID"
+                        sortKey="id"
+                        activeKey={sort?.key ?? null}
+                        direction={sort?.direction ?? null}
+                        onSort={onSort}
+                      />
+                      <SortableTableHead
+                        label="Type"
+                        sortKey="type"
+                        activeKey={sort?.key ?? null}
+                        direction={sort?.direction ?? null}
+                        onSort={onSort}
+                      />
+                      <SortableTableHead
+                        label="Title"
+                        sortKey="title"
+                        activeKey={sort?.key ?? null}
+                        direction={sort?.direction ?? null}
+                        onSort={onSort}
+                      />
+                      <SortableTableHead
+                        label="Size"
+                        sortKey="size"
+                        activeKey={sort?.key ?? null}
+                        direction={sort?.direction ?? null}
+                        onSort={onSort}
+                      />
+                      <SortableTableHead
+                        label="Points"
+                        sortKey="points"
+                        activeKey={sort?.key ?? null}
+                        direction={sort?.direction ?? null}
+                        onSort={onSort}
+                      />
                       <TableHead>Est</TableHead>
                       <TableHead>Actual</TableHead>
-                      <TableHead className="w-16 text-center">People</TableHead>
-                      <TableHead>Status</TableHead>
+                      <SortableTableHead
+                        label="People"
+                        sortKey="people"
+                        activeKey={sort?.key ?? null}
+                        direction={sort?.direction ?? null}
+                        onSort={onSort}
+                        className="w-16 text-center"
+                      />
+                      <SortableTableHead
+                        label="Status"
+                        sortKey="status"
+                        activeKey={sort?.key ?? null}
+                        direction={sort?.direction ?? null}
+                        onSort={onSort}
+                      />
                     </TableRow>
                   </TableHeader>
                   <TableBody>

@@ -26,11 +26,13 @@ import {
 import { ChildProgressBar } from "@/components/board/child-progress-bar"
 import { ListFiltersBar } from "@/components/board/list-filters-bar"
 import { ListPagination } from "@/components/board/list-pagination"
+import { SortableTableHead } from "@/components/board/sortable-table-head"
 import { TimeframeFilter } from "@/components/board/timeframe-filter"
 import { ViewWorkItemButton } from "@/components/board/work-item-sheet"
 import { AttributionAvatarGroup } from "@/components/board/attribution-avatars"
 import { usePaginatedRows } from "@/hooks/use-paginated-rows"
 import { usePersistedHideCompleted } from "@/hooks/use-persisted-hide-completed"
+import { useTableSort } from "@/hooks/use-table-sort"
 import { cn } from "@/lib/utils"
 import { formatActualDuration, formatDurationMinutes } from "@/lib/format-duration"
 import type { EpicStoryList } from "@/lib/taskmark/story-types"
@@ -41,6 +43,10 @@ import {
   listFilterResetKey,
   type TimeframeFilterState,
 } from "@/lib/taskmark/list-filters"
+import {
+  sortRowsByTableSort,
+  tableSortResetKey,
+} from "@/lib/taskmark/table-sort"
 
 function formatPoints(value: number | null): string {
   if (value === null) return "—"
@@ -70,6 +76,7 @@ export function StoryList({
   const [timeframe, setTimeframe] = useState<TimeframeFilterState>(
     DEFAULT_TIMEFRAME_FILTER
   )
+  const { sort, onSort } = useTableSort()
 
   const completedAts = useMemo(
     () => stories.map((story) => story.completedAt),
@@ -87,6 +94,11 @@ export function StoryList({
     [stories, query, hideCompleted, timeframe]
   )
 
+  const sorted = useMemo(
+    () => sortRowsByTableSort(filtered, sort),
+    [filtered, sort]
+  )
+
   const {
     pageRows,
     page,
@@ -96,14 +108,17 @@ export function StoryList({
     setPage,
     setPageSize,
   } = usePaginatedRows(
-    filtered,
-    listFilterResetKey(epicId, {
-      query,
-      hideCompleted,
-      parentKey: null,
-      selectedTags: [],
-      timeframe,
-    })
+    sorted,
+    [
+      listFilterResetKey(epicId, {
+        query,
+        hideCompleted,
+        parentKey: null,
+        selectedTags: [],
+        timeframe,
+      }),
+      tableSortResetKey(sort),
+    ].join("|")
   )
 
   const hasSourceRows = stories.length > 0
@@ -178,15 +193,52 @@ export function StoryList({
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-10" />
-                      <TableHead>ID</TableHead>
-                      <TableHead>Title</TableHead>
+                      <SortableTableHead
+                        label="ID"
+                        sortKey="id"
+                        activeKey={sort?.key ?? null}
+                        direction={sort?.direction ?? null}
+                        onSort={onSort}
+                      />
+                      <SortableTableHead
+                        label="Title"
+                        sortKey="title"
+                        activeKey={sort?.key ?? null}
+                        direction={sort?.direction ?? null}
+                        onSort={onSort}
+                      />
                       <TableHead>Work items</TableHead>
-                      <TableHead>Size</TableHead>
-                      <TableHead>Points</TableHead>
+                      <SortableTableHead
+                        label="Size"
+                        sortKey="size"
+                        activeKey={sort?.key ?? null}
+                        direction={sort?.direction ?? null}
+                        onSort={onSort}
+                      />
+                      <SortableTableHead
+                        label="Points"
+                        sortKey="points"
+                        activeKey={sort?.key ?? null}
+                        direction={sort?.direction ?? null}
+                        onSort={onSort}
+                      />
                       <TableHead>Est</TableHead>
                       <TableHead>Actual</TableHead>
-                      <TableHead className="w-16 text-center">People</TableHead>
-                      <TableHead>Status</TableHead>
+                      <SortableTableHead
+                        label="People"
+                        sortKey="people"
+                        activeKey={sort?.key ?? null}
+                        direction={sort?.direction ?? null}
+                        onSort={onSort}
+                        className="w-16 text-center"
+                      />
+                      <SortableTableHead
+                        label="Status"
+                        sortKey="status"
+                        activeKey={sort?.key ?? null}
+                        direction={sort?.direction ?? null}
+                        onSort={onSort}
+                      />
                     </TableRow>
                   </TableHeader>
                   <TableBody>
