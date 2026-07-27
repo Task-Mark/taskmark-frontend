@@ -1,6 +1,6 @@
 "use client"
 
-import { ArrowDownIcon, ArrowUpIcon, ArrowUpDownIcon } from "lucide-react"
+import { ArrowDownIcon, ArrowUpIcon } from "lucide-react"
 
 import { TableHead } from "@/components/ui/table"
 import { cn } from "@/lib/utils"
@@ -45,15 +45,11 @@ export function SortableTableHead({
         )}
       >
         <span>{label}</span>
-        <span className="inline-flex size-3.5 shrink-0 items-center justify-center text-muted-foreground" aria-hidden>
-          {active && direction === "asc" ? (
-            <ArrowUpIcon className="size-3.5 text-foreground" />
-          ) : active && direction === "desc" ? (
-            <ArrowDownIcon className="size-3.5 text-foreground" />
-          ) : (
-            <ArrowUpDownIcon className="size-3.5 opacity-50" />
-          )}
-        </span>
+        {active && direction === "asc" ? (
+          <ArrowUpIcon className="size-3.5 shrink-0 text-foreground" aria-hidden />
+        ) : active && direction === "desc" ? (
+          <ArrowDownIcon className="size-3.5 shrink-0 text-foreground" aria-hidden />
+        ) : null}
         <span className="sr-only">
           {!active
             ? "activate to sort ascending"
