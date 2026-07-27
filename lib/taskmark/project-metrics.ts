@@ -33,6 +33,8 @@ export type MetricLeaf = {
 export type ProjectStatusMetrics = {
   totalWorkItems: number
   completeWorkItems: number
+  /** Story points completed in the current ISO week from done task/bug leaves. */
+  currentWeekPointsDone: number
   /** Average story points completed per ISO week over the 90-day window; null if no done tasks/bugs. */
   currentSpeedPtsPerWeek: number | null
   /** Weeks included in the speed average (0 when no speed). */
@@ -191,6 +193,23 @@ export function computeCurrentSpeedPtsPerWeek(
   return { average: sum / considered.length, weekCount: considered.length }
 }
 
+export function computeCurrentWeekPointsDone(
+  leaves: readonly MetricLeaf[],
+  now: Date = new Date()
+): number {
+  const current = isoWeekParts(now)
+  let total = 0
+  for (const leaf of leaves) {
+    if (!isCompletedTaskBugLeaf(leaf)) continue
+    const date = parseTaskmarkDate(leaf.completedAt)
+    if (!date) continue
+    const parts = isoWeekParts(date)
+    if (parts.year !== current.year || parts.week !== current.week) continue
+    total += Number.isFinite(leaf.points) ? Math.max(0, leaf.points) : 0
+  }
+  return total
+}
+
 /** Walk the board and collect metric leaves (stories, tasks, bugs + epic identities for contributors). */
 export function collectMetricLeaves(
   project: DiscoveredProject
@@ -257,10 +276,12 @@ export function computeProjectStatusMetrics(
 ): ProjectStatusMetrics {
   const leaves = collectMetricLeaves(project)
   const { total, complete } = aggregateWorkItemCounts(leaves)
+  const currentWeekPointsDone = computeCurrentWeekPointsDone(leaves)
   const speed = computeCurrentSpeedPtsPerWeek(leaves)
   return {
     totalWorkItems: total,
     completeWorkItems: complete,
+    currentWeekPointsDone,
     currentSpeedPtsPerWeek: speed.average,
     speedWeekCount: speed.weekCount,
     contributors: collectUniqueContributors(leaves),

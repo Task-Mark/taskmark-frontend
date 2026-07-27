@@ -1,4 +1,5 @@
 import {
+  CalendarDays,
   CheckSquare,
   Layers,
   TrendingUp,
@@ -24,7 +25,7 @@ export function ProjectStatusMetricsStrip({
       className="flex flex-col gap-4"
       aria-label="Project status metrics"
     >
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <MetricStatCard
           title="Total work items"
           value={metrics.totalWorkItems}
@@ -38,6 +39,17 @@ export function ProjectStatusMetricsStrip({
           subtitle="Status done"
           accentClassName="bg-pink-400"
           icon={<CheckSquare className="size-4" strokeWidth={2.5} />}
+        />
+        <MetricStatCard
+          title="Current week"
+          value={metrics.currentWeekPointsDone}
+          subtitle={
+            metrics.currentWeekPointsDone > 0
+              ? "pts done this ISO week"
+              : "No completed points this week"
+          }
+          accentClassName="bg-emerald-400"
+          icon={<CalendarDays className="size-4" strokeWidth={2.5} />}
         />
         <MetricStatCard
           title="Current speed"
