@@ -11,6 +11,7 @@ import { WorkItemSheetProvider } from "@/components/board/work-item-sheet"
 import { resolveActiveProject } from "@/lib/taskmark/active-project"
 import {
   getActiveProjectCookie,
+  getHideCompletedCookies,
   getMasterFoldersCookie,
 } from "@/lib/taskmark/cookies"
 import {
@@ -58,6 +59,7 @@ export default async function BoardPage({ searchParams }: BoardPageProps) {
   }
 
   const savedActiveId = await getActiveProjectCookie()
+  const hideCompletedPrefs = await getHideCompletedCookies()
   const activeProject = resolveActiveProject(
     workspace.projects,
     savedActiveId
@@ -174,6 +176,7 @@ export default async function BoardPage({ searchParams }: BoardPageProps) {
                 lists={[list]}
                 selectedEpicId={selectedEpicId}
                 countableCompletedAts={countableCompletedAts}
+                initialHideCompleted={hideCompletedPrefs.epics}
               />
 
               {epicWorkItems ? (
@@ -207,6 +210,7 @@ export default async function BoardPage({ searchParams }: BoardPageProps) {
                     list={epicWorkItems}
                     selectedStoryId={selectedStory?.id ?? null}
                     countableCompletedAts={countableCompletedAts}
+                    initialHideCompleted={hideCompletedPrefs.overallWorkItems}
                   />
                 </div>
               ) : null}
@@ -239,6 +243,7 @@ export default async function BoardPage({ searchParams }: BoardPageProps) {
                   <TaskList
                     list={itemList}
                     countableCompletedAts={countableCompletedAts}
+                    initialHideCompleted={hideCompletedPrefs.tasks}
                   />
                 </div>
               ) : null}
@@ -249,6 +254,7 @@ export default async function BoardPage({ searchParams }: BoardPageProps) {
             <WorkItemsList
               list={workItemsList}
               countableCompletedAts={countableCompletedAts}
+              initialHideCompleted={hideCompletedPrefs.workItems}
             />
           ) : null}
         </div>

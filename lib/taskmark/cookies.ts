@@ -3,11 +3,14 @@ import { cookies } from "next/headers"
 import {
   ACTIVE_PROJECT_COOKIE,
   ACTIVE_PROJECT_COOKIE_MAX_AGE,
+  HIDE_COMPLETED_COOKIES,
   MASTER_FOLDER_COOKIE,
   MASTER_FOLDERS_COOKIE,
   MASTER_FOLDERS_COOKIE_MAX_AGE,
   MASTER_FOLDER_COOKIE_MAX_AGE,
+  type HideCompletedCookieKey,
 } from "@/lib/taskmark/constants"
+import { parseHideCompletedCookieValue } from "@/lib/taskmark/hide-completed-cookie"
 
 async function readEncodedCookie(name: string): Promise<string | null> {
   const store = await cookies()
@@ -115,4 +118,36 @@ export async function setActiveProjectCookie(projectId: string): Promise<void> {
 export async function clearActiveProjectCookie(): Promise<void> {
   const store = await cookies()
   store.delete(ACTIVE_PROJECT_COOKIE)
+}
+
+export async function getHideCompletedCookie(
+  key: HideCompletedCookieKey
+): Promise<boolean> {
+  const store = await cookies()
+  return parseHideCompletedCookieValue(
+    store.get(HIDE_COMPLETED_COOKIES[key])?.value
+  )
+}
+
+export async function getHideCompletedCookies(): Promise<
+  Record<HideCompletedCookieKey, boolean>
+> {
+  const store = await cookies()
+  return {
+    epics: parseHideCompletedCookieValue(
+      store.get(HIDE_COMPLETED_COOKIES.epics)?.value
+    ),
+    stories: parseHideCompletedCookieValue(
+      store.get(HIDE_COMPLETED_COOKIES.stories)?.value
+    ),
+    tasks: parseHideCompletedCookieValue(
+      store.get(HIDE_COMPLETED_COOKIES.tasks)?.value
+    ),
+    overallWorkItems: parseHideCompletedCookieValue(
+      store.get(HIDE_COMPLETED_COOKIES.overallWorkItems)?.value
+    ),
+    workItems: parseHideCompletedCookieValue(
+      store.get(HIDE_COMPLETED_COOKIES.workItems)?.value
+    ),
+  }
 }

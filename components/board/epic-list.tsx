@@ -29,6 +29,7 @@ import { TimeframeFilter } from "@/components/board/timeframe-filter"
 import { ViewWorkItemButton } from "@/components/board/work-item-sheet"
 import { AttributionAvatarGroup } from "@/components/board/attribution-avatars"
 import { usePaginatedRows } from "@/hooks/use-paginated-rows"
+import { usePersistedHideCompleted } from "@/hooks/use-persisted-hide-completed"
 import { cn } from "@/lib/utils"
 import { formatActualDuration, formatDurationMinutes } from "@/lib/format-duration"
 import type { EpicSummary, ProjectEpicList } from "@/lib/taskmark/epic-types"
@@ -51,6 +52,7 @@ type EpicListProps = {
   selectedEpicId?: string | null
   /** Stories + epic-direct tasks/bugs completed_at for week/day counts. */
   countableCompletedAts?: readonly string[]
+  initialHideCompleted?: boolean
 }
 
 function ProjectEpicCard({
@@ -59,15 +61,20 @@ function ProjectEpicCard({
   errors,
   selectedEpicId,
   countableCompletedAts = [],
+  initialHideCompleted = false,
 }: {
   project: ProjectEpicList["project"]
   epics: EpicSummary[]
   errors: ProjectEpicList["errors"]
   selectedEpicId: string | null
   countableCompletedAts?: readonly string[]
+  initialHideCompleted?: boolean
 }) {
   const [query, setQuery] = useState("")
-  const [hideCompleted, setHideCompleted] = useState(false)
+  const [hideCompleted, setHideCompleted] = usePersistedHideCompleted(
+    "epics",
+    initialHideCompleted
+  )
   const [timeframe, setTimeframe] = useState<TimeframeFilterState>(
     DEFAULT_TIMEFRAME_FILTER
   )
@@ -294,6 +301,7 @@ export function EpicList({
   lists,
   selectedEpicId = null,
   countableCompletedAts = [],
+  initialHideCompleted = false,
 }: EpicListProps) {
   if (lists.length === 0) {
     return (
@@ -318,6 +326,7 @@ export function EpicList({
           errors={errors}
           selectedEpicId={selectedEpicId}
           countableCompletedAts={countableCompletedAts}
+          initialHideCompleted={initialHideCompleted}
         />
       ))}
     </div>

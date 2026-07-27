@@ -19,6 +19,9 @@ const spaceGrotesk = Space_Grotesk({
 export const metadata: Metadata = {
   title: "Taskmark",
   description: "Local Taskmark board dashboard",
+  icons: {
+    icon: "/tm_light.png",
+  },
 }
 
 export default function RootLayout({

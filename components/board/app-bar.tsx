@@ -1,6 +1,7 @@
 "use client"
 
 import { selectActiveProject, openAddProject } from "@/app/setup/actions"
+import { BrandLogo } from "@/components/brand-logo"
 import { Button } from "@/components/ui/button"
 import { projectOptionLabel } from "@/lib/taskmark/project-label"
 import type { DiscoveredProject } from "@/lib/taskmark/types"
@@ -20,8 +21,7 @@ export function AppBar({
     <header className="sticky top-0 z-40 border-b-2 border-border bg-card/95 shadow-sm backdrop-blur">
       <div className="mx-auto flex w-full max-w-5xl flex-wrap items-center gap-3 px-4 py-3">
         <div className="group flex min-w-0 flex-1 items-center gap-3 transition-[gap] duration-200 group-hover:gap-4">
-          <img
-            src="/logo.png"
+          <BrandLogo
             alt=""
             width={40}
             height={45}

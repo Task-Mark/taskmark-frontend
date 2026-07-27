@@ -30,6 +30,7 @@ import { TimeframeFilter } from "@/components/board/timeframe-filter"
 import { ViewWorkItemButton } from "@/components/board/work-item-sheet"
 import { AttributionAvatarGroup } from "@/components/board/attribution-avatars"
 import { usePaginatedRows } from "@/hooks/use-paginated-rows"
+import { usePersistedHideCompleted } from "@/hooks/use-persisted-hide-completed"
 import { cn } from "@/lib/utils"
 import { formatActualDuration, formatDurationMinutes } from "@/lib/format-duration"
 import type { EpicStoryList } from "@/lib/taskmark/story-types"
@@ -50,17 +51,22 @@ type StoryListProps = {
   list: EpicStoryList
   selectedStoryId?: string | null
   countableCompletedAts?: readonly string[]
+  initialHideCompleted?: boolean
 }
 
 export function StoryList({
   list,
   selectedStoryId = null,
   countableCompletedAts = [],
+  initialHideCompleted = false,
 }: StoryListProps) {
   const { project, epicId, epicTitle, stories, errors } = list
   const heading = epicTitle ? `${epicId}: ${epicTitle}` : epicId
   const [query, setQuery] = useState("")
-  const [hideCompleted, setHideCompleted] = useState(false)
+  const [hideCompleted, setHideCompleted] = usePersistedHideCompleted(
+    "stories",
+    initialHideCompleted
+  )
   const [timeframe, setTimeframe] = useState<TimeframeFilterState>(
     DEFAULT_TIMEFRAME_FILTER
   )

@@ -29,6 +29,7 @@ import { TimeframeFilter } from "@/components/board/timeframe-filter"
 import { ViewWorkItemButton } from "@/components/board/work-item-sheet"
 import { AttributionAvatarGroup } from "@/components/board/attribution-avatars"
 import { usePaginatedRows } from "@/hooks/use-paginated-rows"
+import { usePersistedHideCompleted } from "@/hooks/use-persisted-hide-completed"
 import { formatActualDuration, formatDurationMinutes } from "@/lib/format-duration"
 import type { StoryItemList } from "@/lib/taskmark/item-types"
 import {
@@ -47,16 +48,21 @@ function formatPoints(value: number | null): string {
 type TaskListProps = {
   list: StoryItemList
   countableCompletedAts?: readonly string[]
+  initialHideCompleted?: boolean
 }
 
 export function TaskList({
   list,
   countableCompletedAts = [],
+  initialHideCompleted = false,
 }: TaskListProps) {
   const { project, storyId, storyTitle, items, errors } = list
   const heading = storyTitle ? `${storyId}: ${storyTitle}` : storyId
   const [query, setQuery] = useState("")
-  const [hideCompleted, setHideCompleted] = useState(false)
+  const [hideCompleted, setHideCompleted] = usePersistedHideCompleted(
+    "tasks",
+    initialHideCompleted
+  )
   const [timeframe, setTimeframe] = useState<TimeframeFilterState>(
     DEFAULT_TIMEFRAME_FILTER
   )

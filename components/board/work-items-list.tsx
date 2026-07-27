@@ -19,6 +19,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { ParentTagBadge } from "@/components/board/parent-tag-badge"
+import { ChildProgressBar } from "@/components/board/child-progress-bar"
 import {
   PriorityBadge,
   TypeBadge,
@@ -33,6 +34,7 @@ import { TimeframeFilter } from "@/components/board/timeframe-filter"
 import { ViewWorkItemButton } from "@/components/board/work-item-sheet"
 import { AttributionAvatarGroup } from "@/components/board/attribution-avatars"
 import { usePaginatedRows } from "@/hooks/use-paginated-rows"
+import { usePersistedHideCompleted } from "@/hooks/use-persisted-hide-completed"
 import { formatActualDuration, formatDurationMinutes } from "@/lib/format-duration"
 import type { WorkItemsViewList } from "@/lib/taskmark/flat-work-item-types"
 import {
@@ -53,15 +55,20 @@ function formatPoints(value: number | null): string {
 type WorkItemsListProps = {
   list: WorkItemsViewList
   countableCompletedAts?: readonly string[]
+  initialHideCompleted?: boolean
 }
 
 export function WorkItemsList({
   list,
   countableCompletedAts,
+  initialHideCompleted = false,
 }: WorkItemsListProps) {
   const { project, rows, errors } = list
   const [query, setQuery] = useState("")
-  const [hideCompleted, setHideCompleted] = useState(false)
+  const [hideCompleted, setHideCompleted] = usePersistedHideCompleted(
+    "workItems",
+    initialHideCompleted
+  )
   const [parentKeys, setParentKeys] = useState<string[]>([])
   const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [timeframe, setTimeframe] = useState<TimeframeFilterState>(
@@ -262,10 +269,17 @@ export function WorkItemsList({
                             </div>
                           </TableCell>
                           <TableCell>
-                            <StatusWithSolvedTooltip
-                              status={row.status}
-                              solvedAt={row.completedAt}
-                            />
+                            {row.kind === "story" && row.workItemCount > 0 ? (
+                              <ChildProgressBar
+                                done={row.doneWorkItemCount}
+                                total={row.workItemCount}
+                              />
+                            ) : (
+                              <StatusWithSolvedTooltip
+                                status={row.status}
+                                solvedAt={row.completedAt}
+                              />
+                            )}
                           </TableCell>
                           <TableCell>
                             <PriorityBadge priority={row.priority} />
