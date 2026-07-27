@@ -44,6 +44,7 @@ import {
   listFilterResetKey,
   type TimeframeFilterState,
 } from "@/lib/taskmark/list-filters"
+import type { SolvedCompletionSample } from "@/lib/taskmark/timeframe-filters"
 import {
   sortRowsByTableSort,
   tableSortResetKey,
@@ -52,14 +53,14 @@ import {
 type OverallWorkItemsListProps = {
   list: EpicWorkItemsList
   selectedStoryId?: string | null
-  countableCompletedAts?: readonly string[]
+  countableCompletions?: readonly SolvedCompletionSample[]
   initialHideCompleted?: boolean
 }
 
 export function OverallWorkItemsList({
   list,
   selectedStoryId = null,
-  countableCompletedAts = [],
+  countableCompletions = [],
   initialHideCompleted = false,
 }: OverallWorkItemsListProps) {
   const { project, epicId, epicTitle, rows, errors } = list
@@ -136,7 +137,7 @@ export function OverallWorkItemsList({
               value={timeframe}
               onChange={setTimeframe}
               completedAts={completedAts}
-              countableCompletedAts={countableCompletedAts}
+              countableCompletions={countableCompletions}
             />
           </CardAction>
         ) : null}

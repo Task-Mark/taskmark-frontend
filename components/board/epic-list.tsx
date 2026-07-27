@@ -43,6 +43,7 @@ import {
   listFilterResetKey,
   type TimeframeFilterState,
 } from "@/lib/taskmark/list-filters"
+import type { SolvedCompletionSample } from "@/lib/taskmark/timeframe-filters"
 import {
   sortRowsByTableSort,
   tableSortResetKey,
@@ -56,8 +57,8 @@ function formatPoints(value: number | null): string {
 type EpicListProps = {
   lists: ProjectEpicList[]
   selectedEpicId?: string | null
-  /** Stories + epic-direct tasks/bugs completed_at for week/day counts. */
-  countableCompletedAts?: readonly string[]
+  /** Stories + epic-direct tasks/bugs for day/week story-point badges. */
+  countableCompletions?: readonly SolvedCompletionSample[]
   initialHideCompleted?: boolean
 }
 
@@ -66,14 +67,14 @@ function ProjectEpicCard({
   epics,
   errors,
   selectedEpicId,
-  countableCompletedAts = [],
+  countableCompletions = [],
   initialHideCompleted = false,
 }: {
   project: ProjectEpicList["project"]
   epics: EpicSummary[]
   errors: ProjectEpicList["errors"]
   selectedEpicId: string | null
-  countableCompletedAts?: readonly string[]
+  countableCompletions?: readonly SolvedCompletionSample[]
   initialHideCompleted?: boolean
 }) {
   const [query, setQuery] = useState("")
@@ -155,7 +156,7 @@ function ProjectEpicCard({
               value={timeframe}
               onChange={setTimeframe}
               completedAts={completedAts}
-              countableCompletedAts={countableCompletedAts}
+              countableCompletions={countableCompletions}
             />
           </CardAction>
         ) : null}
@@ -340,7 +341,7 @@ function ProjectEpicCard({
 export function EpicList({
   lists,
   selectedEpicId = null,
-  countableCompletedAts = [],
+  countableCompletions = [],
   initialHideCompleted = false,
 }: EpicListProps) {
   if (lists.length === 0) {
@@ -365,7 +366,7 @@ export function EpicList({
           epics={epics}
           errors={errors}
           selectedEpicId={selectedEpicId}
-          countableCompletedAts={countableCompletedAts}
+          countableCompletions={countableCompletions}
           initialHideCompleted={initialHideCompleted}
         />
       ))}

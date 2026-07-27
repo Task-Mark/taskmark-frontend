@@ -43,6 +43,7 @@ import {
   listFilterResetKey,
   type TimeframeFilterState,
 } from "@/lib/taskmark/list-filters"
+import type { SolvedCompletionSample } from "@/lib/taskmark/timeframe-filters"
 import {
   sortRowsByTableSort,
   tableSortResetKey,
@@ -56,14 +57,14 @@ function formatPoints(value: number | null): string {
 type StoryListProps = {
   list: EpicStoryList
   selectedStoryId?: string | null
-  countableCompletedAts?: readonly string[]
+  countableCompletions?: readonly SolvedCompletionSample[]
   initialHideCompleted?: boolean
 }
 
 export function StoryList({
   list,
   selectedStoryId = null,
-  countableCompletedAts = [],
+  countableCompletions = [],
   initialHideCompleted = false,
 }: StoryListProps) {
   const { project, epicId, epicTitle, stories, errors } = list
@@ -140,7 +141,7 @@ export function StoryList({
               value={timeframe}
               onChange={setTimeframe}
               completedAts={completedAts}
-              countableCompletedAts={countableCompletedAts}
+              countableCompletions={countableCompletions}
             />
           </CardAction>
         ) : null}

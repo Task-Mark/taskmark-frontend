@@ -48,6 +48,7 @@ import {
   listFilterResetKey,
   type TimeframeFilterState,
 } from "@/lib/taskmark/list-filters"
+import type { SolvedCompletionSample } from "@/lib/taskmark/timeframe-filters"
 import {
   sortRowsByTableSort,
   tableSortResetKey,
@@ -55,13 +56,13 @@ import {
 
 type WorkItemsListProps = {
   list: WorkItemsViewList
-  countableCompletedAts?: readonly string[]
+  countableCompletions?: readonly SolvedCompletionSample[]
   initialHideCompleted?: boolean
 }
 
 export function WorkItemsList({
   list,
-  countableCompletedAts,
+  countableCompletions,
   initialHideCompleted = false,
 }: WorkItemsListProps) {
   const { project, rows, errors } = list
@@ -83,8 +84,15 @@ export function WorkItemsList({
     () => rows.map((row) => row.completedAt),
     [rows]
   )
-  const countAts = countableCompletedAts ?? completedAts
-
+  const pointSamples = useMemo(
+    () =>
+      countableCompletions ??
+      rows.map((row) => ({
+        completedAt: row.completedAt,
+        points: row.points,
+      })),
+    [countableCompletions, rows]
+  )
   const filtered = useMemo(
     () =>
       filterListRows(rows, {
@@ -151,7 +159,7 @@ export function WorkItemsList({
               value={timeframe}
               onChange={setTimeframe}
               completedAts={completedAts}
-              countableCompletedAts={countAts}
+              countableCompletions={pointSamples}
             />
           </CardAction>
         ) : null}

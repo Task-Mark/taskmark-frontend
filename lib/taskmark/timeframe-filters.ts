@@ -145,6 +145,12 @@ export function isoWeekCountKey(year: number, week: number): string {
   return `${year}-W${week}`
 }
 
+/** Solved item with optional story points (stories + epic-direct leaves). */
+export type SolvedCompletionSample = {
+  completedAt: string | null | undefined
+  points?: number | null
+}
+
 /**
  * Count solved items per ISO week (stories + epic-direct tasks/bugs).
  * Items without a parseable completed_at are skipped.
@@ -177,6 +183,49 @@ export function countCompletionsByDate(
     counts.set(key, (counts.get(key) ?? 0) + 1)
   }
   return counts
+}
+
+function samplePoints(points: number | null | undefined): number {
+  return typeof points === "number" && Number.isFinite(points) && points > 0
+    ? points
+    : 0
+}
+
+/**
+ * Sum story points of solved items per ISO week.
+ */
+export function sumPointsByIsoWeek(
+  samples: readonly SolvedCompletionSample[]
+): Map<string, number> {
+  const totals = new Map<string, number>()
+  for (const sample of samples) {
+    const date = parseTaskmarkDate(sample.completedAt)
+    if (!date) continue
+    const pts = samplePoints(sample.points)
+    if (pts <= 0) continue
+    const { year, week } = isoWeekParts(date)
+    const key = isoWeekCountKey(year, week)
+    totals.set(key, (totals.get(key) ?? 0) + pts)
+  }
+  return totals
+}
+
+/**
+ * Sum story points of solved items per local calendar day (`YYYY-MM-DD`).
+ */
+export function sumPointsByDate(
+  samples: readonly SolvedCompletionSample[]
+): Map<string, number> {
+  const totals = new Map<string, number>()
+  for (const sample of samples) {
+    const date = parseTaskmarkDate(sample.completedAt)
+    if (!date) continue
+    const pts = samplePoints(sample.points)
+    if (pts <= 0) continue
+    const key = toDateOnlyString(date)
+    totals.set(key, (totals.get(key) ?? 0) + pts)
+  }
+  return totals
 }
 
 /**

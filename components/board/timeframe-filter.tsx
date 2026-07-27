@@ -29,8 +29,6 @@ import { Separator } from "@/components/ui/separator"
 import { parseTaskmarkDate } from "@/lib/format-date"
 import {
   DEFAULT_TIMEFRAME_FILTER,
-  countCompletionsByDate,
-  countCompletionsByIsoWeek,
   deriveYearWeekBounds,
   isTimeframeActive,
   isWeekRangeSelection,
@@ -38,8 +36,11 @@ import {
   isoWeekParts,
   recentWeekRange,
   shiftIsoWeek,
+  sumPointsByDate,
+  sumPointsByIsoWeek,
   toDateOnlyString,
   weeksInIsoYear,
+  type SolvedCompletionSample,
   type TimeframeFilterState,
 } from "@/lib/taskmark/timeframe-filters"
 import { cn } from "@/lib/utils"
@@ -50,10 +51,10 @@ type TimeframeFilterProps = {
   /** `completed_at` values for filter year/week bounds (list rows). */
   completedAts: readonly (string | null | undefined)[]
   /**
-   * Solved dates for completion counts (stories + epic-direct tasks/bugs only).
-   * Defaults to `completedAts` when omitted.
+   * Solved items for story-point badges (stories + epic-direct tasks/bugs).
+   * Defaults to `completedAts` with 0 points when omitted.
    */
-  countableCompletedAts?: readonly (string | null | undefined)[]
+  countableCompletions?: readonly SolvedCompletionSample[]
   id?: string
   className?: string
 }
@@ -74,19 +75,29 @@ function isoWeekDateSpan(
   return { start: startOfISOWeek(date), end: endOfISOWeek(date) }
 }
 
-function CompletionCount({
-  count,
+const compactPointsFormatter = new Intl.NumberFormat("en", {
+  notation: "compact",
+  compactDisplay: "short",
+  maximumFractionDigits: 1,
+})
+
+function formatCompactPoints(points: number): string {
+  return compactPointsFormatter.format(points)
+}
+
+function PointsBadge({
+  points,
   className,
 }: {
-  count: number
+  points: number
   className?: string
 }) {
-  if (count <= 0) {
+  if (points <= 0) {
     return <span className={cn("tabular-nums text-muted-foreground/40", className)}>—</span>
   }
   return (
     <span className={cn("tabular-nums text-muted-foreground", className)}>
-      {count}
+      {formatCompactPoints(points)}
     </span>
   )
 }
@@ -95,22 +106,25 @@ export function TimeframeFilter({
   value,
   onChange,
   completedAts,
-  countableCompletedAts,
+  countableCompletions,
   id = "timeframe-filter",
   className,
 }: TimeframeFilterProps) {
-  const countSources = countableCompletedAts ?? completedAts
+  const pointSamples = useMemo((): SolvedCompletionSample[] => {
+    if (countableCompletions) return [...countableCompletions]
+    return completedAts.map((completedAt) => ({ completedAt, points: 0 }))
+  }, [countableCompletions, completedAts])
   const bounds = useMemo(
     () => deriveYearWeekBounds(completedAts),
     [completedAts]
   )
-  const weekCounts = useMemo(
-    () => countCompletionsByIsoWeek(countSources),
-    [countSources]
+  const weekPoints = useMemo(
+    () => sumPointsByIsoWeek(pointSamples),
+    [pointSamples]
   )
-  const dayCounts = useMemo(
-    () => countCompletionsByDate(countSources),
-    [countSources]
+  const dayPoints = useMemo(
+    () => sumPointsByDate(pointSamples),
+    [pointSamples]
   )
 
   const years = bounds.years
@@ -277,7 +291,7 @@ export function TimeframeFilter({
 
   function DayButtonWithCount(props: ComponentProps<typeof DayButton>) {
     const key = toDateOnlyString(props.day.date)
-    const count = dayCounts.get(key) ?? 0
+    const points = dayPoints.get(key) ?? 0
     return (
       <CalendarDayButton
         {...props}
@@ -287,9 +301,12 @@ export function TimeframeFilter({
         )}
       >
         {props.children}
-        {count > 0 ? (
-          <span className="text-[9px] leading-none tabular-nums text-muted-foreground opacity-80">
-            {count}
+        {points > 0 ? (
+          <span
+            className="text-[9px] leading-none tabular-nums text-muted-foreground opacity-80"
+            title={`${points} story point${points === 1 ? "" : "s"}`}
+          >
+            {formatCompactPoints(points)}
           </span>
         ) : (
           <span className="text-[9px] leading-none opacity-0">0</span>
@@ -491,7 +508,7 @@ export function TimeframeFilter({
                       ? "Next"
                       : null
                 const count =
-                  weekCounts.get(isoWeekCountKey(pickerYear, week)) ?? 0
+                  weekPoints.get(isoWeekCountKey(pickerYear, week)) ?? 0
                 const observed = bounds.weeksByYear[pickerYear]
                 const hasData = Boolean(
                   observed && week >= observed.min && week <= observed.max
@@ -528,8 +545,8 @@ export function TimeframeFilter({
                         {format(start, "MMM d")} – {format(end, "MMM d")}
                       </span>
                     </span>
-                    <CompletionCount
-                      count={count}
+                    <PointsBadge
+                      points={count}
                       className="shrink-0 text-xs"
                     />
                   </button>

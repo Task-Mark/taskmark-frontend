@@ -5,6 +5,7 @@ import { AppBar } from "@/components/board/app-bar"
 import { EpicList } from "@/components/board/epic-list"
 import { ListViewSwitcher } from "@/components/board/list-view-switcher"
 import { OverallWorkItemsList } from "@/components/board/overall-work-items-list"
+import { ProjectStatusMetricsStrip } from "@/components/board/project-status-metrics-strip"
 import { TaskList } from "@/components/board/task-list"
 import { WorkItemsList } from "@/components/board/work-items-list"
 import { WorkItemSheetProvider } from "@/components/board/work-item-sheet"
@@ -26,6 +27,11 @@ import {
   parseWorkItemsViewForProject,
 } from "@/lib/taskmark/parse-flat-lists"
 import { parseItemsForStory } from "@/lib/taskmark/parse-items"
+import {
+  collectCompletedLeafPointSamples,
+  collectMetricLeaves,
+  computeProjectStatusMetrics,
+} from "@/lib/taskmark/project-metrics"
 import { loadConfiguredWorkspace } from "@/lib/taskmark/workspace"
 
 type BoardPageProps = {
@@ -114,11 +120,12 @@ export default async function BoardPage({ searchParams }: BoardPageProps) {
       ? parseWorkItemsViewForProject(activeProject)
       : null
 
-  /** Stories + epic-direct tasks/bugs (excludes tasks under a story). */
-  const countableCompletedAts =
-    workItemsList?.rows
-      .map((row) => row.completedAt)
-      .filter((value) => Boolean(value?.trim())) ?? []
+  /** Match Current Speed exactly: completed task/bug leaf points only. */
+  const countableCompletions = collectCompletedLeafPointSamples(
+    collectMetricLeaves(activeProject)
+  )
+
+  const statusMetrics = computeProjectStatusMetrics(activeProject)
 
   return (
     <WorkItemSheetProvider>
@@ -170,12 +177,14 @@ export default async function BoardPage({ searchParams }: BoardPageProps) {
             />
           </div>
 
+          <ProjectStatusMetricsStrip metrics={statusMetrics} />
+
           {activeView === "overall" ? (
             <>
               <EpicList
                 lists={[list]}
                 selectedEpicId={selectedEpicId}
-                countableCompletedAts={countableCompletedAts}
+                countableCompletions={countableCompletions}
                 initialHideCompleted={hideCompletedPrefs.epics}
               />
 
@@ -209,7 +218,7 @@ export default async function BoardPage({ searchParams }: BoardPageProps) {
                   <OverallWorkItemsList
                     list={epicWorkItems}
                     selectedStoryId={selectedStory?.id ?? null}
-                    countableCompletedAts={countableCompletedAts}
+                    countableCompletions={countableCompletions}
                     initialHideCompleted={hideCompletedPrefs.overallWorkItems}
                   />
                 </div>
@@ -242,7 +251,7 @@ export default async function BoardPage({ searchParams }: BoardPageProps) {
                   </p>
                   <TaskList
                     list={itemList}
-                    countableCompletedAts={countableCompletedAts}
+                    countableCompletions={countableCompletions}
                     initialHideCompleted={hideCompletedPrefs.tasks}
                   />
                 </div>
@@ -253,7 +262,7 @@ export default async function BoardPage({ searchParams }: BoardPageProps) {
           {activeView === "workitems" && workItemsList ? (
             <WorkItemsList
               list={workItemsList}
-              countableCompletedAts={countableCompletedAts}
+              countableCompletions={countableCompletions}
               initialHideCompleted={hideCompletedPrefs.workItems}
             />
           ) : null}
