@@ -237,6 +237,7 @@ export function TaskList({
                         activeKey={sort?.key ?? null}
                         direction={sort?.direction ?? null}
                         onSort={onSort}
+                        align="center"
                       />
                     </TableRow>
                   </TableHeader>
@@ -287,11 +288,13 @@ export function TaskList({
                             />
                           </div>
                         </TableCell>
-                        <TableCell>
-                          <StatusWithSolvedTooltip
-                            status={item.status}
-                            solvedAt={item.completedAt}
-                          />
+                        <TableCell className="text-center">
+                          <div className="inline-flex w-full justify-center">
+                            <StatusWithSolvedTooltip
+                              status={item.status}
+                              solvedAt={item.completedAt}
+                            />
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}

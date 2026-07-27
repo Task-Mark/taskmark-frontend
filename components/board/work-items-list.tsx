@@ -26,6 +26,7 @@ import {
 } from "@/components/board/status-badge"
 import {
   IdCreatedTooltip,
+  SizeWithPointsTooltip,
   StatusWithSolvedTooltip,
 } from "@/components/board/date-tooltip"
 import { ListFiltersBar } from "@/components/board/list-filters-bar"
@@ -52,11 +53,6 @@ import {
   sortRowsByTableSort,
   tableSortResetKey,
 } from "@/lib/taskmark/table-sort"
-
-function formatPoints(value: number | null): string {
-  if (value === null) return "—"
-  return String(value)
-}
 
 type WorkItemsListProps = {
   list: WorkItemsViewList
@@ -247,13 +243,6 @@ export function WorkItemsList({
                         direction={sort?.direction ?? null}
                         onSort={onSort}
                       />
-                      <SortableTableHead
-                        label="Points"
-                        sortKey="points"
-                        activeKey={sort?.key ?? null}
-                        direction={sort?.direction ?? null}
-                        onSort={onSort}
-                      />
                       <TableHead>Est</TableHead>
                       <TableHead>Actual</TableHead>
                       <SortableTableHead
@@ -265,18 +254,20 @@ export function WorkItemsList({
                         className="w-16 text-center"
                       />
                       <SortableTableHead
-                        label="Status"
-                        sortKey="status"
-                        activeKey={sort?.key ?? null}
-                        direction={sort?.direction ?? null}
-                        onSort={onSort}
-                      />
-                      <SortableTableHead
                         label="Priority"
                         sortKey="priority"
                         activeKey={sort?.key ?? null}
                         direction={sort?.direction ?? null}
                         onSort={onSort}
+                        align="center"
+                      />
+                      <SortableTableHead
+                        label="Status"
+                        sortKey="status"
+                        activeKey={sort?.key ?? null}
+                        direction={sort?.direction ?? null}
+                        onSort={onSort}
+                        align="center"
                       />
                     </TableRow>
                   </TableHeader>
@@ -319,8 +310,12 @@ export function WorkItemsList({
                               title={row.epicTitle}
                             />
                           </TableCell>
-                          <TableCell>{row.size}</TableCell>
-                          <TableCell>{formatPoints(row.points)}</TableCell>
+                          <TableCell>
+                            <SizeWithPointsTooltip
+                              size={row.size}
+                              points={row.points}
+                            />
+                          </TableCell>
                           <TableCell>
                             {formatDurationMinutes(row.estimateMinutes)}
                           </TableCell>
@@ -338,21 +333,25 @@ export function WorkItemsList({
                               />
                             </div>
                           </TableCell>
-                          <TableCell>
-                            {row.kind === "story" && row.workItemCount > 0 ? (
-                              <ChildProgressBar
-                                done={row.doneWorkItemCount}
-                                total={row.workItemCount}
-                              />
-                            ) : (
-                              <StatusWithSolvedTooltip
-                                status={row.status}
-                                solvedAt={row.completedAt}
-                              />
-                            )}
+                          <TableCell className="text-center">
+                            <div className="inline-flex w-full justify-center">
+                              <PriorityBadge priority={row.priority} />
+                            </div>
                           </TableCell>
-                          <TableCell>
-                            <PriorityBadge priority={row.priority} />
+                          <TableCell className="text-center">
+                            <div className="inline-flex w-full justify-center">
+                              {row.kind === "story" && row.workItemCount > 0 ? (
+                                <ChildProgressBar
+                                  done={row.doneWorkItemCount}
+                                  total={row.workItemCount}
+                                />
+                              ) : (
+                                <StatusWithSolvedTooltip
+                                  status={row.status}
+                                  solvedAt={row.completedAt}
+                                />
+                              )}
+                            </div>
                           </TableCell>
                         </TableRow>
                       )

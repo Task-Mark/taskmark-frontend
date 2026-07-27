@@ -22,6 +22,7 @@ import {
 import { ChildProgressBar } from "@/components/board/child-progress-bar"
 import {
   IdCreatedTooltip,
+  SizeWithPointsTooltip,
   StatusWithSolvedTooltip,
 } from "@/components/board/date-tooltip"
 import { ListFiltersBar } from "@/components/board/list-filters-bar"
@@ -48,11 +49,6 @@ import {
   sortRowsByTableSort,
   tableSortResetKey,
 } from "@/lib/taskmark/table-sort"
-
-function formatPoints(value: number | null): string {
-  if (value === null) return "—"
-  return String(value)
-}
 
 type OverallWorkItemsListProps = {
   list: EpicWorkItemsList
@@ -223,13 +219,6 @@ export function OverallWorkItemsList({
                         direction={sort?.direction ?? null}
                         onSort={onSort}
                       />
-                      <SortableTableHead
-                        label="Points"
-                        sortKey="points"
-                        activeKey={sort?.key ?? null}
-                        direction={sort?.direction ?? null}
-                        onSort={onSort}
-                      />
                       <TableHead>Est</TableHead>
                       <TableHead>Actual</TableHead>
                       <SortableTableHead
@@ -246,6 +235,7 @@ export function OverallWorkItemsList({
                         activeKey={sort?.key ?? null}
                         direction={sort?.direction ?? null}
                         onSort={onSort}
+                        align="center"
                       />
                     </TableRow>
                   </TableHeader>
@@ -316,8 +306,12 @@ export function OverallWorkItemsList({
                           <TableCell className="tabular-nums">
                             {isStory ? row.workItemCount : "—"}
                           </TableCell>
-                          <TableCell>{row.size}</TableCell>
-                          <TableCell>{formatPoints(row.points)}</TableCell>
+                          <TableCell>
+                            <SizeWithPointsTooltip
+                              size={row.size}
+                              points={row.points}
+                            />
+                          </TableCell>
                           <TableCell>
                             {formatDurationMinutes(row.estimateMinutes)}
                           </TableCell>
@@ -335,18 +329,20 @@ export function OverallWorkItemsList({
                               />
                             </div>
                           </TableCell>
-                          <TableCell>
-                            {isStory && row.workItemCount > 0 ? (
-                              <ChildProgressBar
-                                done={row.doneWorkItemCount}
-                                total={row.workItemCount}
-                              />
-                            ) : (
-                              <StatusWithSolvedTooltip
-                                status={row.status}
-                                solvedAt={row.completedAt}
-                              />
-                            )}
+                          <TableCell className="text-center">
+                            <div className="inline-flex w-full justify-center">
+                              {isStory && row.workItemCount > 0 ? (
+                                <ChildProgressBar
+                                  done={row.doneWorkItemCount}
+                                  total={row.workItemCount}
+                                />
+                              ) : (
+                                <StatusWithSolvedTooltip
+                                  status={row.status}
+                                  solvedAt={row.completedAt}
+                                />
+                              )}
+                            </div>
                           </TableCell>
                         </TableRow>
                       )

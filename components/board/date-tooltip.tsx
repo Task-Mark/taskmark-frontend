@@ -66,3 +66,28 @@ export function StatusWithSolvedTooltip({
   if (status !== "done") return badge
   return <DateTooltip label="Solved" date={solvedAt}>{badge}</DateTooltip>
 }
+
+/** Size cell with points on hover. */
+export function SizeWithPointsTooltip({
+  size,
+  points,
+}: {
+  size: string | null | undefined
+  points: number | null | undefined
+}) {
+  const label = size?.trim() ? size : "—"
+  const pointsText =
+    points === null || points === undefined ? "—" : String(points)
+  const text = `Points ${pointsText}`
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger render={<span className="cursor-default" />} title={text}>
+          {label}
+        </TooltipTrigger>
+        <TooltipContent>{text}</TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  )
+}
+

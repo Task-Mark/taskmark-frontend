@@ -13,6 +13,8 @@ type SortableTableHeadProps = {
   direction: TableSortDirection | null
   onSort: (key: TableSortKey) => void
   className?: string
+  /** Header label alignment (default start / left). */
+  align?: "start" | "center" | "end"
 }
 
 export function SortableTableHead({
@@ -22,6 +24,7 @@ export function SortableTableHead({
   direction,
   onSort,
   className,
+  align = "start",
 }: SortableTableHeadProps) {
   const active = activeKey === sortKey
   const ariaSort = active
@@ -39,9 +42,12 @@ export function SortableTableHead({
         type="button"
         onClick={() => onSort(sortKey)}
         className={cn(
-          "inline-flex h-10 w-full items-center gap-1.5 px-2 text-left font-medium whitespace-nowrap",
+          "inline-flex h-10 w-full items-center gap-1.5 px-2 font-medium whitespace-nowrap",
           "rounded-sm hover:bg-muted/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
-          active ? "text-foreground" : "text-foreground/80"
+          active ? "text-foreground" : "text-foreground/80",
+          align === "center" && "justify-center text-center",
+          align === "end" && "justify-end text-right",
+          align === "start" && "justify-start text-left"
         )}
       >
         <span>{label}</span>

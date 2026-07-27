@@ -238,6 +238,7 @@ export function StoryList({
                         activeKey={sort?.key ?? null}
                         direction={sort?.direction ?? null}
                         onSort={onSort}
+                        align="center"
                       />
                     </TableRow>
                   </TableHeader>
@@ -308,18 +309,20 @@ export function StoryList({
                               />
                             </div>
                           </TableCell>
-                          <TableCell>
-                            {story.workItemCount === 0 ? (
-                              <StatusWithSolvedTooltip
-                                status={story.status}
-                                solvedAt={story.completedAt}
-                              />
-                            ) : (
-                              <ChildProgressBar
-                                done={story.doneWorkItemCount}
-                                total={story.workItemCount}
-                              />
-                            )}
+                          <TableCell className="text-center">
+                            <div className="inline-flex w-full justify-center">
+                              {story.workItemCount === 0 ? (
+                                <StatusWithSolvedTooltip
+                                  status={story.status}
+                                  solvedAt={story.completedAt}
+                                />
+                              ) : (
+                                <ChildProgressBar
+                                  done={story.doneWorkItemCount}
+                                  total={story.workItemCount}
+                                />
+                              )}
+                            </div>
                           </TableCell>
                         </TableRow>
                       )
