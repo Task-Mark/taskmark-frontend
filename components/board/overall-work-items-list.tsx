@@ -36,7 +36,6 @@ import { usePaginatedRows } from "@/hooks/use-paginated-rows"
 import { usePersistedHideCompleted } from "@/hooks/use-persisted-hide-completed"
 import { useTableSort } from "@/hooks/use-table-sort"
 import { cn } from "@/lib/utils"
-import { formatActualDuration, formatDurationMinutes } from "@/lib/format-duration"
 import type { EpicWorkItemsList } from "@/lib/taskmark/flat-work-item-types"
 import {
   DEFAULT_TIMEFRAME_FILTER,
@@ -219,8 +218,6 @@ export function OverallWorkItemsList({
                         direction={sort?.direction ?? null}
                         onSort={onSort}
                       />
-                      <TableHead>Est</TableHead>
-                      <TableHead>Actual</TableHead>
                       <SortableTableHead
                         label="People"
                         sortKey="people"
@@ -311,15 +308,6 @@ export function OverallWorkItemsList({
                               size={row.size}
                               points={row.points}
                             />
-                          </TableCell>
-                          <TableCell>
-                            {formatDurationMinutes(row.estimateMinutes)}
-                          </TableCell>
-                          <TableCell>
-                            {formatActualDuration(
-                              row.actualMs,
-                              row.actualMinutes
-                            )}
                           </TableCell>
                           <TableCell className="text-center">
                             <div className="flex justify-center">

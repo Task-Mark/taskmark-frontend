@@ -38,7 +38,6 @@ import { AttributionAvatarGroup } from "@/components/board/attribution-avatars"
 import { usePaginatedRows } from "@/hooks/use-paginated-rows"
 import { usePersistedHideCompleted } from "@/hooks/use-persisted-hide-completed"
 import { useTableSort } from "@/hooks/use-table-sort"
-import { formatActualDuration, formatDurationMinutes } from "@/lib/format-duration"
 import type { WorkItemsViewList } from "@/lib/taskmark/flat-work-item-types"
 import {
   buildParentFilterOptions,
@@ -243,8 +242,6 @@ export function WorkItemsList({
                         direction={sort?.direction ?? null}
                         onSort={onSort}
                       />
-                      <TableHead>Est</TableHead>
-                      <TableHead>Actual</TableHead>
                       <SortableTableHead
                         label="People"
                         sortKey="people"
@@ -315,15 +312,6 @@ export function WorkItemsList({
                               size={row.size}
                               points={row.points}
                             />
-                          </TableCell>
-                          <TableCell>
-                            {formatDurationMinutes(row.estimateMinutes)}
-                          </TableCell>
-                          <TableCell>
-                            {formatActualDuration(
-                              row.actualMs,
-                              row.actualMinutes
-                            )}
                           </TableCell>
                           <TableCell className="text-center">
                             <div className="flex justify-center">
