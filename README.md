@@ -45,16 +45,18 @@ You do **not** need to clone `taskmark-frontend`.
 {
   "name": "my-project-taskmark",
   "private": true,
+  "type": "module",
   "scripts": {
-    "start": "taskmark serve"
+    "start": "taskmark serve --no-open",
+    "serve": "taskmark serve"
   },
-  "devDependencies": {
+  "dependencies": {
     "@taskmark/ui": "^0.1.0"
   }
 }
 ```
 
-Then `npm install && npm start`.
+Then `npm install && npm run serve` (or `npm start`). For **Vercel**, add the stub `server.js` + `vercel.json` (Framework Preset: **Node**) from the Taskmark board-ui-stub example.
 
 ## Develop this package
 

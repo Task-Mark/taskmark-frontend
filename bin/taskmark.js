@@ -196,9 +196,15 @@ Or install a published build that includes dist/standalone.`)
     process.exit(code ?? 0)
   })
 
+  const hosted =
+    Boolean(process.env.VERCEL) ||
+    Boolean(process.env.NOW_REGION) ||
+    process.env.CI === "true"
+  const shouldOpen = args.open && !hosted
+
   try {
     await waitForServer(port)
-    if (args.open) {
+    if (shouldOpen) {
       openBrowser(url)
     } else {
       console.log(`Ready: ${url}`)
