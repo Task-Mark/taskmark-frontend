@@ -32,7 +32,6 @@ import { AttributionAvatarGroup } from "@/components/board/attribution-avatars"
 import { usePaginatedRows } from "@/hooks/use-paginated-rows"
 import { usePersistedHideCompleted } from "@/hooks/use-persisted-hide-completed"
 import { useTableSort } from "@/hooks/use-table-sort"
-import { formatActualDuration, formatDurationMinutes } from "@/lib/format-duration"
 import type { StoryItemList } from "@/lib/taskmark/item-types"
 import {
   DEFAULT_TIMEFRAME_FILTER,
@@ -222,8 +221,6 @@ export function TaskList({
                         direction={sort?.direction ?? null}
                         onSort={onSort}
                       />
-                      <TableHead>Est</TableHead>
-                      <TableHead>Actual</TableHead>
                       <SortableTableHead
                         label="People"
                         sortKey="people"
@@ -272,15 +269,6 @@ export function TaskList({
                         </TableCell>
                         <TableCell>{item.size}</TableCell>
                         <TableCell>{formatPoints(item.points)}</TableCell>
-                        <TableCell>
-                          {formatDurationMinutes(item.estimateMinutes)}
-                        </TableCell>
-                        <TableCell>
-                          {formatActualDuration(
-                            item.actualMs,
-                            item.actualMinutes
-                          )}
-                        </TableCell>
                         <TableCell className="text-center">
                           <div className="flex justify-center">
                             <AttributionAvatarGroup

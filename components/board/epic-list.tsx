@@ -33,7 +33,6 @@ import { usePaginatedRows } from "@/hooks/use-paginated-rows"
 import { usePersistedHideCompleted } from "@/hooks/use-persisted-hide-completed"
 import { useTableSort } from "@/hooks/use-table-sort"
 import { cn } from "@/lib/utils"
-import { formatActualDuration, formatDurationMinutes } from "@/lib/format-duration"
 import type { EpicSummary, ProjectEpicList } from "@/lib/taskmark/epic-types"
 import { isGeneralEpic } from "@/lib/taskmark/general-epic"
 import {
@@ -229,8 +228,6 @@ function ProjectEpicCard({
                         direction={sort?.direction ?? null}
                         onSort={onSort}
                       />
-                      <TableHead>Est</TableHead>
-                      <TableHead>Actual</TableHead>
                       <SortableTableHead
                         label="People"
                         sortKey="people"
@@ -293,15 +290,6 @@ function ProjectEpicCard({
                             {epic.workItemCount}
                           </TableCell>
                           <TableCell>{formatPoints(epic.points)}</TableCell>
-                          <TableCell>
-                            {formatDurationMinutes(epic.estimateMinutes)}
-                          </TableCell>
-                          <TableCell>
-                            {formatActualDuration(
-                              epic.actualMs,
-                              epic.actualMinutes
-                            )}
-                          </TableCell>
                           <TableCell className="text-center">
                             <div className="flex justify-center">
                               <AttributionAvatarGroup

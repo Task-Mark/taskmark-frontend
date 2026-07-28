@@ -34,7 +34,6 @@ import { usePaginatedRows } from "@/hooks/use-paginated-rows"
 import { usePersistedHideCompleted } from "@/hooks/use-persisted-hide-completed"
 import { useTableSort } from "@/hooks/use-table-sort"
 import { cn } from "@/lib/utils"
-import { formatActualDuration, formatDurationMinutes } from "@/lib/format-duration"
 import type { EpicStoryList } from "@/lib/taskmark/story-types"
 import {
   DEFAULT_TIMEFRAME_FILTER,
@@ -223,8 +222,6 @@ export function StoryList({
                         direction={sort?.direction ?? null}
                         onSort={onSort}
                       />
-                      <TableHead>Est</TableHead>
-                      <TableHead>Actual</TableHead>
                       <SortableTableHead
                         label="People"
                         sortKey="people"
@@ -293,15 +290,6 @@ export function StoryList({
                           </TableCell>
                           <TableCell>{story.size}</TableCell>
                           <TableCell>{formatPoints(story.points)}</TableCell>
-                          <TableCell>
-                            {formatDurationMinutes(story.estimateMinutes)}
-                          </TableCell>
-                          <TableCell>
-                            {formatActualDuration(
-                              story.actualMs,
-                              story.actualMinutes
-                            )}
-                          </TableCell>
                           <TableCell className="text-center">
                             <div className="flex justify-center">
                               <AttributionAvatarGroup
