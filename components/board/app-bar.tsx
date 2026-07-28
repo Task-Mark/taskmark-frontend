@@ -10,12 +10,15 @@ type AppBarProps = {
   projects: DiscoveredProject[]
   activeProjectId: string
   masterCount: number
+  /** When true, workspace is env/cwd-bound — hide multi-master add. */
+  autoconfig?: boolean
 }
 
 export function AppBar({
   projects,
   activeProjectId,
   masterCount,
+  autoconfig = false,
 }: AppBarProps) {
   return (
     <header className="sticky top-0 z-40 border-b-2 border-border bg-card/95 shadow-sm backdrop-blur">
@@ -83,11 +86,13 @@ export function AppBar({
           </noscript>
         </form>
 
-        <form action={openAddProject}>
-          <Button type="submit" variant="outline" size="sm">
-            Add project
-          </Button>
-        </form>
+        {!autoconfig ? (
+          <form action={openAddProject}>
+            <Button type="submit" variant="outline" size="sm">
+              Add project
+            </Button>
+          </form>
+        ) : null}
       </div>
     </header>
   )

@@ -1,7 +1,9 @@
 import Link from "next/link"
+import { redirect } from "next/navigation"
 
 import { BrandLogo } from "@/components/brand-logo"
 import { SetupWizard } from "@/components/setup/setup-wizard"
+import { resolveAutoconfigWorkspace } from "@/lib/taskmark/autoconfig"
 import { getMasterFoldersCookie } from "@/lib/taskmark/cookies"
 
 type SetupPageProps = {
@@ -9,6 +11,12 @@ type SetupPageProps = {
 }
 
 export default async function SetupPage({ searchParams }: SetupPageProps) {
+  const auto = resolveAutoconfigWorkspace()
+  if (auto && auto.projects.length > 0) {
+    // Zero-config bind — setup wizard is not needed.
+    redirect("/board")
+  }
+
   const params = searchParams ? await searchParams : {}
   const masters = await getMasterFoldersCookie()
   const hasProjects = masters.length > 0

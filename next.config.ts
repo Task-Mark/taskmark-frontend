@@ -1,7 +1,8 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from "next"
 
 const nextConfig: NextConfig = {
-  /* config options here */
-};
+  // Ship a relocatable Node server for `npx taskmark serve` (see bin/ + scripts/).
+  output: "standalone",
+}
 
-export default nextConfig;
+export default nextConfig

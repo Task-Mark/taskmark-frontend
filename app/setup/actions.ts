@@ -85,6 +85,12 @@ export async function pickMasterFolder(): Promise<PickMasterFolderState> {
 
 /** Open setup wizard to add another master folder without clearing existing ones. */
 export async function openAddProject(): Promise<void> {
+  const { resolveAutoconfigWorkspace } = await import(
+    "@/lib/taskmark/autoconfig"
+  )
+  if (resolveAutoconfigWorkspace()?.projects.length) {
+    redirect("/board")
+  }
   redirect("/setup?mode=add")
 }
 

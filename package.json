@@ -1,11 +1,27 @@
 {
-  "name": "taskmark-frontend",
+  "name": "taskmark",
   "version": "0.1.0",
-  "private": true,
+  "description": "Local Taskmark board UI — open a markdown board with `npx taskmark serve`",
+  "private": false,
+  "type": "module",
+  "bin": {
+    "taskmark": "./bin/taskmark.js"
+  },
+  "files": [
+    "bin",
+    "dist/standalone",
+    "README.md",
+    "package.json"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build && node scripts/prepare-standalone.mjs",
     "start": "next start",
+    "serve": "node ./bin/taskmark.js serve",
+    "prepack": "npm run build",
     "lint": "eslint"
   },
   "dependencies": {
@@ -21,6 +37,7 @@
     "react-day-picker": "^10.0.1",
     "react-dom": "19.2.4",
     "react-markdown": "^10.1.0",
+    "react-resizable-panels": "^3.0.3",
     "remark-gfm": "^4.0.1",
     "shadcn": "^4.13.1",
     "sonner": "^2.0.7",

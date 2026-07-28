@@ -21,7 +21,7 @@ function hasBoardMarkers(boardPath: string): boolean {
 }
 
 /** Single-project layout: `<project>/taskmark/` with INDEX.md or epics/. */
-function nestedBoardPath(candidateProjectRoot: string): string | null {
+export function nestedBoardPath(candidateProjectRoot: string): string | null {
   const boardPath = path.join(candidateProjectRoot, "taskmark")
   try {
     if (!fs.statSync(boardPath).isDirectory()) return null
@@ -35,7 +35,7 @@ function nestedBoardPath(candidateProjectRoot: string): string | null {
  * Multi-project layout: dedicated `<name>-taskmark` repo whose root is the board
  * (INDEX.md / epics/ at the folder root — no nested taskmark/).
  */
-function flatBoardPath(candidateRoot: string): string | null {
+export function flatBoardPath(candidateRoot: string): string | null {
   if (!isDedicatedBoardRepoName(path.basename(candidateRoot))) return null
   try {
     if (!fs.statSync(candidateRoot).isDirectory()) return null
@@ -45,11 +45,37 @@ function flatBoardPath(candidateRoot: string): string | null {
   return hasBoardMarkers(candidateRoot) ? candidateRoot : null
 }
 
+/**
+ * Resolve a single board directory from a path:
+ * - dedicated `*-taskmark` root with markers
+ * - nested `<project>/taskmark/` under the path
+ * - the path itself when it is already a board directory (e.g. `…/taskmark`)
+ */
+export function resolveBoardAtPath(candidatePath: string): string | null {
+  const resolved = path.resolve(candidatePath)
+  try {
+    if (!fs.statSync(resolved).isDirectory()) return null
+  } catch {
+    return null
+  }
+
+  const flat = flatBoardPath(resolved)
+  if (flat) return flat
+
+  const nested = nestedBoardPath(resolved)
+  if (nested) return nested
+
+  // Path is the nested board folder itself (`…/taskmark`) or any board root with markers.
+  if (hasBoardMarkers(resolved)) return resolved
+
+  return null
+}
+
 function resolveDiscoveredBoard(candidateRoot: string): string | null {
   return flatBoardPath(candidateRoot) ?? nestedBoardPath(candidateRoot)
 }
 
-function toDiscoveredProject(boardPath: string): DiscoveredProject {
+export function toDiscoveredProject(boardPath: string): DiscoveredProject {
   const key = resolveBoardKey(boardPath)
   return {
     id: key,

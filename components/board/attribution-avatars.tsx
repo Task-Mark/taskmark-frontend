@@ -105,27 +105,29 @@ export function AttributionPeopleList({
   const people = buildAttributionAvatars(reporters, resolvers)
   if (people.length === 0) return <>{empty}</>
 
-  const sections: {
-    role: AttributionRole
-    heading: string
-    people: AttributionAvatar[]
-  }[] = [
-    {
-      role: "both",
-      heading: "Created and developed by",
-      people: people.filter((p) => p.role === "both"),
-    },
-    {
-      role: "created",
-      heading: "Created by",
-      people: people.filter((p) => p.role === "created"),
-    },
-    {
-      role: "resolved",
-      heading: "Resolved by",
-      people: people.filter((p) => p.role === "resolved"),
-    },
-  ].filter((s) => s.people.length > 0)
+  const sections = (
+    [
+      {
+        role: "both" as const,
+        heading: "Created and developed by",
+        people: people.filter((p) => p.role === "both"),
+      },
+      {
+        role: "created" as const,
+        heading: "Created by",
+        people: people.filter((p) => p.role === "created"),
+      },
+      {
+        role: "resolved" as const,
+        heading: "Resolved by",
+        people: people.filter((p) => p.role === "resolved"),
+      },
+    ] satisfies {
+      role: AttributionRole
+      heading: string
+      people: AttributionAvatar[]
+    }[]
+  ).filter((s) => s.people.length > 0)
 
   return (
     <TooltipProvider delay={200}>

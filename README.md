@@ -1,45 +1,97 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Taskmark — local board UI
 
-## Getting Started
+Open a Taskmark markdown board in the browser without cloning this repo for day-to-day use.
 
-First, run the development server:
+## One command
+
+From a product repo that already has `./taskmark/`, or from a dedicated `*-taskmark` board root:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npx taskmark serve
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Opens [http://localhost:8275](http://localhost:8275) and binds **only that board**.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Option | Meaning |
+|--------|---------|
+| `--port` / `-p` | Listen port (default **8275**; also `PORT` / `TASKMARK_PORT`) |
+| `--board <path>` | Board or product root (sets `TASKMARK_BOARD`) |
+| `--no-open` | Print the URL only |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Board resolution (same as zero-config in the app):
 
-## Learn More
+1. `--board` / `TASKMARK_BOARD`
+2. `TASKMARK_MASTER`
+3. `TASKMARK_CWD` → npm `INIT_CWD` → `process.cwd()` — nested `./taskmark/` or flat `*-taskmark` root
 
-To learn more about Next.js, take a look at the following resources:
+If no board is found, the CLI exits with a clear error (setup cookies are for `npm run dev` only).
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Nested vs flat boards
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+| Layout | Where to run `serve` |
+|--------|----------------------|
+| Single-git | Product root (discovers `./taskmark/`) or the `taskmark/` folder itself |
+| Multi-git | Dedicated sibling `*-taskmark` repo root (`INDEX.md` at root — not nested) |
 
-## Deploy on Vercel
+You do **not** need to clone `taskmark-frontend` to view a board.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Optional `npm start` stub
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+New boards can add a tiny `package.json` (markdown-first boards stay without one):
 
-<!-- taskmark:contributors:begin -->
-## Contributors
+```json
+{
+  "name": "my-project-taskmark",
+  "private": true,
+  "scripts": {
+    "start": "taskmark serve"
+  },
+  "devDependencies": {
+    "taskmark": "^0.1.0"
+  }
+}
+```
 
-People who created or resolved work items on this board (from local git config).
+Then `npm start` from the board or product root.
 
-- Marco Mendão <marco.mendao@betacode.tech>
+## Dev server (this package)
 
-<!-- taskmark:contributors:end -->
+```bash
+npm install
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000).
+
+### Setup wizard (default)
+
+When you run from a cwd **without** a Taskmark board, the app opens the **setup wizard**. Cookie-based multi-project workspaces still work.
+
+### Zero-config (skip setup)
+
+| Bind | How |
+|------|-----|
+| `TASKMARK_BOARD` | Absolute path to a board root or a product root with `./taskmark/` |
+| `TASKMARK_MASTER` | Absolute path to a master folder |
+| Cwd | `TASKMARK_CWD`, else `INIT_CWD`, else `process.cwd()` |
+
+Precedence: **env board → env master → cwd → cookies**.
+
+```bash
+TASKMARK_BOARD=/path/to/my-app/taskmark npm run dev
+```
+
+When zero-config is active, **Add project** is hidden.
+
+### Package build
+
+```bash
+npm run build   # next build + prepare dist/standalone for the CLI
+npm run serve   # same as npx taskmark serve (needs build first)
+```
+
+## Stack
+
+- Next.js / React (standalone output for `taskmark serve`)
+- Tailwind CSS v4
+- Local markdown boards only (no hosted sync)

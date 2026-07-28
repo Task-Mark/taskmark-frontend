@@ -32,7 +32,7 @@ import {
   collectMetricLeaves,
   computeProjectStatusMetrics,
 } from "@/lib/taskmark/project-metrics"
-import { loadConfiguredWorkspace } from "@/lib/taskmark/workspace"
+import { loadWorkspace } from "@/lib/taskmark/workspace"
 
 type BoardPageProps = {
   searchParams: Promise<{
@@ -55,11 +55,7 @@ function headingForView(view: ListViewMode): string {
 
 export default async function BoardPage({ searchParams }: BoardPageProps) {
   const masters = await getMasterFoldersCookie()
-  if (masters.length === 0) {
-    redirect("/setup")
-  }
-
-  const workspace = loadConfiguredWorkspace(masters)
+  const workspace = loadWorkspace(masters)
   if (workspace.projects.length === 0) {
     redirect("/setup")
   }
@@ -68,7 +64,8 @@ export default async function BoardPage({ searchParams }: BoardPageProps) {
   const hideCompletedPrefs = await getHideCompletedCookies()
   const activeProject = resolveActiveProject(
     workspace.projects,
-    savedActiveId
+    // Autoconfig: prefer the bound board; ignore stale active-project cookies.
+    workspace.autoconfig ? null : savedActiveId
   )
   if (!activeProject) {
     redirect("/setup")
@@ -134,6 +131,7 @@ export default async function BoardPage({ searchParams }: BoardPageProps) {
           projects={workspace.projects}
           activeProjectId={activeProject.id}
           masterCount={workspace.masters.length}
+          autoconfig={workspace.autoconfig}
         />
 
         <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-8">
