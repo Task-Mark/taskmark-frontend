@@ -28,7 +28,8 @@ Board resolution (same as the UI):
      (product root with ./taskmark/, or dedicated *-taskmark root)
 
 Examples:
-  npx taskmark serve
+  npm i -D @taskmark/ui && npx taskmark serve
+  npx -p @taskmark/ui taskmark serve
   npx taskmark serve --port 9000
   TASKMARK_BOARD=/path/to/my-app/taskmark npx taskmark serve
 `)
@@ -149,7 +150,8 @@ Looked for:
   - cwd layouts: nested ./taskmark/ or dedicated *-taskmark root
 
 Fix: cd into a product repo (with ./taskmark/) or a board root, or set TASKMARK_BOARD.
-Then re-run: npx taskmark serve`)
+Then re-run: npx taskmark serve
+(or: npx -p @taskmark/ui taskmark serve)`)
     process.exit(1)
   }
 
