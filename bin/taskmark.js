@@ -28,7 +28,7 @@ Board resolution (same as the UI):
      (product root with ./taskmark/, or dedicated *-taskmark root)
 
 Examples:
-  npm i -D @taskmark/ui && npx taskmark serve
+  npm i @taskmark/ui --save && npx taskmark serve
   npx -p @taskmark/ui taskmark serve
   npx taskmark serve --port 9000
   TASKMARK_BOARD=/path/to/my-app/taskmark npx taskmark serve

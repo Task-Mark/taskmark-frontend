@@ -6,7 +6,7 @@ Install in a Taskmark board folder (or product root with `./taskmark/`) and open
 
 ```bash
 # from nested ./taskmark/ or a dedicated *-taskmark board root
-npm install @taskmark/ui --save-dev
+npm install @taskmark/ui --save
 npx taskmark serve
 ```
 
