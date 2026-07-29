@@ -36,6 +36,7 @@ import { usePaginatedRows } from "@/hooks/use-paginated-rows"
 import { usePersistedHideCompleted } from "@/hooks/use-persisted-hide-completed"
 import { useTableSort } from "@/hooks/use-table-sort"
 import { cn } from "@/lib/utils"
+import { displayFileName } from "@/lib/display-path"
 import type { EpicWorkItemsList } from "@/lib/taskmark/flat-work-item-types"
 import {
   DEFAULT_TIMEFRAME_FILTER,
@@ -155,7 +156,7 @@ export function OverallWorkItemsList({
             <ul className="mt-2 flex flex-col gap-1 font-mono text-xs text-muted-foreground">
               {errors.map((err) => (
                 <li key={`${err.filePath}:${err.message}`}>
-                  {err.filePath}: {err.message}
+                  {displayFileName(err.filePath)}: {err.message}
                 </li>
               ))}
             </ul>

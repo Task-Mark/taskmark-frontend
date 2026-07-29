@@ -143,7 +143,6 @@ export default async function BoardPage({ searchParams }: BoardPageProps) {
         <AppBar
           projects={workspace.projects}
           activeProjectId={activeProject.id}
-          masterCount={workspace.masters.length}
           autoconfig={workspace.autoconfig}
         />
 
@@ -176,9 +175,6 @@ export default async function BoardPage({ searchParams }: BoardPageProps) {
                   : activeView === "overall" && selectedStoryId
                     ? ` · story ${selectedStoryId} not in list`
                     : ""}
-              </p>
-              <p className="mt-1 font-mono text-xs text-muted-foreground">
-                {activeProject.boardPath}
               </p>
             </div>
             <ListViewSwitcher

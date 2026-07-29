@@ -33,6 +33,7 @@ import { usePaginatedRows } from "@/hooks/use-paginated-rows"
 import { usePersistedHideCompleted } from "@/hooks/use-persisted-hide-completed"
 import { useTableSort } from "@/hooks/use-table-sort"
 import type { StoryItemList } from "@/lib/taskmark/item-types"
+import { displayFileName } from "@/lib/display-path"
 import {
   DEFAULT_TIMEFRAME_FILTER,
   filterListRows,
@@ -154,7 +155,7 @@ export function TaskList({
             <ul className="mt-2 flex flex-col gap-1 font-mono text-xs text-muted-foreground">
               {errors.map((err) => (
                 <li key={`${err.filePath}:${err.message}`}>
-                  {err.filePath}: {err.message}
+                  {displayFileName(err.filePath)}: {err.message}
                 </li>
               ))}
             </ul>

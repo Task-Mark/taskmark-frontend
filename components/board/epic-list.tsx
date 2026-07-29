@@ -15,7 +15,6 @@ import {
   Card,
   CardAction,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
@@ -33,6 +32,7 @@ import { usePaginatedRows } from "@/hooks/use-paginated-rows"
 import { usePersistedHideCompleted } from "@/hooks/use-persisted-hide-completed"
 import { useTableSort } from "@/hooks/use-table-sort"
 import { cn } from "@/lib/utils"
+import { displayFileName } from "@/lib/display-path"
 import type { EpicSummary, ProjectEpicList } from "@/lib/taskmark/epic-types"
 import { isGeneralEpic } from "@/lib/taskmark/general-epic"
 import {
@@ -145,9 +145,6 @@ function ProjectEpicCard({
     <Card>
       <CardHeader>
         <CardTitle className="font-head text-xl">{project.name}</CardTitle>
-        <CardDescription className="font-mono text-xs">
-          {project.boardPath}
-        </CardDescription>
         {hasSourceRows ? (
           <CardAction>
             <TimeframeFilter
@@ -173,7 +170,7 @@ function ProjectEpicCard({
             <ul className="mt-2 flex flex-col gap-1 font-mono text-xs text-muted-foreground">
               {errors.map((err) => (
                 <li key={err.filePath}>
-                  {err.filePath}: {err.message}
+                  {displayFileName(err.filePath)}: {err.message}
                 </li>
               ))}
             </ul>

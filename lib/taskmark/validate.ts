@@ -30,13 +30,13 @@ export function validateMasterFolder(
       return {
         ok: false,
         code: "not_found",
-        error: `Folder not found: ${masterPath}`,
+        error: "Folder not found. Check the path and try again.",
       }
     }
     return {
       ok: false,
       code: "unreadable",
-      error: `Cannot read folder: ${masterPath}`,
+      error: "Cannot read that folder. Check permissions and try again.",
     }
   }
 
@@ -44,7 +44,7 @@ export function validateMasterFolder(
     return {
       ok: false,
       code: "not_directory",
-      error: `Path is not a folder: ${masterPath}`,
+      error: "That path is not a folder.",
     }
   }
 
@@ -55,7 +55,7 @@ export function validateMasterFolder(
     return {
       ok: false,
       code: "unreadable",
-      error: `Cannot scan folder: ${masterPath}`,
+      error: "Cannot scan that folder. Check permissions and try again.",
     }
   }
 

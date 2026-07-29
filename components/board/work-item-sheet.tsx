@@ -39,6 +39,7 @@ import {
   loadWorkItemDetailFromSnapshot,
   resolveWorkItemByIdFromSnapshot,
 } from "@/lib/taskmark/snapshot-client"
+import { displayFileName } from "@/lib/display-path"
 
 const isStatic =
   process.env.NEXT_PUBLIC_TASKMARK_STATIC === "1" ||
@@ -574,7 +575,7 @@ function WorkItemSheetProviderInner({
                 <p className="mt-1 text-muted-foreground">{state.message}</p>
                 {state.filePath ? (
                   <p className="mt-2 break-all font-mono text-xs text-muted-foreground">
-                    {state.filePath}
+                    {displayFileName(state.filePath)}
                   </p>
                 ) : null}
               </div>
@@ -598,13 +599,25 @@ function WorkItemSheetProviderInner({
   )
 }
 
+/** Context while `useSearchParams` Suspense is pending — children must not render bare. */
+const SUSPENSE_FALLBACK_SHEET: WorkItemSheetContextValue = {
+  openDetail: () => {},
+  openDetailById: () => {},
+}
+
 export function WorkItemSheetProvider({
   children,
 }: {
   children: React.ReactNode
 }) {
   return (
-    <React.Suspense fallback={children}>
+    <React.Suspense
+      fallback={
+        <WorkItemSheetContext.Provider value={SUSPENSE_FALLBACK_SHEET}>
+          {children}
+        </WorkItemSheetContext.Provider>
+      }
+    >
       <WorkItemSheetProviderInner>{children}</WorkItemSheetProviderInner>
     </React.Suspense>
   )

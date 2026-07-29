@@ -1,6 +1,6 @@
 {
   "name": "@taskmark/ui",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "description": "Local Taskmark board UI — install in a board folder and run `npx taskmark serve` or `npx taskmark build`",
   "private": false,
   "type": "module",

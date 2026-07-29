@@ -39,6 +39,7 @@ import { usePaginatedRows } from "@/hooks/use-paginated-rows"
 import { usePersistedHideCompleted } from "@/hooks/use-persisted-hide-completed"
 import { useTableSort } from "@/hooks/use-table-sort"
 import type { WorkItemsViewList } from "@/lib/taskmark/flat-work-item-types"
+import { displayFileName } from "@/lib/display-path"
 import {
   buildParentFilterOptions,
   collectUniqueTags,
@@ -150,7 +151,6 @@ export function WorkItemsList({
             Stories and epic-direct tasks/bugs · open by status/priority/created;
             done by newest solved date
           </span>
-          <span className="mt-1 block font-mono text-xs">{project.boardPath}</span>
         </CardDescription>
         {hasSourceRows ? (
           <CardAction>
@@ -177,7 +177,7 @@ export function WorkItemsList({
             <ul className="mt-2 flex flex-col gap-1 font-mono text-xs text-muted-foreground">
               {errors.map((err) => (
                 <li key={`${err.filePath}:${err.message}`}>
-                  {err.filePath}: {err.message}
+                  {displayFileName(err.filePath)}: {err.message}
                 </li>
               ))}
             </ul>

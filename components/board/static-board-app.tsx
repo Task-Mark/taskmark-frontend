@@ -82,7 +82,6 @@ export function StaticBoardApp({ snapshot }: { snapshot: BoardSnapshot }) {
         <AppBar
           projects={snapshot.projects}
           activeProjectId={activeProject.id}
-          masterCount={1}
           autoconfig={true}
         />
 

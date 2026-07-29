@@ -149,13 +149,9 @@ export function SetupWizard({
               {projects.map((project) => (
                 <li
                   key={project.id}
-                  className="font-mono text-xs leading-relaxed text-muted-foreground"
+                  className="text-sm font-medium text-foreground"
                 >
-                  <span className="font-sans text-sm font-medium text-foreground">
-                    {project.name}
-                  </span>
-                  <br />
-                  {project.projectPath}
+                  {project.name}
                 </li>
               ))}
             </ul>

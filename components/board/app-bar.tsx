@@ -9,15 +9,13 @@ import type { DiscoveredProject } from "@/lib/taskmark/types"
 type AppBarProps = {
   projects: DiscoveredProject[]
   activeProjectId: string
-  masterCount: number
-  /** When true, workspace is env/cwd-bound — hide multi-master add. */
+  /** When true, workspace is env/cwd-bound — hide project switcher and add. */
   autoconfig?: boolean
 }
 
 export function AppBar({
   projects,
   activeProjectId,
-  masterCount,
   autoconfig = false,
 }: AppBarProps) {
   return (
@@ -49,42 +47,41 @@ export function AppBar({
               </span>
             </p>
             <p className="truncate text-xs text-muted-foreground transition-transform duration-200 group-hover:translate-y-1">
-              {projects.length} project{projects.length === 1 ? "" : "s"}
-              {masterCount > 0
-                ? ` · ${masterCount} workspace${masterCount === 1 ? "" : "s"}`
-                : ""}
+              Product memory for agent work
             </p>
           </div>
         </div>
 
-        <form
-          action={selectActiveProject}
-          className="flex min-w-0 flex-wrap items-center gap-2"
-        >
-          <label htmlFor="projectId" className="sr-only">
-            Active project
-          </label>
-          <select
-            id="projectId"
-            name="projectId"
-            defaultValue={activeProjectId}
-            onChange={(e) => {
-              e.currentTarget.form?.requestSubmit()
-            }}
-            className="max-w-[20rem] rounded border-2 border-border bg-input px-3 py-1.5 text-sm shadow-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+        {!autoconfig ? (
+          <form
+            action={selectActiveProject}
+            className="flex min-w-0 flex-wrap items-center gap-2"
           >
-            {projects.map((project) => (
-              <option key={project.id} value={project.id}>
-                {projectOptionLabel(project, projects)}
-              </option>
-            ))}
-          </select>
-          <noscript>
-            <Button type="submit" size="sm" variant="outline">
-              Switch project
-            </Button>
-          </noscript>
-        </form>
+            <label htmlFor="projectId" className="sr-only">
+              Active project
+            </label>
+            <select
+              id="projectId"
+              name="projectId"
+              defaultValue={activeProjectId}
+              onChange={(e) => {
+                e.currentTarget.form?.requestSubmit()
+              }}
+              className="max-w-[20rem] rounded border-2 border-border bg-input px-3 py-1.5 text-sm shadow-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+            >
+              {projects.map((project) => (
+                <option key={project.id} value={project.id}>
+                  {projectOptionLabel(project, projects)}
+                </option>
+              ))}
+            </select>
+            <noscript>
+              <Button type="submit" size="sm" variant="outline">
+                Switch project
+              </Button>
+            </noscript>
+          </form>
+        ) : null}
 
         {!autoconfig ? (
           <form action={openAddProject}>
