@@ -13,8 +13,7 @@ type MarkdownContentProps = {
 }
 
 const proseClassName = cn(
-  "text-sm leading-relaxed text-foreground",
-  "[&>:first-child]:mt-0 [&>:last-child]:mb-0",
+  "tm-md text-sm leading-relaxed text-foreground",
   "[&_p]:my-2",
   "[&_h1]:mt-3 [&_h1]:mb-2 [&_h1]:font-head [&_h1]:text-lg [&_h1]:font-semibold",
   "[&_h2]:mt-3 [&_h2]:mb-2 [&_h2]:font-head [&_h2]:text-base [&_h2]:font-semibold",

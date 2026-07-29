@@ -8,8 +8,10 @@ import {
 
 import { MetricStatCard } from "@/components/board/metric-stat-card"
 import { ProjectContributorsPanel } from "@/components/board/project-contributors-panel"
-import type { ProjectStatusMetrics } from "@/lib/taskmark/project-metrics"
-import { formatSpeedPtsPerWeek } from "@/lib/taskmark/project-metrics"
+import {
+  formatSpeedPtsPerWeek,
+  type ProjectStatusMetrics,
+} from "@/lib/taskmark/project-metrics-shared"
 
 type ProjectStatusMetricsStripProps = {
   metrics: ProjectStatusMetrics

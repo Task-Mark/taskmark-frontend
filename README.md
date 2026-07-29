@@ -48,15 +48,30 @@ You do **not** need to clone `taskmark-frontend`.
   "type": "module",
   "scripts": {
     "start": "taskmark serve --no-open",
-    "serve": "taskmark serve"
+    "serve": "taskmark serve",
+    "build": "taskmark build --board . --out out",
+    "preview": "taskmark preview"
   },
   "dependencies": {
-    "@taskmark/ui": "^0.1.0"
+    "@taskmark/ui": "^0.2.4"
   }
 }
 ```
 
-Then `npm install && npm run serve` (or `npm start`). For **Vercel**, add the stub `server.js` + `vercel.json` (Framework Preset: **Node**) from the Taskmark board-ui-stub example.
+Then `npm install && npm run serve` (or `npm start`). For **Vercel**, use `npm run build` (static HTML in `out/`) — see the board-ui-stub `vercel.json`.
+
+### Static production build
+
+```bash
+npx taskmark build --board .
+# → <board>/out  (HTML + assets + taskmark-snapshot.json)
+
+npm run preview
+# or: npx taskmark preview
+# serves <board>/out locally (default port 8275)
+```
+
+Favicon, webmanifest, and Open Graph assets ship in `public/` and are included in both standalone (`taskmark serve`) and static (`taskmark build`) outputs.
 
 ## Develop this package
 

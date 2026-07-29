@@ -1,4 +1,11 @@
-@import "tailwindcss";
+@import "tailwindcss" source(none);
+
+/* Explicit sources only — staged builds live under a board and must not scan board markdown. */
+@source "../app";
+@source "../components";
+@source "../hooks";
+@source "../lib";
+@source "../bin";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -87,6 +94,15 @@
   --shadow-lg: 9px 9px 0 0 var(--shadow-color);
   --shadow-xl: 14px 14px 0 1px var(--shadow-color);
   --shadow-2xl: 20px 20px 0 2px var(--shadow-color);
+}
+
+/* Markdown body: reset outer margins without Tailwind arbitrary :first-child variants
+   (those trigger Lightning CSS optimize warnings when scanned from board docs). */
+.tm-md > :first-child {
+  margin-top: 0;
+}
+.tm-md > :last-child {
+  margin-bottom: 0;
 }
 
 .dark {

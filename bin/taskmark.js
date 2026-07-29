@@ -6,6 +6,7 @@ import path from "node:path"
 import { fileURLToPath } from "node:url"
 
 import { resolveServeBoard } from "./lib/resolve-board.mjs"
+import { startStaticServer } from "./lib/static-preview.mjs"
 
 const DEFAULT_PORT = 8275
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -14,11 +15,19 @@ const packageRoot = path.resolve(__dirname, "..")
 function printHelp() {
   console.log(`Usage:
   taskmark serve [options]
+  taskmark build [options]
+  taskmark preview [options]
+
+Commands:
+  serve              Start the prebuilt local UI server (default port ${DEFAULT_PORT})
+  build              Production static HTML export for Vercel / static hosting
+  preview            Serve an existing static export (default: <board>/out)
 
 Options:
   --port, -p <n>     Listen port (default ${DEFAULT_PORT}; env PORT / TASKMARK_PORT)
   --board <path>     Board or product root (sets TASKMARK_BOARD)
-  --no-open          Do not open a browser
+  --out <dir>        Static output directory for build/preview (default: <board>/out)
+  --no-open          Do not open a browser (serve / preview)
   --help, -h         Show help
 
 Board resolution (same as the UI):
@@ -29,8 +38,10 @@ Board resolution (same as the UI):
 
 Examples:
   npm i @taskmark/ui --save && npx taskmark serve
+  npx taskmark build --board .
+  npm run preview
+  npx taskmark preview --port 9000
   npx -p @taskmark/ui taskmark serve
-  npx taskmark serve --port 9000
   TASKMARK_BOARD=/path/to/my-app/taskmark npx taskmark serve
 `)
 }
@@ -40,6 +51,7 @@ function parseArgs(argv) {
     command: null,
     port: null,
     board: null,
+    out: null,
     open: true,
     help: false,
   }
@@ -59,10 +71,14 @@ function parseArgs(argv) {
       args.port = rest.shift()
     } else if (token === "--board") {
       args.board = rest.shift()
+    } else if (token === "--out") {
+      args.out = rest.shift()
     } else if (token.startsWith("--port=")) {
       args.port = token.slice("--port=".length)
     } else if (token.startsWith("--board=")) {
       args.board = token.slice("--board=".length)
+    } else if (token.startsWith("--out=")) {
+      args.out = token.slice("--out=".length)
     } else {
       console.error(`Unknown argument: ${token}`)
       args.help = true
@@ -216,23 +232,121 @@ Or install a published build that includes dist/standalone.`)
   }
 }
 
+async function preview(args) {
+  const callerCwd = process.env.INIT_CWD || process.cwd()
+
+  function resolveCallerPath(p) {
+    if (!p) return null
+    return path.isAbsolute(p) ? path.resolve(p) : path.resolve(callerCwd, p)
+  }
+
+  const boardArg = resolveCallerPath(args.board)
+  const resolved = resolveServeBoard(boardArg)
+  if (!resolved) {
+    console.error(`No Taskmark board found.
+
+Looked for:
+  - --board / TASKMARK_BOARD
+  - TASKMARK_MASTER
+  - cwd layouts: nested ./taskmark/ or dedicated *-taskmark root
+
+Fix: cd into a product repo (with ./taskmark/) or a board root, or set TASKMARK_BOARD.
+Then re-run: npx taskmark preview`)
+    process.exit(1)
+  }
+
+  const outDir = args.out
+    ? resolveCallerPath(args.out)
+    : path.join(resolved.boardPath, "out")
+
+  if (!outDir || !fs.existsSync(outDir) || !fs.statSync(outDir).isDirectory()) {
+    console.error(`Static export not found: ${outDir || "(missing)"}
+
+Run a production build first:
+  npx taskmark build --board .
+  # or: npm run build
+
+Then: npm run preview`)
+    process.exit(1)
+  }
+
+  const port = resolvePort(args.port)
+  const url = `http://localhost:${port}`
+
+  console.log(`Taskmark static preview`)
+  console.log(`  board:  ${resolved.boardPath} (${resolved.source})`)
+  console.log(`  out:    ${outDir}`)
+  console.log(`  listen: ${url}`)
+
+  await startStaticServer({ root: outDir, port })
+
+  const hosted =
+    Boolean(process.env.VERCEL) ||
+    Boolean(process.env.NOW_REGION) ||
+    process.env.CI === "true"
+  const shouldOpen = args.open && !hosted
+
+  if (shouldOpen) {
+    openBrowser(url)
+  } else {
+    console.log(`Ready: ${url}`)
+  }
+}
+
 async function main() {
   const args = parseArgs(process.argv.slice(2))
   if (args.help || !args.command) {
     printHelp()
     process.exit(args.help || !args.command ? 0 : 1)
   }
-  if (args.command !== "serve") {
-    console.error(`Unknown command: ${args.command}`)
-    printHelp()
-    process.exit(1)
+  if (args.command === "serve") {
+    try {
+      await serve(args)
+    } catch (err) {
+      console.error(String(err?.message || err))
+      process.exit(1)
+    }
+    return
   }
-  try {
-    await serve(args)
-  } catch (err) {
-    console.error(String(err?.message || err))
-    process.exit(1)
+  if (args.command === "preview") {
+    try {
+      await preview(args)
+    } catch (err) {
+      console.error(String(err?.message || err))
+      process.exit(1)
+    }
+    return
   }
+  if (args.command === "build") {
+    const buildScript = path.join(packageRoot, "scripts", "build-static.mjs")
+    // Resolve relative paths against the caller's cwd (npm/yarn script dir),
+    // not packageRoot — the child runs with cwd = @taskmark/ui.
+    const callerCwd = process.env.INIT_CWD || process.cwd()
+    const childArgs = [buildScript]
+    if (args.board) {
+      childArgs.push("--board", path.resolve(callerCwd, args.board))
+    } else {
+      // Prefer the invoke directory as the board when no --board flag.
+      childArgs.push("--board", callerCwd)
+    }
+    if (args.out) {
+      childArgs.push("--out", path.resolve(callerCwd, args.out))
+    }
+    const child = spawn(process.execPath, childArgs, {
+      cwd: packageRoot,
+      env: {
+        ...process.env,
+        INIT_CWD: callerCwd,
+        TASKMARK_CWD: process.env.TASKMARK_CWD || callerCwd,
+      },
+      stdio: "inherit",
+    })
+    child.on("exit", (code) => process.exit(code ?? 1))
+    return
+  }
+  console.error(`Unknown command: ${args.command}`)
+  printHelp()
+  process.exit(1)
 }
 
 main()

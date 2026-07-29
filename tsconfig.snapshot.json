@@ -1,0 +1,20 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*"]
+    },
+    "plugins": [],
+    "jsx": "react-jsx",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "noEmit": true
+  },
+  "include": [
+    "scripts/write-board-snapshot.ts",
+    "lib/**/*.ts",
+    "lib/**/*.tsx"
+  ],
+  "exclude": ["node_modules", "dist", "out", ".next"]
+}

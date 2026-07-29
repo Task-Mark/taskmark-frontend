@@ -18,6 +18,12 @@ import {
   type SolvedCompletionSample,
 } from "@/lib/taskmark/timeframe-filters"
 
+export type {
+  ProjectStatusMetrics,
+} from "@/lib/taskmark/project-metrics-shared"
+export { formatSpeedPtsPerWeek } from "@/lib/taskmark/project-metrics-shared"
+import type { ProjectStatusMetrics } from "@/lib/taskmark/project-metrics-shared"
+
 export type MetricLeafKind = "epic" | "story" | "task" | "bug"
 
 export type MetricLeaf = {
@@ -28,18 +34,6 @@ export type MetricLeaf = {
   completedAt: string
   reporters: ContributorIdentity[]
   resolvers: ContributorIdentity[]
-}
-
-export type ProjectStatusMetrics = {
-  totalWorkItems: number
-  completeWorkItems: number
-  /** Story points completed in the current ISO week from done task/bug leaves. */
-  currentWeekPointsDone: number
-  /** Average story points completed per ISO week over the 90-day window; null if no done tasks/bugs. */
-  currentSpeedPtsPerWeek: number | null
-  /** Weeks included in the speed average (0 when no speed). */
-  speedWeekCount: number
-  contributors: ContributorIdentity[]
 }
 
 const COUNTABLE_KINDS = new Set<MetricLeafKind>(["story", "task", "bug"])
@@ -288,9 +282,3 @@ export function computeProjectStatusMetrics(
   }
 }
 
-/** Format average pts/week for display (one decimal when needed). */
-export function formatSpeedPtsPerWeek(value: number | null): string {
-  if (value == null || !Number.isFinite(value)) return "—"
-  const rounded = Math.round(value * 10) / 10
-  return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1)
-}

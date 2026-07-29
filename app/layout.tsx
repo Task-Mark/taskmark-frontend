@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next"
 import { Archivo_Black, Space_Grotesk } from "next/font/google"
 import { Toaster } from "@/components/ui/sonner"
+import { SITE } from "@/lib/site"
 import "./globals.css"
 
 const archivoBlack = Archivo_Black({
@@ -17,13 +18,14 @@ const spaceGrotesk = Space_Grotesk({
 })
 
 const siteDescription =
-  "Local Taskmark board dashboard — markdown product memory with sizing, work logs, and velocity."
+  "Taskmark — product memory for agent work. Local markdown boards for Cursor with sizing, work logs, and velocity."
 
 export const viewport: Viewport = {
   themeColor: "#111111",
 }
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE.url),
   applicationName: "Taskmark",
   title: {
     default: "Taskmark",
@@ -41,6 +43,8 @@ export const metadata: Metadata = {
   manifest: "/site.webmanifest",
   openGraph: {
     type: "website",
+    locale: "en_US",
+    url: SITE.url,
     siteName: "Taskmark",
     title: "Taskmark",
     description: siteDescription,
@@ -58,6 +62,10 @@ export const metadata: Metadata = {
     title: "Taskmark",
     description: siteDescription,
     images: ["/og/og-default.png"],
+  },
+  robots: {
+    index: true,
+    follow: true,
   },
 }
 

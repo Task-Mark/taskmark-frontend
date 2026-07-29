@@ -4,10 +4,6 @@ import * as React from "react"
 import { ArrowLeftIcon, EyeIcon, XIcon } from "lucide-react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 
-import {
-  loadWorkItemDetail,
-  resolveWorkItemById,
-} from "@/app/board/actions"
 import { WorkItemDetailBody, WorkItemDetailHeaderBadges } from "@/components/board/work-item-detail-body"
 import { TypeBadge } from "@/components/board/status-badge"
 import { Button } from "@/components/ui/button"
@@ -35,9 +31,46 @@ import {
 } from "@/components/ui/tooltip"
 import type {
   WorkItemDetail,
+  WorkItemDetailResult,
   WorkItemMeta,
   WorkItemRef,
 } from "@/lib/taskmark/detail-types"
+import {
+  loadWorkItemDetailFromSnapshot,
+  resolveWorkItemByIdFromSnapshot,
+} from "@/lib/taskmark/snapshot-client"
+
+const isStatic =
+  process.env.NEXT_PUBLIC_TASKMARK_STATIC === "1" ||
+  process.env.TASKMARK_STATIC === "1"
+
+async function loadWorkItemDetail(
+  filePath: string,
+  hint?: "epic" | "story" | "item"
+): Promise<WorkItemDetailResult> {
+  if (isStatic) {
+    return loadWorkItemDetailFromSnapshot(filePath)
+  }
+  const actions = await import("@/app/board/actions")
+  return actions.loadWorkItemDetail(filePath, hint) as Promise<WorkItemDetailResult>
+}
+
+async function resolveWorkItemById(
+  itemId: string,
+  options?: { withinFilePath?: string | null }
+): Promise<
+  | { ok: true; ref: WorkItemRef }
+  | { ok: false; itemId: string; message: string }
+> {
+  if (isStatic) {
+    return resolveWorkItemByIdFromSnapshot(itemId)
+  }
+  const actions = await import("@/app/board/actions")
+  return actions.resolveWorkItemById(itemId, options) as Promise<
+    | { ok: true; ref: WorkItemRef }
+    | { ok: false; itemId: string; message: string }
+  >
+}
 
 type LoadState =
   | { status: "idle" }

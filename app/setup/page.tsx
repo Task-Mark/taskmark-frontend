@@ -5,12 +5,17 @@ import { BrandLogo } from "@/components/brand-logo"
 import { SetupWizard } from "@/components/setup/setup-wizard"
 import { resolveAutoconfigWorkspace } from "@/lib/taskmark/autoconfig"
 import { getMasterFoldersCookie } from "@/lib/taskmark/cookies"
+import { isStaticRuntime } from "@/lib/taskmark/static-mode"
 
 type SetupPageProps = {
   searchParams?: Promise<{ mode?: string }>
 }
 
 export default async function SetupPage({ searchParams }: SetupPageProps) {
+  if (isStaticRuntime()) {
+    redirect("/board")
+  }
+
   const auto = resolveAutoconfigWorkspace()
   if (auto && auto.projects.length > 0) {
     // Zero-config bind — setup wizard is not needed.

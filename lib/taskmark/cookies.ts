@@ -11,8 +11,10 @@ import {
   type HideCompletedCookieKey,
 } from "@/lib/taskmark/constants"
 import { parseHideCompletedCookieValue } from "@/lib/taskmark/hide-completed-cookie"
+import { isStaticRuntime } from "@/lib/taskmark/static-mode"
 
 async function readEncodedCookie(name: string): Promise<string | null> {
+  if (isStaticRuntime()) return null
   const store = await cookies()
   const value = store.get(name)?.value
   if (!value) return null
@@ -56,6 +58,7 @@ export async function getMasterFoldersCookie(): Promise<string[]> {
 }
 
 export async function setMasterFoldersCookie(masters: string[]): Promise<void> {
+  if (isStaticRuntime()) return
   const unique = [
     ...new Set(masters.map((m) => m.trim()).filter(Boolean)),
   ]
@@ -90,6 +93,7 @@ export async function addMasterFolderCookie(masterPath: string): Promise<string[
 }
 
 export async function clearMasterFoldersCookie(): Promise<void> {
+  if (isStaticRuntime()) return
   const store = await cookies()
   store.delete(MASTER_FOLDERS_COOKIE)
   store.delete(MASTER_FOLDER_COOKIE)
@@ -106,6 +110,7 @@ export async function getActiveProjectCookie(): Promise<string | null> {
 }
 
 export async function setActiveProjectCookie(projectId: string): Promise<void> {
+  if (isStaticRuntime()) return
   const store = await cookies()
   store.set(ACTIVE_PROJECT_COOKIE, encodeCookieValue(projectId), {
     path: "/",
@@ -116,6 +121,7 @@ export async function setActiveProjectCookie(projectId: string): Promise<void> {
 }
 
 export async function clearActiveProjectCookie(): Promise<void> {
+  if (isStaticRuntime()) return
   const store = await cookies()
   store.delete(ACTIVE_PROJECT_COOKIE)
 }
@@ -123,6 +129,7 @@ export async function clearActiveProjectCookie(): Promise<void> {
 export async function getHideCompletedCookie(
   key: HideCompletedCookieKey
 ): Promise<boolean> {
+  if (isStaticRuntime()) return false
   const store = await cookies()
   return parseHideCompletedCookieValue(
     store.get(HIDE_COMPLETED_COOKIES[key])?.value
@@ -132,6 +139,15 @@ export async function getHideCompletedCookie(
 export async function getHideCompletedCookies(): Promise<
   Record<HideCompletedCookieKey, boolean>
 > {
+  if (isStaticRuntime()) {
+    return {
+      epics: false,
+      stories: false,
+      tasks: false,
+      overallWorkItems: false,
+      workItems: false,
+    }
+  }
   const store = await cookies()
   return {
     epics: parseHideCompletedCookieValue(

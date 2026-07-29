@@ -16,6 +16,8 @@
 # next.js
 /.next/
 /out/
+/public/taskmark-snapshot.json
+/.taskmark-build/
 
 # production
 /build
