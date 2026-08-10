@@ -40,6 +40,7 @@ Board resolution (same as the UI):
   2. TASKMARK_MASTER
   3. TASKMARK_CWD → npm INIT_CWD → process.cwd()
      (product root with ./taskmark/, or dedicated *-taskmark root)
+  4. Sibling <parent>-taskmark next to a product repo (multi-git)
 
 Examples:
   npm i @taskmark/ui --save && npx taskmark serve
@@ -228,6 +229,7 @@ Looked for:
   - --board / TASKMARK_BOARD
   - TASKMARK_MASTER
   - cwd layouts: nested ./taskmark/ or dedicated *-taskmark root
+  - sibling <parent>-taskmark beside a product repo
 
 Fix: cd into a product repo (with ./taskmark/) or a board root, or set TASKMARK_BOARD.
 Then re-run: npx taskmark ${command}

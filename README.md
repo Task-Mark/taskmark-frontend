@@ -38,6 +38,7 @@ Board resolution:
 1. `--board` / `TASKMARK_BOARD`
 2. `TASKMARK_MASTER`
 3. `TASKMARK_CWD` → npm `INIT_CWD` → `process.cwd()` — nested `./taskmark/` or flat `*-taskmark` root
+4. Sibling `<parent>-taskmark` next to a product repo (multi-git workspaces)
 
 ### Nested vs flat boards
 

@@ -8,7 +8,11 @@ import {
 } from "@/lib/taskmark/discover"
 import type { DiscoveredProject } from "@/lib/taskmark/types"
 
-export type AutoconfigSource = "env_board" | "env_master" | "cwd"
+export type AutoconfigSource =
+  | "env_board"
+  | "env_master"
+  | "cwd"
+  | "sibling"
 
 export type AutoconfigWorkspace = {
   source: AutoconfigSource
@@ -85,9 +89,47 @@ export function cwdCandidates(): string[] {
 }
 
 /**
+ * Multi-git: product repo beside `<parentBasename>-taskmark` (or unique sibling).
+ */
+export function resolveSiblingDedicatedBoard(fromDir: string): string | null {
+  const resolved = path.resolve(fromDir)
+  const parent = path.dirname(resolved)
+  const parentName = path.basename(parent)
+  const preferred = path.join(parent, `${parentName}-taskmark`)
+  const preferredBoard = resolveBoardAtPath(preferred)
+  if (preferredBoard) return preferredBoard
+
+  let entries: fs.Dirent[]
+  try {
+    entries = fs.readdirSync(parent, { withFileTypes: true })
+  } catch {
+    return null
+  }
+
+  const boards: string[] = []
+  for (const entry of entries) {
+    if (!entry.isDirectory() || !entry.name.endsWith("-taskmark")) continue
+    const board = resolveBoardAtPath(path.join(parent, entry.name))
+    if (board) boards.push(board)
+  }
+  if (boards.length === 0) return null
+  if (boards.length === 1) return boards[0]
+
+  const cwdBase = path.basename(resolved)
+  const parts = cwdBase.split("-").filter(Boolean)
+  for (let i = parts.length - 1; i >= 1; i--) {
+    const prefix = parts.slice(0, i).join("-")
+    const hit = boards.find((b) => path.basename(b) === `${prefix}-taskmark`)
+    if (hit) return hit
+  }
+
+  return null
+}
+
+/**
  * Resolve a zero-config workspace without cookies.
  *
- * Precedence: TASKMARK_BOARD → TASKMARK_MASTER → cwd layouts.
+ * Precedence: TASKMARK_BOARD → TASKMARK_MASTER → cwd layouts → sibling *-taskmark.
  * Returns null when nothing valid is found (caller should use cookie setup).
  */
 export function resolveAutoconfigWorkspace(): AutoconfigWorkspace | null {
@@ -112,6 +154,11 @@ export function resolveAutoconfigWorkspace(): AutoconfigWorkspace | null {
   for (const candidate of cwdCandidates()) {
     const board = resolveBoardAtPath(candidate)
     if (board) return workspaceFromBoard(board, "cwd")
+  }
+
+  for (const candidate of cwdCandidates()) {
+    const sibling = resolveSiblingDedicatedBoard(candidate)
+    if (sibling) return workspaceFromBoard(sibling, "sibling")
   }
 
   return null

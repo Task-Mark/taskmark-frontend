@@ -48,6 +48,50 @@ export function resolveBoardAtPath(candidatePath) {
   return null
 }
 
+/**
+ * Multi-git layout: product repo beside a dedicated `<common>-taskmark` board.
+ * Prefer `<parentDirBasename>-taskmark`, else a unique `*-taskmark` sibling,
+ * else a sibling whose board prefix matches the product repo name.
+ */
+export function resolveSiblingDedicatedBoard(fromDir) {
+  const resolved = path.resolve(fromDir)
+  const parent = path.dirname(resolved)
+  const parentName = path.basename(parent)
+  const preferred = path.join(parent, `${parentName}-taskmark`)
+  if (
+    isDedicatedBoardRepoName(path.basename(preferred)) &&
+    hasBoardMarkers(preferred)
+  ) {
+    return preferred
+  }
+
+  let entries
+  try {
+    entries = fs.readdirSync(parent, { withFileTypes: true })
+  } catch {
+    return null
+  }
+
+  const boards = []
+  for (const entry of entries) {
+    if (!entry.isDirectory() || !isDedicatedBoardRepoName(entry.name)) continue
+    const full = path.join(parent, entry.name)
+    if (hasBoardMarkers(full)) boards.push(full)
+  }
+  if (boards.length === 0) return null
+  if (boards.length === 1) return boards[0]
+
+  const cwdBase = path.basename(resolved)
+  const parts = cwdBase.split("-").filter(Boolean)
+  for (let i = parts.length - 1; i >= 1; i--) {
+    const prefix = parts.slice(0, i).join("-")
+    const hit = boards.find((b) => path.basename(b) === `${prefix}-taskmark`)
+    if (hit) return hit
+  }
+
+  return null
+}
+
 function cwdCandidates() {
   const out = []
   const seen = new Set()
@@ -74,7 +118,7 @@ function cwdCandidates() {
 
 /**
  * Same precedence as the Next app autoconfig:
- * TASKMARK_BOARD → TASKMARK_MASTER (as board-or-master) → cwd.
+ * TASKMARK_BOARD → TASKMARK_MASTER (as board-or-master) → cwd → sibling *-taskmark.
  * @returns {{ boardPath: string, source: string } | null}
  */
 export function resolveServeBoard(explicitBoard) {
@@ -102,6 +146,11 @@ export function resolveServeBoard(explicitBoard) {
   for (const candidate of cwdCandidates()) {
     const board = resolveBoardAtPath(candidate)
     if (board) return { boardPath: board, source: "cwd" }
+  }
+
+  for (const candidate of cwdCandidates()) {
+    const sibling = resolveSiblingDedicatedBoard(candidate)
+    if (sibling) return { boardPath: sibling, source: "sibling" }
   }
 
   return null
