@@ -1,7 +1,7 @@
 {
   "name": "@taskmark/ui",
   "version": "0.2.5",
-  "description": "Local Taskmark board UI — install in a board folder and run `npx taskmark serve` or `npx taskmark build`",
+  "description": "Local Taskmark board UI — install in a board folder and run `npx taskmark serve`, `npx taskmark dev`, or `npx taskmark build`",
   "private": false,
   "type": "module",
   "bin": {
@@ -15,7 +15,8 @@
     "lib",
     "public",
     "scripts",
-    "dist/standalone",
+    "dist/prod-next",
+    "dist/public",
     "next.config.ts",
     "postcss.config.mjs",
     "tsconfig.json",
@@ -31,7 +32,7 @@
     "node": ">=18"
   },
   "scripts": {
-    "dev": "next dev",
+    "dev": "node ./bin/taskmark.js dev",
     "build": "next build --webpack && node scripts/prepare-standalone.mjs",
     "build:static": "node scripts/build-static.mjs",
     "start": "next start",

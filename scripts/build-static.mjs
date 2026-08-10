@@ -194,12 +194,21 @@ export async function resetWorkspace() {}
     fs.writeFileSync(full, stub, "utf8")
     stashed.push({ full, bak })
   }
+  // Route handlers are incompatible with `output: 'export'`.
+  const apiDir = path.join(buildRoot, "app", "api")
+  if (fs.existsSync(apiDir)) {
+    const bak = apiDir + ".staticbak"
+    fs.renameSync(apiDir, bak)
+    stashed.push({ full: apiDir, bak, isDir: true })
+  }
   return stashed
 }
 
 function restoreServerActions(stashed) {
   for (const { full, bak } of stashed) {
-    if (fs.existsSync(full)) fs.unlinkSync(full)
+    if (fs.existsSync(full)) {
+      fs.rmSync(full, { recursive: true, force: true })
+    }
     if (fs.existsSync(bak)) fs.renameSync(bak, full)
   }
 }

@@ -10,17 +10,12 @@ const nextConfig: NextConfig = {
   // When installed under a board with its own lockfile, Next would otherwise
   // treat the board as the workspace root and break `@/` resolution.
   outputFileTracingRoot: packageDir,
-  // `taskmark serve` uses standalone; `taskmark build` (static hosting) uses export.
-  output: staticExport ? "export" : "standalone",
+  // Static hosting uses `export`; local `taskmark serve` uses `next start`
+  // against a slim prebuilt `.next` (see scripts/prepare-standalone.mjs).
+  output: staticExport ? "export" : undefined,
   images: staticExport ? { unoptimized: true } : undefined,
   // Static build stubs server actions; skip tsc against those temporary stubs.
   typescript: staticExport ? { ignoreBuildErrors: true } : undefined,
-  // Avoid tracing prior dist/standalone into itself (nested copies).
-  outputFileTracingExcludes: staticExport
-    ? undefined
-    : {
-        "*": ["./dist/**/*", "./out/**/*"],
-      },
   webpack: (config) => {
     config.resolve.alias = {
       ...config.resolve.alias,

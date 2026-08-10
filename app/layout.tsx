@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next"
 import { Archivo_Black, Space_Grotesk } from "next/font/google"
+import { BoardDevReloader } from "@/components/board/board-dev-reloader"
 import { Toaster } from "@/components/ui/sonner"
 import { SITE } from "@/lib/site"
 import "./globals.css"
@@ -80,6 +81,7 @@ export default function RootLayout({
         className={`${archivoBlack.variable} ${spaceGrotesk.variable} font-sans antialiased`}
       >
         <Toaster />
+        <BoardDevReloader />
         {children}
       </body>
     </html>

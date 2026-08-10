@@ -1,19 +1,43 @@
 #!/usr/bin/env node
 /**
- * Copy Next standalone output into a packable layout and attach static assets.
+ * Prepare a packable production Next build for `taskmark serve`.
  *
  * Layout after prepare:
- *   dist/standalone/   — server.js + traced node_modules + .next/static + public
+ *   dist/prod-next/  — slim `.next` (server + static + manifests, no cache)
+ *
+ * npm always strips directories named `node_modules`, and Next 16's standalone
+ * NFT tree is incomplete for packaging — so we ship a normal production build
+ * and run `next start` (next is already a dependency of @taskmark/ui).
  */
 import fs from "node:fs"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..")
-const standaloneSrc = path.join(root, ".next", "standalone")
-const staticSrc = path.join(root, ".next", "static")
+const nextSrc = path.join(root, ".next")
+const distRoot = path.join(root, "dist", "prod-next")
 const publicSrc = path.join(root, "public")
-const distRoot = path.join(root, "dist", "standalone")
+
+const COPY_ENTRIES = [
+  "BUILD_ID",
+  "build-manifest.json",
+  "export-marker.json",
+  "images-manifest.json",
+  "next-minimal-server.js.nft.json",
+  "next-server.js.nft.json",
+  "package.json",
+  "prerender-manifest.json",
+  "react-loadable-manifest.json",
+  "required-server-files.json",
+  "required-server-files.js",
+  "routes-manifest.json",
+  "app-path-routes-manifest.json",
+  "app-build-manifest.json",
+  "server-reference-manifest.js",
+  "server-reference-manifest.json",
+  "server",
+  "static",
+]
 
 function rmrf(dir) {
   fs.rmSync(dir, { recursive: true, force: true })
@@ -23,28 +47,37 @@ function cp(src, dest) {
   fs.cpSync(src, dest, { recursive: true })
 }
 
-if (!fs.existsSync(standaloneSrc)) {
-  console.error(
-    "[prepare-standalone] Missing .next/standalone — run `next build` first."
-  )
+if (!fs.existsSync(nextSrc)) {
+  console.error("[prepare-standalone] Missing .next — run `next build` first.")
   process.exit(1)
 }
 
 rmrf(distRoot)
-fs.mkdirSync(path.dirname(distRoot), { recursive: true })
-cp(standaloneSrc, distRoot)
+fs.mkdirSync(distRoot, { recursive: true })
 
-const staticDest = path.join(distRoot, ".next", "static")
-if (fs.existsSync(staticSrc)) {
-  fs.mkdirSync(path.dirname(staticDest), { recursive: true })
-  cp(staticSrc, staticDest)
-} else {
-  console.warn("[prepare-standalone] Warning: .next/static not found")
+let copied = 0
+for (const name of COPY_ENTRIES) {
+  const src = path.join(nextSrc, name)
+  if (!fs.existsSync(src)) continue
+  cp(src, path.join(distRoot, name))
+  copied += 1
 }
 
-const publicDest = path.join(distRoot, "public")
+if (!fs.existsSync(path.join(distRoot, "server"))) {
+  console.error(
+    "[prepare-standalone] Missing .next/server after copy — build looks incomplete."
+  )
+  process.exit(1)
+}
+
+// Keep public assets next to the package root (already published via files[]),
+// but also mirror into dist for clarity when inspecting packs.
 if (fs.existsSync(publicSrc)) {
+  const publicDest = path.join(path.dirname(distRoot), "public")
+  rmrf(publicDest)
   cp(publicSrc, publicDest)
 }
 
-console.log(`[prepare-standalone] Ready: ${distRoot}`)
+console.log(
+  `[prepare-standalone] Ready: ${distRoot} (${copied} entries from .next)`
+)

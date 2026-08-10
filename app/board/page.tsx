@@ -23,6 +23,7 @@ import {
   parseListViewMode,
   type ListViewMode,
 } from "@/lib/taskmark/list-view-mode"
+import { DEV_RELOAD_TOKEN } from "@/lib/taskmark/dev-reload-token"
 import { loadSnapshotFromPublic } from "@/lib/taskmark/load-snapshot-server"
 import { parseEpicsForProject } from "@/lib/taskmark/parse-epics"
 import {
@@ -37,6 +38,11 @@ import {
 } from "@/lib/taskmark/project-metrics"
 import { isStaticRuntime } from "@/lib/taskmark/static-mode"
 import { loadWorkspace } from "@/lib/taskmark/workspace"
+
+export const dynamic = "force-dynamic"
+
+// Keep this import so `taskmark dev` can touch the token module and refresh RSC.
+void DEV_RELOAD_TOKEN
 
 type BoardPageProps = {
   searchParams: Promise<{

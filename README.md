@@ -12,6 +12,15 @@ npx taskmark serve
 
 Opens [http://localhost:8275](http://localhost:8275) bound to **this** board.
 
+### Development (live board reload)
+
+```bash
+npx taskmark dev
+# or: npm run dev / yarn dev
+```
+
+Runs Next.js in development on port **8275** and refreshes the UI when board `.md` files change.
+
 Without a local install (once published):
 
 ```bash
@@ -49,16 +58,17 @@ You do **not** need to clone `taskmark-frontend`.
   "scripts": {
     "start": "taskmark serve --no-open",
     "serve": "taskmark serve",
+    "dev": "taskmark dev",
     "build": "taskmark build --board . --out out",
     "preview": "taskmark preview"
   },
   "dependencies": {
-    "@taskmark/ui": "^0.2.4"
+    "@taskmark/ui": "^0.2.5"
   }
 }
 ```
 
-Then `npm install && npm run serve` (or `npm start`). For **Vercel**, use `npm run build` (static HTML in `out/`) — see the board-ui-stub `vercel.json`.
+Then `npm install && npm run serve` (or `npm start`). Use `npm run dev` while editing board markdown. For **Vercel**, use `npm run build` (static HTML in `out/`) — see the board-ui-stub `vercel.json`.
 
 ### Static production build
 
@@ -78,14 +88,15 @@ Favicon, webmanifest, and Open Graph assets ship in `public/` and are included i
 ```bash
 npm install
 npm run build    # next standalone + dist/ for the CLI
-npm run serve    # local bin against cwd/env board
-npm run dev      # Next dev server on :3000 (setup wizard unless auto-bound)
+npm run serve    # production standalone against cwd/env board
+npm run dev      # taskmark dev (Next + markdown live reload) on :8275
 ```
 
-Zero-config for `npm run dev`: `TASKMARK_BOARD` / `TASKMARK_MASTER` / cwd (see above). Cookie multi-master setup still works when unbound.
+Zero-config for `npm run dev` / `serve`: `TASKMARK_BOARD` / `TASKMARK_MASTER` / cwd (see above). Cookie multi-master setup still works when unbound.
 
 ## Stack
 
-- Next.js standalone server packaged for `taskmark serve`
+- Next.js production server packaged for `taskmark serve` (`next start` + slim `dist/prod-next`)
+- `taskmark dev` for live board markdown reload
 - Tailwind CSS v4
 - Local markdown boards only (no hosted sync)

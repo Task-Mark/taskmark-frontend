@@ -3,23 +3,28 @@ import { spawn } from "node:child_process"
 import fs from "node:fs"
 import http from "node:http"
 import path from "node:path"
+import { createRequire } from "node:module"
 import { fileURLToPath } from "node:url"
 
 import { resolveServeBoard } from "./lib/resolve-board.mjs"
 import { startStaticServer } from "./lib/static-preview.mjs"
+import { watchBoardMarkdown } from "./lib/watch-board-markdown.mjs"
 
 const DEFAULT_PORT = 8275
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const packageRoot = path.resolve(__dirname, "..")
+const requireFromPackage = createRequire(path.join(packageRoot, "package.json"))
 
 function printHelp() {
   console.log(`Usage:
   taskmark serve [options]
+  taskmark dev [options]
   taskmark build [options]
   taskmark preview [options]
 
 Commands:
   serve              Start the prebuilt local UI server (default port ${DEFAULT_PORT})
+  dev                Next.js development server with board markdown live reload
   build              Production static HTML export for Vercel / static hosting
   preview            Serve an existing static export (default: <board>/out)
 
@@ -27,7 +32,7 @@ Options:
   --port, -p <n>     Listen port (default ${DEFAULT_PORT}; env PORT / TASKMARK_PORT)
   --board <path>     Board or product root (sets TASKMARK_BOARD)
   --out <dir>        Static output directory for build/preview (default: <board>/out)
-  --no-open          Do not open a browser (serve / preview)
+  --no-open          Do not open a browser (serve / preview / dev)
   --help, -h         Show help
 
 Board resolution (same as the UI):
@@ -38,6 +43,7 @@ Board resolution (same as the UI):
 
 Examples:
   npm i @taskmark/ui --save && npx taskmark serve
+  npx taskmark dev --board .
   npx taskmark build --board .
   npm run preview
   npx taskmark preview --port 9000
@@ -97,15 +103,73 @@ function resolvePort(raw) {
   return n
 }
 
-function findStandaloneServer() {
-  const candidates = [
-    path.join(packageRoot, "dist", "standalone", "server.js"),
-    path.join(packageRoot, ".next", "standalone", "server.js"),
-  ]
-  for (const candidate of candidates) {
-    if (fs.existsSync(candidate)) return candidate
+function resolveNextBin() {
+  try {
+    return requireFromPackage.resolve("next/dist/bin/next")
+  } catch {
+    const fallback = path.join(
+      packageRoot,
+      "node_modules",
+      "next",
+      "dist",
+      "bin",
+      "next"
+    )
+    if (fs.existsSync(fallback)) return fallback
+    throw new Error(
+      "next binary not found. Reinstall @taskmark/ui (next is required for serve/dev)."
+    )
   }
-  return null
+}
+
+/**
+ * Ensure packageRoot/.next points at a usable production build.
+ * Published packages ship dist/prod-next (npm cannot pack nested node_modules
+ * used by Next standalone).
+ */
+function ensureProdNext() {
+  const nextDir = path.join(packageRoot, ".next")
+  const shipped = path.join(packageRoot, "dist", "prod-next")
+  const hasLocalServer = fs.existsSync(path.join(nextDir, "server"))
+  const hasShippedServer = fs.existsSync(path.join(shipped, "server"))
+
+  if (hasLocalServer) return nextDir
+  if (!hasShippedServer) {
+    throw new Error(`Prebuilt UI not found.
+
+Expected ${shipped} (or a local .next/server from npm run build).
+Reinstall @taskmark/ui or rebuild the package.`)
+  }
+
+  if (fs.existsSync(nextDir)) {
+    const st = fs.lstatSync(nextDir)
+    if (st.isSymbolicLink() || st.isDirectory()) {
+      fs.rmSync(nextDir, { recursive: true, force: true })
+    }
+  }
+
+  try {
+    const type = process.platform === "win32" ? "junction" : "dir"
+    fs.symlinkSync(shipped, nextDir, type)
+  } catch {
+    fs.cpSync(shipped, nextDir, { recursive: true })
+  }
+  return nextDir
+}
+
+function touchDevReloadToken() {
+  const tokenFile = path.join(
+    packageRoot,
+    "lib",
+    "taskmark",
+    "dev-reload-token.ts"
+  )
+  const stamp = String(Date.now())
+  fs.writeFileSync(
+    tokenFile,
+    `/**\n * Touched by \`taskmark dev\` when board markdown changes so Next Fast Refresh\n * re-runs server components that import this module.\n */\nexport const DEV_RELOAD_TOKEN = "${stamp}"\n`,
+    "utf8"
+  )
 }
 
 function openBrowser(url) {
@@ -155,8 +219,8 @@ function waitForServer(port, timeoutMs = 60_000) {
   })
 }
 
-async function serve(args) {
-  const resolved = resolveServeBoard(args.board)
+function resolveBoardOrExit(boardArg, command) {
+  const resolved = resolveServeBoard(boardArg)
   if (!resolved) {
     console.error(`No Taskmark board found.
 
@@ -166,51 +230,62 @@ Looked for:
   - cwd layouts: nested ./taskmark/ or dedicated *-taskmark root
 
 Fix: cd into a product repo (with ./taskmark/) or a board root, or set TASKMARK_BOARD.
-Then re-run: npx taskmark serve
-(or: npx -p @taskmark/ui taskmark serve)`)
+Then re-run: npx taskmark ${command}
+(or: npx -p @taskmark/ui taskmark ${command})`)
     process.exit(1)
   }
+  return resolved
+}
 
-  const serverJs = findStandaloneServer()
-  if (!serverJs) {
-    console.error(`Prebuilt server not found.
-
-From the taskmark package source, run:
-  npm run build
-
-Or install a published build that includes dist/standalone.`)
-    process.exit(1)
+function attachChildLifecycle(child, onShutdown) {
+  const shutdown = (signal) => {
+    onShutdown?.()
+    if (!child.killed) child.kill(signal)
   }
+  process.on("SIGINT", () => shutdown("SIGINT"))
+  process.on("SIGTERM", () => shutdown("SIGTERM"))
+  child.on("exit", (code, signal) => {
+    onShutdown?.()
+    if (signal) process.exit(1)
+    process.exit(code ?? 0)
+  })
+  return shutdown
+}
 
+async function serve(args) {
+  const resolved = resolveBoardOrExit(args.board, "serve")
   const port = resolvePort(args.port)
   const url = `http://localhost:${port}`
-  const standaloneDir = path.dirname(serverJs)
+  const nextBin = resolveNextBin()
+
+  try {
+    ensureProdNext()
+  } catch (err) {
+    console.error(String(err?.message || err))
+    process.exit(1)
+  }
 
   console.log(`Taskmark UI`)
   console.log(`  board:  ${resolved.boardPath} (${resolved.source})`)
   console.log(`  listen: ${url}`)
 
-  const child = spawn(process.execPath, [serverJs], {
-    cwd: standaloneDir,
-    env: {
-      ...process.env,
-      PORT: String(port),
-      HOSTNAME: "0.0.0.0",
-      TASKMARK_BOARD: resolved.boardPath,
-    },
-    stdio: "inherit",
-  })
+  const child = spawn(
+    process.execPath,
+    [nextBin, "start", "-H", "0.0.0.0", "-p", String(port)],
+    {
+      cwd: packageRoot,
+      env: {
+        ...process.env,
+        PORT: String(port),
+        HOSTNAME: "0.0.0.0",
+        TASKMARK_BOARD: resolved.boardPath,
+        NODE_ENV: "production",
+      },
+      stdio: "inherit",
+    }
+  )
 
-  const shutdown = (signal) => {
-    if (!child.killed) child.kill(signal)
-  }
-  process.on("SIGINT", () => shutdown("SIGINT"))
-  process.on("SIGTERM", () => shutdown("SIGTERM"))
-
-  child.on("exit", (code, signal) => {
-    if (signal) process.exit(1)
-    process.exit(code ?? 0)
-  })
+  const shutdown = attachChildLifecycle(child)
 
   const hosted =
     Boolean(process.env.VERCEL) ||
@@ -232,6 +307,71 @@ Or install a published build that includes dist/standalone.`)
   }
 }
 
+async function dev(args) {
+  const resolved = resolveBoardOrExit(args.board, "dev")
+  const port = resolvePort(args.port)
+  const url = `http://localhost:${port}`
+  const nextBin = resolveNextBin()
+
+  console.log(`Taskmark UI (dev)`)
+  console.log(`  board:  ${resolved.boardPath} (${resolved.source})`)
+  console.log(`  listen: ${url}`)
+  console.log(`  watch:  **/*.md under board`)
+
+  const child = spawn(
+    process.execPath,
+    [nextBin, "dev", "--webpack", "-H", "0.0.0.0", "-p", String(port)],
+    {
+      cwd: packageRoot,
+      env: {
+        ...process.env,
+        PORT: String(port),
+        TASKMARK_BOARD: resolved.boardPath,
+        TASKMARK_CWD: resolved.boardPath,
+        NODE_ENV: "development",
+      },
+      stdio: "inherit",
+    }
+  )
+
+  let debounce = null
+  const stopWatch = watchBoardMarkdown(resolved.boardPath, () => {
+    if (debounce) clearTimeout(debounce)
+    debounce = setTimeout(() => {
+      try {
+        touchDevReloadToken()
+        console.log(`[taskmark] board markdown changed — refreshing`)
+      } catch (err) {
+        console.warn(`[taskmark] reload touch failed: ${err?.message || err}`)
+      }
+    }, 200)
+  })
+
+  const shutdown = attachChildLifecycle(child, () => {
+    stopWatch()
+    if (debounce) clearTimeout(debounce)
+  })
+
+  const hosted =
+    Boolean(process.env.VERCEL) ||
+    Boolean(process.env.NOW_REGION) ||
+    process.env.CI === "true"
+  const shouldOpen = args.open && !hosted
+
+  try {
+    await waitForServer(port, 120_000)
+    if (shouldOpen) {
+      openBrowser(url)
+    } else {
+      console.log(`Ready: ${url}`)
+    }
+  } catch (err) {
+    console.error(String(err?.message || err))
+    shutdown("SIGTERM")
+    process.exit(1)
+  }
+}
+
 async function preview(args) {
   const callerCwd = process.env.INIT_CWD || process.cwd()
 
@@ -241,19 +381,7 @@ async function preview(args) {
   }
 
   const boardArg = resolveCallerPath(args.board)
-  const resolved = resolveServeBoard(boardArg)
-  if (!resolved) {
-    console.error(`No Taskmark board found.
-
-Looked for:
-  - --board / TASKMARK_BOARD
-  - TASKMARK_MASTER
-  - cwd layouts: nested ./taskmark/ or dedicated *-taskmark root
-
-Fix: cd into a product repo (with ./taskmark/) or a board root, or set TASKMARK_BOARD.
-Then re-run: npx taskmark preview`)
-    process.exit(1)
-  }
+  const resolved = resolveBoardOrExit(boardArg, "preview")
 
   const outDir = args.out
     ? resolveCallerPath(args.out)
@@ -308,6 +436,15 @@ async function main() {
     }
     return
   }
+  if (args.command === "dev") {
+    try {
+      await dev(args)
+    } catch (err) {
+      console.error(String(err?.message || err))
+      process.exit(1)
+    }
+    return
+  }
   if (args.command === "preview") {
     try {
       await preview(args)
@@ -319,14 +456,11 @@ async function main() {
   }
   if (args.command === "build") {
     const buildScript = path.join(packageRoot, "scripts", "build-static.mjs")
-    // Resolve relative paths against the caller's cwd (npm/yarn script dir),
-    // not packageRoot — the child runs with cwd = @taskmark/ui.
     const callerCwd = process.env.INIT_CWD || process.cwd()
     const childArgs = [buildScript]
     if (args.board) {
       childArgs.push("--board", path.resolve(callerCwd, args.board))
     } else {
-      // Prefer the invoke directory as the board when no --board flag.
       childArgs.push("--board", callerCwd)
     }
     if (args.out) {
