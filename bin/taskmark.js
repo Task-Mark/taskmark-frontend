@@ -17,13 +17,18 @@ const requireFromPackage = createRequire(path.join(packageRoot, "package.json"))
 
 function printHelp() {
   console.log(`Usage:
+  taskmark [options]              smart default: local board if found, else setup
+  taskmark open [options]
   taskmark serve [options]
   taskmark dev [options]
   taskmark build [options]
   taskmark preview [options]
 
 Commands:
-  serve              Start the prebuilt local UI server (default port ${DEFAULT_PORT})
+  (default)          Bind to a board in/near cwd when one exists; otherwise open
+                     the standalone setup / project picker (same as global use)
+  open               Always start in workspace mode (setup / project picker)
+  serve              Start the prebuilt UI bound to one resolved board (port ${DEFAULT_PORT})
   dev                Next.js development server with board markdown live reload
   build              Production static HTML export for Vercel / static hosting
   preview            Serve an existing static export (default: <board>/out)
@@ -31,11 +36,17 @@ Commands:
 Options:
   --port, -p <n>     Listen port (default ${DEFAULT_PORT}; env PORT / TASKMARK_PORT)
   --board <path>     Board or product root (sets TASKMARK_BOARD)
+  --workspace, -w    Force multi-project / setup mode (skip local board binding)
   --out <dir>        Static output directory for build/preview (default: <board>/out)
-  --no-open          Do not open a browser (serve / preview / dev)
+  --no-open          Do not open a browser (default / open / serve / preview / dev)
   --help, -h         Show help
 
-Board resolution (same as the UI):
+Modes:
+  Bound      One board from --board / env / cwd / sibling *-taskmark; no project picker.
+  Workspace  Setup wizard + app-bar project picker (cookies). Used when no local
+             board is found, or with open / --workspace.
+
+Board resolution for bound mode (same as the UI):
   1. --board / TASKMARK_BOARD
   2. TASKMARK_MASTER
   3. TASKMARK_CWD → npm INIT_CWD → process.cwd()
@@ -43,13 +54,14 @@ Board resolution (same as the UI):
   4. Sibling <parent>-taskmark next to a product repo (multi-git)
 
 Examples:
+  npx @taskmark/ui                 # global: setup / pick projects
+  cd my-app-taskmark && npx taskmark   # local board in this folder
   npm i @taskmark/ui --save && npx taskmark serve
+  npx taskmark open                # force setup even inside a board folder
   npx taskmark dev --board .
   npx taskmark build --board .
   npm run preview
-  npx taskmark preview --port 9000
-  npx -p @taskmark/ui taskmark serve
-  TASKMARK_BOARD=/path/to/my-app/taskmark npx taskmark serve
+  TASKMARK_BOARD=/path/to/board npx taskmark serve
 `)
 }
 
@@ -60,20 +72,24 @@ function parseArgs(argv) {
     board: null,
     out: null,
     open: true,
+    workspace: false,
     help: false,
   }
   const rest = [...argv]
-  if (rest.length === 0 || rest[0] === "--help" || rest[0] === "-h") {
-    args.help = true
+  if (rest.length === 0) {
+    args.command = "auto"
     return args
   }
-  args.command = rest.shift()
+  // Bare `taskmark` with only flags → smart default (local board or setup).
+  args.command = rest[0].startsWith("-") ? "auto" : rest.shift()
   while (rest.length) {
     const token = rest.shift()
     if (token === "--help" || token === "-h") {
       args.help = true
     } else if (token === "--no-open") {
       args.open = false
+    } else if (token === "--workspace" || token === "-w") {
+      args.workspace = true
     } else if (token === "--port" || token === "-p") {
       args.port = rest.shift()
     } else if (token === "--board") {
@@ -220,6 +236,46 @@ function waitForServer(port, timeoutMs = 60_000) {
   })
 }
 
+function callerCwd() {
+  return process.env.INIT_CWD || process.cwd()
+}
+
+function isWorkspaceRun(args) {
+  return args.command === "open" || args.workspace === true
+}
+
+/**
+ * Decide bound vs workspace for the default (`auto`) command.
+ * Returns a serve-compatible args object with workspace forced when unbound.
+ */
+function resolveAutoArgs(args) {
+  if (args.workspace) {
+    return { ...args, command: "open", workspace: true }
+  }
+  if (args.board) {
+    return { ...args, command: "serve", workspace: false }
+  }
+  const resolved = resolveServeBoard(null)
+  if (resolved) {
+    return { ...args, command: "serve", workspace: false }
+  }
+  return { ...args, command: "open", workspace: true }
+}
+
+/**
+ * Workspace mode must out-rank an inherited board bind, so blank those vars for
+ * the child (the UI reads empty as unset) instead of only adding the flag.
+ */
+function workspaceEnv() {
+  return {
+    TASKMARK_WORKSPACE: "1",
+    TASKMARK_WORKSPACE_ROOT: callerCwd(),
+    TASKMARK_BOARD: "",
+    TASKMARK_MASTER: "",
+    TASKMARK_CWD: "",
+  }
+}
+
 function resolveBoardOrExit(boardArg, command) {
   const resolved = resolveServeBoard(boardArg)
   if (!resolved) {
@@ -233,7 +289,9 @@ Looked for:
 
 Fix: cd into a product repo (with ./taskmark/) or a board root, or set TASKMARK_BOARD.
 Then re-run: npx taskmark ${command}
-(or: npx -p @taskmark/ui taskmark ${command})`)
+(or: npx -p @taskmark/ui taskmark ${command})
+
+To pick a project in the browser instead: npx taskmark`)
     process.exit(1)
   }
   return resolved
@@ -255,7 +313,8 @@ function attachChildLifecycle(child, onShutdown) {
 }
 
 async function serve(args) {
-  const resolved = resolveBoardOrExit(args.board, "serve")
+  const workspace = isWorkspaceRun(args)
+  const resolved = workspace ? null : resolveBoardOrExit(args.board, "serve")
   const port = resolvePort(args.port)
   const url = `http://localhost:${port}`
   const nextBin = resolveNextBin()
@@ -268,7 +327,12 @@ async function serve(args) {
   }
 
   console.log(`Taskmark UI`)
-  console.log(`  board:  ${resolved.boardPath} (${resolved.source})`)
+  if (workspace) {
+    console.log(`  mode:   workspace (choose projects in the browser)`)
+    console.log(`  from:   ${callerCwd()}`)
+  } else {
+    console.log(`  board:  ${resolved.boardPath} (${resolved.source})`)
+  }
   console.log(`  listen: ${url}`)
 
   const child = spawn(
@@ -280,7 +344,9 @@ async function serve(args) {
         ...process.env,
         PORT: String(port),
         HOSTNAME: "0.0.0.0",
-        TASKMARK_BOARD: resolved.boardPath,
+        ...(workspace
+          ? workspaceEnv()
+          : { TASKMARK_BOARD: resolved.boardPath }),
         NODE_ENV: "production",
       },
       stdio: "inherit",
@@ -310,15 +376,25 @@ async function serve(args) {
 }
 
 async function dev(args) {
-  const resolved = resolveBoardOrExit(args.board, "dev")
+  const workspace = isWorkspaceRun(args)
+  const resolved = workspace ? null : resolveBoardOrExit(args.board, "dev")
   const port = resolvePort(args.port)
   const url = `http://localhost:${port}`
   const nextBin = resolveNextBin()
 
   console.log(`Taskmark UI (dev)`)
-  console.log(`  board:  ${resolved.boardPath} (${resolved.source})`)
+  if (workspace) {
+    console.log(`  mode:   workspace (choose projects in the browser)`)
+    console.log(`  from:   ${callerCwd()}`)
+  } else {
+    console.log(`  board:  ${resolved.boardPath} (${resolved.source})`)
+  }
   console.log(`  listen: ${url}`)
-  console.log(`  watch:  **/*.md under board`)
+  console.log(
+    workspace
+      ? `  watch:  off (no single board bound)`
+      : `  watch:  **/*.md under board`
+  )
 
   const child = spawn(
     process.execPath,
@@ -328,8 +404,12 @@ async function dev(args) {
       env: {
         ...process.env,
         PORT: String(port),
-        TASKMARK_BOARD: resolved.boardPath,
-        TASKMARK_CWD: resolved.boardPath,
+        ...(workspace
+          ? workspaceEnv()
+          : {
+              TASKMARK_BOARD: resolved.boardPath,
+              TASKMARK_CWD: resolved.boardPath,
+            }),
         NODE_ENV: "development",
       },
       stdio: "inherit",
@@ -337,17 +417,21 @@ async function dev(args) {
   )
 
   let debounce = null
-  const stopWatch = watchBoardMarkdown(resolved.boardPath, () => {
-    if (debounce) clearTimeout(debounce)
-    debounce = setTimeout(() => {
-      try {
-        touchDevReloadToken()
-        console.log(`[taskmark] board markdown changed — refreshing`)
-      } catch (err) {
-        console.warn(`[taskmark] reload touch failed: ${err?.message || err}`)
-      }
-    }, 200)
-  })
+  const stopWatch = workspace
+    ? () => {}
+    : watchBoardMarkdown(resolved.boardPath, () => {
+        if (debounce) clearTimeout(debounce)
+        debounce = setTimeout(() => {
+          try {
+            touchDevReloadToken()
+            console.log(`[taskmark] board markdown changed — refreshing`)
+          } catch (err) {
+            console.warn(
+              `[taskmark] reload touch failed: ${err?.message || err}`
+            )
+          }
+        }, 200)
+      })
 
   const shutdown = attachChildLifecycle(child, () => {
     stopWatch()
@@ -429,7 +513,30 @@ async function main() {
     printHelp()
     process.exit(args.help || !args.command ? 0 : 1)
   }
-  if (args.command === "serve") {
+  const workspaceCommands = new Set(["auto", "open", "serve", "dev"])
+  if (args.workspace && !workspaceCommands.has(args.command)) {
+    console.error(`--workspace applies to the default command, open, serve, and dev.
+
+Use: npx taskmark  (or: npx taskmark open)`)
+    process.exit(1)
+  }
+  if ((isWorkspaceRun(args) || (args.command === "auto" && args.workspace)) && args.board) {
+    console.error(`--board and workspace mode are mutually exclusive.
+
+Bind one board:      npx taskmark serve --board ${args.board}
+Pick projects in UI: npx taskmark open`)
+    process.exit(1)
+  }
+  if (args.command === "auto") {
+    try {
+      await serve(resolveAutoArgs(args))
+    } catch (err) {
+      console.error(String(err?.message || err))
+      process.exit(1)
+    }
+    return
+  }
+  if (args.command === "open" || args.command === "serve") {
     try {
       await serve(args)
     } catch (err) {

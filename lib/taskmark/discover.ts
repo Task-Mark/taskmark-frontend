@@ -129,7 +129,8 @@ export function discoverTaskmarkProjects(
     for (const entry of entries) {
       if (!entry.isDirectory()) continue
       if (shouldSkipDir(entry.name)) continue
-      if (entry.name === "taskmark") continue
+      // A real `<dir>/taskmark` board already returned above, so a folder named
+      // "taskmark" here is an ordinary directory (e.g. a workspace root).
       visit(path.join(dir, entry.name), depth + 1)
     }
   }

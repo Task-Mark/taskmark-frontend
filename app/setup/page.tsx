@@ -6,6 +6,7 @@ import { SetupWizard } from "@/components/setup/setup-wizard"
 import { resolveAutoconfigWorkspace } from "@/lib/taskmark/autoconfig"
 import { getMasterFoldersCookie } from "@/lib/taskmark/cookies"
 import { isStaticRuntime } from "@/lib/taskmark/static-mode"
+import { workspaceStartPath } from "@/lib/taskmark/workspace-mode"
 
 type SetupPageProps = {
   searchParams?: Promise<{ mode?: string }>
@@ -26,6 +27,8 @@ export default async function SetupPage({ searchParams }: SetupPageProps) {
   const masters = await getMasterFoldersCookie()
   const hasProjects = masters.length > 0
   const adding = params.mode === "add" && hasProjects
+  // First run: offer the directory `taskmark` was launched from as the master.
+  const suggestedPath = adding || hasProjects ? "" : workspaceStartPath()
 
   return (
     <div className="relative flex min-h-svh flex-col items-center justify-center px-4 py-16">
@@ -50,7 +53,7 @@ export default async function SetupPage({ searchParams }: SetupPageProps) {
           </p>
         </div>
         <SetupWizard
-          initialPath=""
+          initialPath={suggestedPath}
           adding={adding}
           hasExistingProjects={hasProjects}
         />

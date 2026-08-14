@@ -1,4 +1,7 @@
-import { resolveAutoconfigWorkspace } from "@/lib/taskmark/autoconfig"
+import {
+  resolveAutoconfigWorkspace,
+  type AutoconfigSource,
+} from "@/lib/taskmark/autoconfig"
 import { discoverTaskmarkProjectsFromMasters } from "@/lib/taskmark/discover"
 import { validateMasterFolder } from "@/lib/taskmark/validate"
 import type { DiscoveredProject } from "@/lib/taskmark/types"
@@ -7,7 +10,7 @@ export type ConfiguredWorkspace = {
   masters: string[]
   projects: DiscoveredProject[]
   /** How the workspace was resolved; null means cookie/manual masters. */
-  source: "env_board" | "env_master" | "cwd" | "cookies" | null
+  source: AutoconfigSource | "cookies" | null
   /** When true, UI is locked to the auto-bound board(s) (skip setup). */
   autoconfig: boolean
 }

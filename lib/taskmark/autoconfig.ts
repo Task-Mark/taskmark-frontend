@@ -7,6 +7,7 @@ import {
   discoverTaskmarkProjects,
 } from "@/lib/taskmark/discover"
 import type { DiscoveredProject } from "@/lib/taskmark/types"
+import { isWorkspaceMode } from "@/lib/taskmark/workspace-mode"
 
 export type AutoconfigSource =
   | "env_board"
@@ -130,9 +131,12 @@ export function resolveSiblingDedicatedBoard(fromDir: string): string | null {
  * Resolve a zero-config workspace without cookies.
  *
  * Precedence: TASKMARK_BOARD → TASKMARK_MASTER → cwd layouts → sibling *-taskmark.
- * Returns null when nothing valid is found (caller should use cookie setup).
+ * Returns null when nothing valid is found (caller should use cookie setup),
+ * or when workspace mode asked for the multi-project picker instead of a bind.
  */
 export function resolveAutoconfigWorkspace(): AutoconfigWorkspace | null {
+  if (isWorkspaceMode()) return null
+
   const boardEnv = readEnvPath("TASKMARK_BOARD")
   if (boardEnv) {
     const board = resolveBoardAtPath(boardEnv)
