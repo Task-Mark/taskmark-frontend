@@ -244,7 +244,7 @@ export function StoryList({
                   <TableBody>
                     {pageRows.map((story) => {
                       const selected = selectedStoryId === story.id
-                      const href = `/board?epic=${encodeURIComponent(epicId)}&story=${encodeURIComponent(story.id)}`
+                      const href = `/?epic=${encodeURIComponent(epicId)}&story=${encodeURIComponent(story.id)}`
                       return (
                         <TableRow
                           key={`${project.id}:${story.id}:${story.filePath}`}

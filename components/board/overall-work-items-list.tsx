@@ -243,7 +243,7 @@ export function OverallWorkItemsList({
                       const isStory = row.kind === "story"
                       const selected = isStory && selectedStoryId === row.id
                       const href = isStory
-                        ? `/board?epic=${encodeURIComponent(epicId)}&story=${encodeURIComponent(row.id)}`
+                        ? `/?epic=${encodeURIComponent(epicId)}&story=${encodeURIComponent(row.id)}`
                         : null
                       const sheetKind = isStory ? "story" : "item"
                       return (

@@ -263,7 +263,7 @@ function ProjectEpicCard({
                           <TableCell className="font-mono text-xs">
                             <IdCreatedTooltip id={epic.id} created={epic.created}>
                               <Link
-                                href={`/board?epic=${encodeURIComponent(epic.id)}`}
+                                href={`/?epic=${encodeURIComponent(epic.id)}`}
                                 className="underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                                 aria-current={selected ? "true" : undefined}
                               >
@@ -273,7 +273,7 @@ function ProjectEpicCard({
                           </TableCell>
                           <TableCell className="max-w-[18rem] whitespace-normal font-medium">
                             <Link
-                              href={`/board?epic=${encodeURIComponent(epic.id)}`}
+                              href={`/?epic=${encodeURIComponent(epic.id)}`}
                               className="underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                             >
                               {epic.title}

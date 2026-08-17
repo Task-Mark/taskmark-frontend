@@ -64,7 +64,7 @@ export async function saveMasterFolder(
     await setActiveProjectCookie(preferred.id)
   }
 
-  redirect("/board")
+  redirect("/")
 }
 
 export type PickMasterFolderState = {
@@ -89,7 +89,7 @@ export async function openAddProject(): Promise<void> {
     "@/lib/taskmark/autoconfig"
   )
   if (resolveAutoconfigWorkspace()?.projects.length) {
-    redirect("/board")
+    redirect("/")
   }
   redirect("/setup?mode=add")
 }
@@ -100,8 +100,8 @@ export async function selectActiveProject(formData: FormData): Promise<void> {
     return
   }
   await setActiveProjectCookie(projectId)
-  revalidatePath("/board")
-  redirect("/board")
+  revalidatePath("/")
+  redirect("/")
 }
 
 /** Optional: clear everything and start over (not shown in app bar by default). */

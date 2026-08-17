@@ -140,6 +140,19 @@ function resolveNextBin() {
 }
 
 /**
+ * A `taskmark build` writes an `output: export` build. It has a server/ dir but
+ * serves prerendered HTML with the static runtime baked in, so `serve` must not
+ * reuse it.
+ */
+function isStaticExportBuild(dir) {
+  return fs.existsSync(path.join(dir, "export-detail.json"))
+}
+
+function hasServerBuild(dir) {
+  return fs.existsSync(path.join(dir, "server")) && !isStaticExportBuild(dir)
+}
+
+/**
  * Ensure packageRoot/.next points at a usable production build.
  * Published packages ship dist/prod-next (npm cannot pack nested node_modules
  * used by Next standalone).
@@ -147,8 +160,8 @@ function resolveNextBin() {
 function ensureProdNext() {
   const nextDir = path.join(packageRoot, ".next")
   const shipped = path.join(packageRoot, "dist", "prod-next")
-  const hasLocalServer = fs.existsSync(path.join(nextDir, "server"))
-  const hasShippedServer = fs.existsSync(path.join(shipped, "server"))
+  const hasLocalServer = hasServerBuild(nextDir)
+  const hasShippedServer = hasServerBuild(shipped)
 
   if (hasLocalServer) return nextDir
   if (!hasShippedServer) {

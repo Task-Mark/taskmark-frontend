@@ -13,19 +13,19 @@ type SetupPageProps = {
 }
 
 // Depends on runtime env (workspace vs bound) and cookies — never prerender in
-// server mode, or a build-time redirect gets baked in and loops against /board.
+// server mode, or a build-time redirect gets baked in and loops against `/`.
 // The static build rewrites this to force-static (see scripts/build-static.mjs).
 export const dynamic = "force-dynamic"
 
 export default async function SetupPage({ searchParams }: SetupPageProps) {
   if (isStaticRuntime()) {
-    redirect("/board")
+    redirect("/")
   }
 
   const auto = resolveAutoconfigWorkspace()
   if (auto && auto.projects.length > 0) {
     // Zero-config bind — setup wizard is not needed.
-    redirect("/board")
+    redirect("/")
   }
 
   const params = searchParams ? await searchParams : {}
@@ -64,7 +64,7 @@ export default async function SetupPage({ searchParams }: SetupPageProps) {
         />
         {adding ? (
           <p className="text-sm text-muted-foreground">
-            <Link href="/board" className="underline underline-offset-2">
+            <Link href="/" className="underline underline-offset-2">
               Cancel and return to board
             </Link>
           </p>

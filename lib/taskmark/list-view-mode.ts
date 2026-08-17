@@ -39,7 +39,7 @@ export function boardHref(opts: {
   }
   if (opts.item) params.set("item", opts.item)
   const qs = params.toString()
-  return qs ? `/board?${qs}` : "/board"
+  return qs ? `/?${qs}` : "/"
 }
 
 const STATUS_RANK: Record<string, number> = {

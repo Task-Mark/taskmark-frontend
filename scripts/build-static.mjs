@@ -133,6 +133,25 @@ function stagePackageForBuild(board) {
   return { root: stageDir, staged: true }
 }
 
+/**
+ * An in-place build overwrites .next with an `output: export` build, which
+ * `taskmark serve` cannot run. Park the server build and put it back after.
+ */
+function stashNextBuild(buildRoot) {
+  const nextDir = path.join(buildRoot, ".next")
+  if (!fs.existsSync(nextDir)) return null
+  const bak = path.join(buildRoot, ".next.taskmark-serve")
+  fs.rmSync(bak, { recursive: true, force: true })
+  fs.renameSync(nextDir, bak)
+  return { nextDir, bak }
+}
+
+function restoreNextBuild(stash) {
+  if (!stash) return
+  fs.rmSync(stash.nextDir, { recursive: true, force: true })
+  fs.renameSync(stash.bak, stash.nextDir)
+}
+
 /** Bundle snapshot writer so `@/` aliases resolve outside Next. */
 function writeBoardSnapshot(buildRoot, env) {
   const esbuild = loadEsbuild(buildRoot)
@@ -212,7 +231,11 @@ export async function resetWorkspace() {}
  * Swap the literal for the duration of the static build.
  */
 function stashDynamicPages(buildRoot) {
-  const pages = ["app/board/page.tsx", "app/setup/page.tsx"]
+  const pages = [
+    "app/page.tsx",
+    "app/board/page.tsx",
+    "app/setup/page.tsx",
+  ]
   const from = `export const dynamic = "force-dynamic"`
   const to = `export const dynamic = "force-static"`
   const stashed = []
@@ -302,6 +325,7 @@ function main() {
     ...stashServerActions(buildRoot),
     ...stashDynamicPages(buildRoot),
   ]
+  const stashedNext = staged ? null : stashNextBuild(buildRoot)
   try {
     run(process.execPath, [resolveNextBin(buildRoot), "build", "--webpack"], {
       cwd: buildRoot,
@@ -321,6 +345,7 @@ function main() {
     process.exitCode = 1
   } finally {
     restoreServerActions(stashed)
+    restoreNextBuild(stashedNext)
     if (staged) {
       // Keep stage on failure for debugging; remove on success.
       if (!process.exitCode) {
