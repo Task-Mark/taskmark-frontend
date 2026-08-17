@@ -194,12 +194,42 @@ export async function resetWorkspace() {}
     fs.writeFileSync(full, stub, "utf8")
     stashed.push({ full, bak })
   }
-  // Route handlers are incompatible with `output: 'export'`.
+  // Route handlers are incompatible with `output: 'export'`. Park the backup
+  // outside `app/` — a `.staticbak` suffix is still a routable segment there.
   const apiDir = path.join(buildRoot, "app", "api")
   if (fs.existsSync(apiDir)) {
-    const bak = apiDir + ".staticbak"
+    const bak = path.join(buildRoot, ".taskmark-build", "app-api.staticbak")
+    fs.mkdirSync(path.dirname(bak), { recursive: true })
+    fs.rmSync(bak, { recursive: true, force: true })
     fs.renameSync(apiDir, bak)
     stashed.push({ full: apiDir, bak, isDir: true })
+  }
+  return stashed
+}
+
+/**
+ * `output: 'export'` rejects `force-dynamic`, but the local server needs it.
+ * Swap the literal for the duration of the static build.
+ */
+function stashDynamicPages(buildRoot) {
+  const pages = ["app/board/page.tsx", "app/setup/page.tsx"]
+  const from = `export const dynamic = "force-dynamic"`
+  const to = `export const dynamic = "force-static"`
+  const stashed = []
+  for (const rel of pages) {
+    const full = path.join(buildRoot, rel)
+    if (!fs.existsSync(full)) continue
+    const src = fs.readFileSync(full, "utf8")
+    if (!src.includes(from)) continue
+    const bak = path.join(
+      buildRoot,
+      ".taskmark-build",
+      rel.replace(/[\\/]/g, "__") + ".staticbak"
+    )
+    fs.mkdirSync(path.dirname(bak), { recursive: true })
+    fs.copyFileSync(full, bak)
+    fs.writeFileSync(full, src.replace(from, to), "utf8")
+    stashed.push({ full, bak })
   }
   return stashed
 }
@@ -268,7 +298,10 @@ function main() {
 
   writeBoardSnapshot(buildRoot, env)
 
-  const stashed = stashServerActions(buildRoot)
+  const stashed = [
+    ...stashServerActions(buildRoot),
+    ...stashDynamicPages(buildRoot),
+  ]
   try {
     run(process.execPath, [resolveNextBin(buildRoot), "build", "--webpack"], {
       cwd: buildRoot,

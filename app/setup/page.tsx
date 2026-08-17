@@ -12,6 +12,11 @@ type SetupPageProps = {
   searchParams?: Promise<{ mode?: string }>
 }
 
+// Depends on runtime env (workspace vs bound) and cookies — never prerender in
+// server mode, or a build-time redirect gets baked in and loops against /board.
+// The static build rewrites this to force-static (see scripts/build-static.mjs).
+export const dynamic = "force-dynamic"
+
 export default async function SetupPage({ searchParams }: SetupPageProps) {
   if (isStaticRuntime()) {
     redirect("/board")

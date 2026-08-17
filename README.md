@@ -19,6 +19,21 @@ cd my-app-taskmark && npx taskmark
 # or: npm i @taskmark/ui --save && npx taskmark serve
 ```
 
+> **`npx taskmark` only works where `@taskmark/ui` is installed.** `taskmark` is the
+> *bin* name, not a package name — an unrelated `taskmark` package exists on npm, and
+> npx will fetch that one instead. Use `npx @taskmark/ui` when running from a folder
+> with no local install, or install the CLI once (see below).
+
+### Install the CLI globally
+
+```bash
+npm install -g @taskmark/ui   # published release
+# from a clone of taskmark-frontend:
+npm run build && npm link      # local build on PATH as `taskmark`
+```
+
+Then `taskmark` works anywhere: setup / project picker outside a board, bound board inside one.
+
 `taskmark open` always forces the setup / picker, even when a board is nearby. Chosen master folders and the active project persist in cookies.
 
 ## Install and serve
