@@ -14,6 +14,7 @@ import {
 } from "@/lib/taskmark/frontmatter"
 import { asContributorList } from "@/lib/taskmark/identity"
 import { deriveParentRollup } from "@/lib/taskmark/derive-parents"
+import type { BoardIndex } from "@/lib/taskmark/board-index"
 
 type EpicFolder = {
   dirName: string
@@ -95,7 +96,8 @@ function listStoryMarkdownFiles(epicDir: string): string[] {
 function parseStoryFile(
   filePath: string,
   project: DiscoveredProject,
-  epicId: string
+  epicId: string,
+  index?: BoardIndex
 ): { story?: StorySummary; error?: StoryParseError } {
   let raw: string
   try {
@@ -154,7 +156,7 @@ function parseStoryFile(
     }
   }
 
-  const derived = deriveParentRollup(project.boardPath, id, "story")
+  const derived = deriveParentRollup(project.boardPath, id, "story", index)
 
   return {
     story: {
@@ -193,7 +195,8 @@ function parseStoryFile(
  */
 export function parseStoriesForEpic(
   project: DiscoveredProject,
-  epicId: string
+  epicId: string,
+  index?: BoardIndex
 ): EpicStoryList {
   const folder = findEpicFolder(project.boardPath, epicId)
   if (!folder) {
@@ -220,7 +223,7 @@ export function parseStoriesForEpic(
   const errors: StoryParseError[] = []
 
   for (const filePath of files) {
-    const result = parseStoryFile(filePath, project, epicId)
+    const result = parseStoryFile(filePath, project, epicId, index)
     if (result.story) stories.push(result.story)
     if (result.error) errors.push(result.error)
   }

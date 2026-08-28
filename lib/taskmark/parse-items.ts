@@ -15,6 +15,7 @@ import {
   extractFrontmatter,
 } from "@/lib/taskmark/frontmatter"
 import { asContributorList } from "@/lib/taskmark/identity"
+import type { BoardIndex, IndexedLeaf } from "@/lib/taskmark/board-index"
 import { findEpicFolder } from "@/lib/taskmark/parse-stories"
 import { readTimingFields } from "@/lib/taskmark/timing"
 
@@ -118,11 +119,12 @@ function parseItemFile(
   filePath: string,
   project: DiscoveredProject,
   parentId: string,
-  epicId: string
+  epicId: string,
+  indexed?: IndexedLeaf
 ): { item?: ItemSummary; error?: ItemParseError } {
   let raw: string
   try {
-    raw = fs.readFileSync(filePath, "utf8")
+    raw = indexed?.raw ?? fs.readFileSync(filePath, "utf8")
   } catch (err) {
     return {
       error: {
@@ -137,7 +139,7 @@ function parseItemFile(
 
   let frontmatter: Record<string, unknown> | null
   try {
-    frontmatter = extractFrontmatter(raw)
+    frontmatter = indexed?.frontmatter ?? extractFrontmatter(raw)
   } catch (err) {
     return {
       error: {
@@ -211,7 +213,8 @@ function parseItemFile(
 export function parseItemsForStory(
   project: DiscoveredProject,
   epicId: string,
-  storyId: string
+  storyId: string,
+  index?: BoardIndex
 ): StoryItemList {
   const folder = findStoryFolder(project.boardPath, epicId, storyId)
   if (!folder) {
@@ -246,11 +249,25 @@ export function parseItemsForStory(
     folder.dirName
   )
   const files = listItemMarkdownFiles(storyDir)
+  const indexedByPath = index
+    ? new Map(
+        (index.leavesByParent.get(storyId) ?? []).map((leaf) => [
+          leaf.filePath,
+          leaf,
+        ])
+      )
+    : null
   const items: ItemSummary[] = []
   const errors: ItemParseError[] = []
 
   for (const filePath of files) {
-    const result = parseItemFile(filePath, project, storyId, epicId)
+    const result = parseItemFile(
+      filePath,
+      project,
+      storyId,
+      epicId,
+      indexedByPath?.get(filePath)
+    )
     if (result.item) items.push(result.item)
     if (result.error) errors.push(result.error)
   }
@@ -272,7 +289,8 @@ export function parseItemsForStory(
  */
 export function parseItemsForEpic(
   project: DiscoveredProject,
-  epicId: string
+  epicId: string,
+  index?: BoardIndex
 ): StoryItemList {
   const epic = findEpicFolder(project.boardPath, epicId)
   if (!epic) {
@@ -296,11 +314,25 @@ export function parseItemsForEpic(
 
   const epicDir = path.join(project.boardPath, "epics", epic.dirName)
   const files = listItemMarkdownFiles(epicDir)
+  const indexedByPath = index
+    ? new Map(
+        (index.leavesByParent.get(epicId) ?? []).map((leaf) => [
+          leaf.filePath,
+          leaf,
+        ])
+      )
+    : null
   const items: ItemSummary[] = []
   const errors: ItemParseError[] = []
 
   for (const filePath of files) {
-    const result = parseItemFile(filePath, project, epicId, epicId)
+    const result = parseItemFile(
+      filePath,
+      project,
+      epicId,
+      epicId,
+      indexedByPath?.get(filePath)
+    )
     if (result.item) items.push(result.item)
     if (result.error) errors.push(result.error)
   }

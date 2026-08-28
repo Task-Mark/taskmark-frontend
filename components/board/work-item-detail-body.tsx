@@ -10,12 +10,19 @@ import type {
   EpicDetail,
   ItemDetail,
   PromptFeedbackRow,
+  RowWorkItemRef,
   StoryDetail,
   WorkItemDetail,
   WorkItemMeta,
   WorkLogRow,
 } from "@/lib/taskmark/detail-types"
-import { StatusBadge, TypeBadge, PriorityBadge } from "@/components/board/status-badge"
+import {
+  StatusBadge,
+  TypeBadge,
+  PriorityBadge,
+  typeBadgeClass,
+} from "@/components/board/status-badge"
+import { cn } from "@/lib/utils"
 import { AttributionPeopleList } from "@/components/board/attribution-avatars"
 import { DetailChildrenList } from "@/components/board/detail-children-list"
 import { MarkdownContent } from "@/components/board/markdown-content"
@@ -23,6 +30,12 @@ import { useWorkItemSheet } from "@/components/board/work-item-sheet"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 function RelatedItemButton({ itemId }: { itemId: string }) {
   const { openDetailById } = useWorkItemSheet()
@@ -36,6 +49,82 @@ function RelatedItemButton({ itemId }: { itemId: string }) {
     >
       {itemId}
     </Button>
+  )
+}
+
+const MAX_VISIBLE_WORK_ITEMS = 2
+
+function workItemKindFromId(id: string): "epic" | "story" | "task" | "bug" {
+  if (id.startsWith("B-")) return "bug"
+  if (id.startsWith("E-")) return "epic"
+  if (id.startsWith("S-")) return "story"
+  return "task"
+}
+
+function WorkItemTag({
+  item,
+  onOpen,
+}: {
+  item: RowWorkItemRef
+  onOpen: (id: string) => void
+}) {
+  return (
+    <Badge
+      variant="outline"
+      title={item.title || item.id}
+      className={cn(
+        "cursor-pointer font-mono text-xs",
+        typeBadgeClass(workItemKindFromId(item.id))
+      )}
+      render={
+        <button type="button" onClick={() => onOpen(item.id)} />
+      }
+    >
+      {item.id}
+    </Badge>
+  )
+}
+
+function WorkItemsCell({ items }: { items?: RowWorkItemRef[] }) {
+  const { openDetailById } = useWorkItemSheet()
+  if (!items || items.length === 0) return "—"
+
+  const visible = items.slice(0, MAX_VISIBLE_WORK_ITEMS)
+  const hidden = items.slice(MAX_VISIBLE_WORK_ITEMS)
+
+  return (
+    <span className="flex flex-wrap items-center gap-1">
+      {visible.map((item) => (
+        <WorkItemTag key={item.id} item={item} onOpen={openDetailById} />
+      ))}
+      {hidden.length > 0 ? (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Badge
+                  variant="outline"
+                  className="cursor-default font-mono text-xs"
+                  title={hidden.map((item) => item.id).join(", ")}
+                />
+              }
+            >
+              +{hidden.length}
+            </TooltipTrigger>
+            <TooltipContent>
+              <ul className="flex flex-col gap-0.5 text-left">
+                {hidden.map((item) => (
+                  <li key={item.id}>
+                    <span className="font-mono">{item.id}</span>
+                    {item.title ? ` — ${item.title}` : null}
+                  </li>
+                ))}
+              </ul>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      ) : null}
+    </span>
   )
 }
 
@@ -162,7 +251,7 @@ function CommitsTable({ rows }: { rows: CommitRow[] }) {
   if (rows.length === 0) {
     return <p className="text-sm text-muted-foreground">No commits logged.</p>
   }
-  const showLeaf = rows.some((row) => row.leafId)
+  const showWorkItems = rows.some((row) => (row.workItems?.length ?? 0) > 0)
   return (
     <div className="w-full overflow-x-auto rounded border-2 border-border">
       <table className="w-full text-left text-xs">
@@ -173,7 +262,7 @@ function CommitsTable({ rows }: { rows: CommitRow[] }) {
             <th className="px-2 py-1.5">Date</th>
             <th className="px-2 py-1.5">Author</th>
             <th className="px-2 py-1.5">Message</th>
-            {showLeaf ? <th className="px-2 py-1.5">Leaf</th> : null}
+            {showWorkItems ? <th className="px-2 py-1.5">Work items</th> : null}
           </tr>
         </thead>
         <tbody>
@@ -186,9 +275,9 @@ function CommitsTable({ rows }: { rows: CommitRow[] }) {
               </td>
               <td className="px-2 py-1.5">{row.author || "—"}</td>
               <td className="px-2 py-1.5">{row.message || "—"}</td>
-              {showLeaf ? (
+              {showWorkItems ? (
                 <td className="px-2 py-1.5 whitespace-nowrap">
-                  <RelatedItemButton itemId={row.leafId ?? ""} />
+                  <WorkItemsCell items={row.workItems} />
                 </td>
               ) : null}
             </tr>
@@ -203,7 +292,7 @@ function WorkLogTable({ rows }: { rows: WorkLogRow[] }) {
   if (rows.length === 0) {
     return <p className="text-sm text-muted-foreground">No work sessions logged.</p>
   }
-  const showLeaf = rows.some((row) => row.leafId)
+  const showWorkItems = rows.some((row) => (row.workItems?.length ?? 0) > 0)
   return (
     <div className="w-full overflow-x-auto rounded border-2 border-border">
       <table className="w-full text-left text-xs">
@@ -214,7 +303,7 @@ function WorkLogTable({ rows }: { rows: WorkLogRow[] }) {
             <th className="px-2 py-1.5">Started</th>
             <th className="px-2 py-1.5">Ended</th>
             <th className="px-2 py-1.5">Summary</th>
-            {showLeaf ? <th className="px-2 py-1.5">Leaf</th> : null}
+            {showWorkItems ? <th className="px-2 py-1.5">Work items</th> : null}
           </tr>
         </thead>
         <tbody>
@@ -229,9 +318,9 @@ function WorkLogTable({ rows }: { rows: WorkLogRow[] }) {
                 {formatTaskmarkDate(row.ended)}
               </td>
               <td className="px-2 py-1.5">{row.summary || "—"}</td>
-              {showLeaf ? (
+              {showWorkItems ? (
                 <td className="px-2 py-1.5 whitespace-nowrap">
-                  <RelatedItemButton itemId={row.leafId ?? ""} />
+                  <WorkItemsCell items={row.workItems} />
                 </td>
               ) : null}
             </tr>
@@ -246,7 +335,7 @@ function PromptTable({ rows }: { rows: PromptFeedbackRow[] }) {
   if (rows.length === 0) {
     return <p className="text-sm text-muted-foreground">No prompts logged.</p>
   }
-  const showLeaf = rows.some((row) => row.leafId)
+  const showWorkItems = rows.some((row) => (row.workItems?.length ?? 0) > 0)
   return (
     <div className="w-full overflow-x-auto rounded border-2 border-border">
       <table className="w-full text-left text-xs">
@@ -257,7 +346,7 @@ function PromptTable({ rows }: { rows: PromptFeedbackRow[] }) {
             <th className="px-2 py-1.5">Kind</th>
             <th className="px-2 py-1.5">Author</th>
             <th className="px-2 py-1.5">Summary</th>
-            {showLeaf ? <th className="px-2 py-1.5">Leaf</th> : null}
+            {showWorkItems ? <th className="px-2 py-1.5">Work items</th> : null}
           </tr>
         </thead>
         <tbody>
@@ -270,9 +359,9 @@ function PromptTable({ rows }: { rows: PromptFeedbackRow[] }) {
               <td className="px-2 py-1.5">{row.kind || "—"}</td>
               <td className="px-2 py-1.5">{row.author || "—"}</td>
               <td className="px-2 py-1.5">{row.summary || "—"}</td>
-              {showLeaf ? (
+              {showWorkItems ? (
                 <td className="px-2 py-1.5 whitespace-nowrap">
-                  <RelatedItemButton itemId={row.leafId ?? ""} />
+                  <WorkItemsCell items={row.workItems} />
                 </td>
               ) : null}
             </tr>

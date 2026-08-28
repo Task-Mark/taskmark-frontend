@@ -15,6 +15,7 @@ import {
 import { asContributorList } from "@/lib/taskmark/identity"
 import { sortEpicsGeneralFirst } from "@/lib/taskmark/general-epic"
 import { deriveParentRollup } from "@/lib/taskmark/derive-parents"
+import type { BoardIndex } from "@/lib/taskmark/board-index"
 
 function listEpicMarkdownFiles(boardPath: string): string[] {
   const epicsDir = path.join(boardPath, "epics")
@@ -39,7 +40,8 @@ function listEpicMarkdownFiles(boardPath: string): string[] {
 
 function parseEpicFile(
   filePath: string,
-  project: DiscoveredProject
+  project: DiscoveredProject,
+  index?: BoardIndex
 ): { epic?: EpicSummary; error?: EpicParseError } {
   let raw: string
   try {
@@ -94,7 +96,7 @@ function parseEpicFile(
     }
   }
 
-  const derived = deriveParentRollup(project.boardPath, id, "epic")
+  const derived = deriveParentRollup(project.boardPath, id, "epic", index)
 
   return {
     epic: {
@@ -127,14 +129,15 @@ function parseEpicFile(
 
 /** Parse all epics under a project's board root (nested taskmark/ or flat *-taskmark). */
 export function parseEpicsForProject(
-  project: DiscoveredProject
+  project: DiscoveredProject,
+  index?: BoardIndex
 ): ProjectEpicList {
   const files = listEpicMarkdownFiles(project.boardPath)
   const epics: EpicSummary[] = []
   const errors: EpicParseError[] = []
 
   for (const filePath of files) {
-    const result = parseEpicFile(filePath, project)
+    const result = parseEpicFile(filePath, project, index)
     if (result.epic) epics.push(result.epic)
     if (result.error) errors.push(result.error)
   }
@@ -149,5 +152,5 @@ export function parseEpicsForProject(
 export function parseEpicsForProjects(
   projects: DiscoveredProject[]
 ): ProjectEpicList[] {
-  return projects.map(parseEpicsForProject)
+  return projects.map((project) => parseEpicsForProject(project))
 }

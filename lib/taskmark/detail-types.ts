@@ -13,15 +13,19 @@ export type MarkdownTable = {
   rows: string[][]
 }
 
+/** Descendant task/bug that contributed a row to a derived parent view. */
+export type RowWorkItemRef = {
+  id: string
+  title: string
+}
+
 export type PromptFeedbackRow = {
   index: string
   when: string
   kind: string
   author: string
   summary: string
-  /** Descendant leaf that contributed this row on a derived parent view. */
-  leafId?: string
-  leafTitle?: string
+  workItems?: RowWorkItemRef[]
 }
 
 export type CommitRow = {
@@ -30,8 +34,7 @@ export type CommitRow = {
   date: string
   author: string
   message: string
-  leafId?: string
-  leafTitle?: string
+  workItems?: RowWorkItemRef[]
 }
 
 export type WorkLogRow = {
@@ -40,8 +43,7 @@ export type WorkLogRow = {
   started: string
   ended: string
   summary: string
-  leafId?: string
-  leafTitle?: string
+  workItems?: RowWorkItemRef[]
 }
 
 export type WorkItemMeta = {

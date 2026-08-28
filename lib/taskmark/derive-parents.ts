@@ -1,17 +1,19 @@
-import fs from "node:fs"
-import path from "node:path"
-
 import {
   asNumberOrNull,
   asString,
-  extractFrontmatter,
 } from "@/lib/taskmark/frontmatter"
+import {
+  buildBoardIndex,
+  type BoardIndex,
+  type IndexedLeaf,
+} from "@/lib/taskmark/board-index"
 import type { ContributorIdentity } from "@/lib/taskmark/identity"
 import { asContributorList } from "@/lib/taskmark/identity"
 import { parseWorkItemDetailFromRaw } from "@/lib/taskmark/parse-detail"
 import type {
   CommitRow,
   PromptFeedbackRow,
+  RowWorkItemRef,
   WorkLogRow,
 } from "@/lib/taskmark/detail-types"
 import { readTimingFields } from "@/lib/taskmark/timing"
@@ -65,24 +67,6 @@ export type ParentRollup = {
   doneLeafCount: number
 }
 
-function markdownFilesUnder(dir: string): string[] {
-  let entries: fs.Dirent[]
-  try {
-    entries = fs.readdirSync(dir, { withFileTypes: true })
-  } catch {
-    return []
-  }
-
-  const files: string[] = []
-  for (const entry of entries) {
-    if (entry.name.startsWith(".")) continue
-    const filePath = path.join(dir, entry.name)
-    if (entry.isDirectory()) files.push(...markdownFilesUnder(filePath))
-    else if (entry.isFile() && entry.name.endsWith(".md")) files.push(filePath)
-  }
-  return files
-}
-
 function leafPoints(frontmatter: Record<string, unknown>): number {
   const explicit = asNumberOrNull(frontmatter.points)
   if (explicit != null) return Math.max(0, explicit)
@@ -90,20 +74,23 @@ function leafPoints(frontmatter: Record<string, unknown>): number {
   return STATIC_SIZE_POINTS[size as keyof typeof STATIC_SIZE_POINTS] ?? 0
 }
 
-function readLeaf(filePath: string): LeafRecord | null {
+function readLeaf(indexed: IndexedLeaf, includeDetails: boolean): LeafRecord | null {
   try {
-    const raw = fs.readFileSync(filePath, "utf8")
-    const frontmatter = extractFrontmatter(raw)
-    if (!frontmatter) return null
+    const { filePath, raw, frontmatter } = indexed
     const type = asString(frontmatter.type).toLowerCase()
     if (type !== "task" && type !== "bug") return null
     const id = asString(frontmatter.id)
     if (!id) return null
     const timing = readTimingFields(frontmatter)
-    const parsed = parseWorkItemDetailFromRaw(raw, filePath, "item")
-    const itemDetail = parsed.ok && parsed.detail.type !== "epic" && parsed.detail.type !== "story"
-      ? parsed.detail
+    const parsed = includeDetails
+      ? parseWorkItemDetailFromRaw(raw, filePath, "item")
       : null
+    const itemDetail =
+      parsed?.ok &&
+      parsed.detail.type !== "epic" &&
+      parsed.detail.type !== "story"
+        ? parsed.detail
+        : null
     return {
       id,
       title: asString(frontmatter.title, id),
@@ -127,18 +114,25 @@ function readLeaf(filePath: string): LeafRecord | null {
 }
 
 function leavesForParent(
-  boardPath: string,
   parentId: string,
-  kind: ParentKind
+  kind: ParentKind,
+  index: BoardIndex,
+  includeDetails: boolean
 ): LeafRecord[] {
-  const leaves = markdownFilesUnder(path.join(boardPath, "epics"))
-    .map(readLeaf)
-    .filter((leaf): leaf is LeafRecord => leaf != null)
-  return leaves.filter((leaf) =>
+  const indexed =
     kind === "story"
-      ? leaf.parent === parentId
-      : leaf.epic === parentId || leaf.parent === parentId
-  )
+      ? index.leavesByParent.get(parentId) ?? []
+      : [
+          ...(index.leavesByEpic.get(parentId) ?? []),
+          ...(index.leavesByParent.get(parentId) ?? []),
+        ].filter(
+          (leaf, position, all) =>
+            all.findIndex((candidate) => candidate.filePath === leaf.filePath) ===
+            position
+        )
+  return indexed
+    .map((leaf) => readLeaf(leaf, includeDetails))
+    .filter((leaf): leaf is LeafRecord => leaf != null)
 }
 
 function parentStatus(leaves: readonly LeafRecord[]): string {
@@ -196,15 +190,57 @@ function uniqueResolvers(leaves: readonly LeafRecord[]): ContributorIdentity[] {
   return [...identities.values()]
 }
 
-function withLeaf<T extends object>(
-  leaf: LeafRecord,
-  rows: readonly T[]
-): (T & { leafId: string; leafTitle: string })[] {
-  return rows.map((row) => ({
-    ...row,
-    leafId: leaf.id,
-    leafTitle: leaf.title,
-  }))
+/**
+ * Collapse rows that leaves repeat verbatim into one row carrying every
+ * contributing work item.
+ */
+function groupRowsByContent<T extends object>(
+  leaves: readonly LeafRecord[],
+  rowsOf: (leaf: LeafRecord) => readonly T[],
+  contentKey: (row: T) => string,
+  merge?: (existing: T, incoming: T) => T
+): (T & { workItems: RowWorkItemRef[] })[] {
+  const grouped = new Map<string, T & { workItems: RowWorkItemRef[] }>()
+
+  for (const leaf of leaves) {
+    for (const row of rowsOf(leaf)) {
+      const key = contentKey(row)
+      const existing = grouped.get(key)
+      const workItem = { id: leaf.id, title: leaf.title }
+      if (existing) {
+        if (merge) Object.assign(existing, merge(existing, row))
+        if (!existing.workItems.some((item) => item.id === leaf.id)) {
+          existing.workItems.push(workItem)
+        }
+        continue
+      }
+      grouped.set(key, {
+        ...row,
+        workItems: [workItem],
+      })
+    }
+  }
+
+  return [...grouped.values()]
+}
+
+function normalizeLogText(value: string): string {
+  return value.trim().replace(/\s+/g, " ").toLowerCase()
+}
+
+function workLogContentKey(row: WorkLogRow): string {
+  const actor = normalizeLogText(row.actor)
+  const summary = normalizeLogText(row.summary)
+  if (!summary) {
+    return [actor, row.started, row.ended, ""].join("\u0000")
+  }
+  return [actor, summary].join("\u0000")
+}
+
+function mergeWorkLogSpan(existing: WorkLogRow, incoming: WorkLogRow): WorkLogRow {
+  const started = selectDate([existing.started, incoming.started], "min")
+  const ended = selectDate([existing.ended, incoming.ended], "max")
+  return { ...existing, started, ended }
 }
 
 function sortByDate<T>(rows: T[], date: (row: T) => string): T[] {
@@ -219,9 +255,11 @@ function sortByDate<T>(rows: T[], date: (row: T) => string): T[] {
 export function deriveParentRollup(
   boardPath: string,
   parentId: string,
-  kind: ParentKind
+  kind: ParentKind,
+  index: BoardIndex = buildBoardIndex(boardPath),
+  includeDetails = false
 ): ParentRollup {
-  const leaves = leavesForParent(boardPath, parentId, kind)
+  const leaves = leavesForParent(parentId, kind, index, includeDetails)
   const status = parentStatus(leaves)
   const points = leaves.reduce((sum, leaf) => sum + leaf.points, 0)
   const actualMs = leaves.reduce(
@@ -251,17 +289,31 @@ export function deriveParentRollup(
         ? selectDate(doneLeaves.map((leaf) => leaf.completedAt), "max")
         : "",
     promptFeedback: sortByDate(
-      leaves.flatMap((leaf) => withLeaf(leaf, leaf.promptFeedback)),
+      groupRowsByContent(
+        leaves,
+        (leaf) => leaf.promptFeedback,
+        (row) => [row.when, row.kind, row.author, row.summary].join("\u0000")
+      ),
       (row) => row.when
-    ),
+    ).map((row, position) => ({ ...row, index: String(position + 1) })),
     commits: sortByDate(
-      leaves.flatMap((leaf) => withLeaf(leaf, leaf.commits)),
+      groupRowsByContent(
+        leaves,
+        (leaf) => leaf.commits,
+        (row) =>
+          [row.sha, row.repo, row.date, row.author, row.message].join("\u0000")
+      ),
       (row) => row.date
     ),
     workLog: sortByDate(
-      leaves.flatMap((leaf) => withLeaf(leaf, leaf.workLog)),
+      groupRowsByContent(
+        leaves,
+        (leaf) => leaf.workLog,
+        workLogContentKey,
+        mergeWorkLogSpan
+      ),
       (row) => row.started
-    ),
+    ).map((row, position) => ({ ...row, session: String(position + 1) })),
     leafCount: leaves.length,
     doneLeafCount: doneLeaves.length,
   }

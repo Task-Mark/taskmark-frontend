@@ -12,6 +12,7 @@ import { TaskList } from "@/components/board/task-list"
 import { WorkItemsList } from "@/components/board/work-items-list"
 import { WorkItemSheetProvider } from "@/components/board/work-item-sheet"
 import { resolveActiveProject } from "@/lib/taskmark/active-project"
+import { buildBoardIndex } from "@/lib/taskmark/board-index"
 import {
   getActiveProjectCookie,
   getHideCompletedCookies,
@@ -90,6 +91,7 @@ export async function BoardScreen({ searchParams }: BoardScreenProps) {
   }
 
   const params = await searchParams
+  const boardIndex = buildBoardIndex(activeProject.boardPath)
   const activeView = parseListViewMode(params.view)
   const selectedEpicId =
     activeView === "overall" ? paramValue(params.epic) : null
@@ -99,7 +101,7 @@ export async function BoardScreen({ searchParams }: BoardScreenProps) {
       : null
   const selectedItemId = paramValue(params.item)
 
-  const list = parseEpicsForProject(activeProject)
+  const list = parseEpicsForProject(activeProject, boardIndex)
   const epicCount = list.epics.length
   const errorCount = list.errors.length
 
@@ -112,7 +114,8 @@ export async function BoardScreen({ searchParams }: BoardScreenProps) {
       ? parseWorkItemsForEpic(
           activeProject,
           selectedEpicId,
-          selectedEpic?.title ?? null
+          selectedEpic?.title ?? null,
+          boardIndex
         )
       : null
 
@@ -127,20 +130,28 @@ export async function BoardScreen({ searchParams }: BoardScreenProps) {
     activeView === "overall" &&
     selectedEpicId != null &&
     selectedStory != null
-      ? parseItemsForStory(activeProject, selectedEpicId, selectedStory.id)
+      ? parseItemsForStory(
+          activeProject,
+          selectedEpicId,
+          selectedStory.id,
+          boardIndex
+        )
       : null
 
   const workItemsList =
     activeView === "overall" || activeView === "workitems"
-      ? parseWorkItemsViewForProject(activeProject)
+      ? parseWorkItemsViewForProject(activeProject, boardIndex)
       : null
 
+  const metricLeaves = collectMetricLeaves(activeProject, boardIndex)
   /** Match Current Speed exactly: completed task/bug leaf points only. */
-  const countableCompletions = collectCompletedLeafPointSamples(
-    collectMetricLeaves(activeProject)
+  const countableCompletions =
+    collectCompletedLeafPointSamples(metricLeaves)
+  const statusMetrics = computeProjectStatusMetrics(
+    activeProject,
+    boardIndex,
+    metricLeaves
   )
-
-  const statusMetrics = computeProjectStatusMetrics(activeProject)
 
   return (
     <WorkItemSheetProvider>

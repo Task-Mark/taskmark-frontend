@@ -6,6 +6,7 @@
 import { addDays } from "date-fns"
 
 import type { ContributorIdentity } from "@/lib/taskmark/identity"
+import type { BoardIndex } from "@/lib/taskmark/board-index"
 import { parseEpicsForProject } from "@/lib/taskmark/parse-epics"
 import { parseItemsForEpic, parseItemsForStory } from "@/lib/taskmark/parse-items"
 import { parseStoriesForEpic } from "@/lib/taskmark/parse-stories"
@@ -206,9 +207,10 @@ export function computeCurrentWeekPointsDone(
 
 /** Walk the board and collect metric leaves (stories, tasks, bugs + epic identities for contributors). */
 export function collectMetricLeaves(
-  project: DiscoveredProject
+  project: DiscoveredProject,
+  index?: BoardIndex
 ): MetricLeaf[] {
-  const epicList = parseEpicsForProject(project)
+  const epicList = parseEpicsForProject(project, index)
   const leaves: MetricLeaf[] = []
 
   for (const epic of epicList.epics) {
@@ -222,7 +224,7 @@ export function collectMetricLeaves(
       resolvers: epic.resolvers,
     })
 
-    const storyList = parseStoriesForEpic(project, epic.id)
+    const storyList = parseStoriesForEpic(project, epic.id, index)
     for (const story of storyList.stories) {
       leaves.push({
         kind: "story",
@@ -234,7 +236,7 @@ export function collectMetricLeaves(
         resolvers: story.resolvers,
       })
 
-      const items = parseItemsForStory(project, epic.id, story.id)
+      const items = parseItemsForStory(project, epic.id, story.id, index)
       for (const item of items.items) {
         leaves.push({
           kind: item.type,
@@ -248,7 +250,7 @@ export function collectMetricLeaves(
       }
     }
 
-    const epicItems = parseItemsForEpic(project, epic.id)
+    const epicItems = parseItemsForEpic(project, epic.id, index)
     for (const item of epicItems.items) {
       leaves.push({
         kind: item.type,
@@ -266,9 +268,11 @@ export function collectMetricLeaves(
 }
 
 export function computeProjectStatusMetrics(
-  project: DiscoveredProject
+  project: DiscoveredProject,
+  index?: BoardIndex,
+  collectedLeaves?: readonly MetricLeaf[]
 ): ProjectStatusMetrics {
-  const leaves = collectMetricLeaves(project)
+  const leaves = collectedLeaves ?? collectMetricLeaves(project, index)
   const { total, complete } = aggregateWorkItemCounts(leaves)
   const currentWeekPointsDone = computeCurrentWeekPointsDone(leaves)
   const speed = computeCurrentSpeedPtsPerWeek(leaves)

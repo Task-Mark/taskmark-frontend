@@ -19,6 +19,10 @@ import {
 } from "@/lib/taskmark/resolve-work-item"
 import type { WorkItemRef } from "@/lib/taskmark/detail-types"
 import { deriveParentRollup } from "@/lib/taskmark/derive-parents"
+import {
+  buildBoardIndex,
+  type BoardIndex,
+} from "@/lib/taskmark/board-index"
 
 function isPathInside(parent: string, child: string): boolean {
   const rel = path.relative(parent, child)
@@ -38,11 +42,12 @@ export function findProjectForFile(
 
 export function attachChildren(
   detail: WorkItemDetail,
-  project: DiscoveredProject
+  project: DiscoveredProject,
+  index?: BoardIndex
 ): WorkItemDetail {
   if (detail.type === "epic") {
     const children: DetailChildItem[] = []
-    const stories = parseStoriesForEpic(project, detail.id)
+    const stories = parseStoriesForEpic(project, detail.id, index)
     for (const story of stories.stories) {
       children.push({
         id: story.id,
@@ -53,7 +58,7 @@ export function attachChildren(
         filePath: story.filePath,
       })
     }
-    const epicItems = parseItemsForEpic(project, detail.id)
+    const epicItems = parseItemsForEpic(project, detail.id, index)
     for (const item of epicItems.items) {
       children.push({
         id: item.id,
@@ -71,7 +76,7 @@ export function attachChildren(
     const epicId = detail.epic || detail.parent
     if (!epicId) return detail
     const children: DetailChildItem[] = []
-    const items = parseItemsForStory(project, epicId, detail.id)
+    const items = parseItemsForStory(project, epicId, detail.id, index)
     for (const item of items.items) {
       children.push({
         id: item.id,
@@ -90,10 +95,17 @@ export function attachChildren(
 
 function attachDerivedParentFields(
   detail: WorkItemDetail,
-  project: DiscoveredProject
+  project: DiscoveredProject,
+  index?: BoardIndex
 ): WorkItemDetail {
   if (detail.type !== "epic" && detail.type !== "story") return detail
-  const derived = deriveParentRollup(project.boardPath, detail.id, detail.type)
+  const derived = deriveParentRollup(
+    project.boardPath,
+    detail.id,
+    detail.type,
+    index,
+    true
+  )
   return {
     ...detail,
     status: derived.status,
@@ -115,7 +127,8 @@ function attachDerivedParentFields(
 export function loadWorkItemDetailSync(
   projects: DiscoveredProject[],
   filePath: string,
-  hint?: "epic" | "story" | "item"
+  hint?: "epic" | "story" | "item",
+  index?: BoardIndex
 ): WorkItemDetailResult {
   if (!filePath || typeof filePath !== "string") {
     return { ok: false, filePath: filePath ?? "", message: "Missing file path" }
@@ -148,9 +161,13 @@ export function loadWorkItemDetailSync(
 
   const result = parseWorkItemDetailFromRaw(raw, resolved, hint)
   if (!result.ok) return result
+  if (result.detail.type !== "epic" && result.detail.type !== "story") {
+    return result
+  }
 
-  const derived = attachDerivedParentFields(result.detail, project)
-  return { ok: true, detail: attachChildren(derived, project) }
+  const boardIndex = index ?? buildBoardIndex(project.boardPath)
+  const derived = attachDerivedParentFields(result.detail, project, boardIndex)
+  return { ok: true, detail: attachChildren(derived, project, boardIndex) }
 }
 
 export function resolveWorkItemByIdSync(

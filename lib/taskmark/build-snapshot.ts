@@ -2,6 +2,7 @@ import fs from "node:fs"
 import path from "node:path"
 
 import { loadWorkItemDetailSync } from "@/lib/taskmark/detail-load"
+import { buildBoardIndex } from "@/lib/taskmark/board-index"
 import type { WorkItemRef } from "@/lib/taskmark/detail-types"
 import { parseEpicsForProject } from "@/lib/taskmark/parse-epics"
 import { parseWorkItemsForEpic, parseWorkItemsViewForProject } from "@/lib/taskmark/parse-flat-lists"
@@ -127,19 +128,26 @@ export function buildBoardSnapshot(
   projects: DiscoveredProject[],
   active: DiscoveredProject
 ): BoardSnapshot {
-  const epics = parseEpicsForProject(active)
+  const boardIndex = buildBoardIndex(active.boardPath)
+  const epics = parseEpicsForProject(active, boardIndex)
   const workItemsByEpic: BoardSnapshot["workItemsByEpic"] = {}
   const itemsByStory: BoardSnapshot["itemsByStory"] = {}
 
   for (const epic of epics.epics) {
-    const epicList = parseWorkItemsForEpic(active, epic.id, epic.title)
+    const epicList = parseWorkItemsForEpic(
+      active,
+      epic.id,
+      epic.title,
+      boardIndex
+    )
     workItemsByEpic[epic.id] = epicList
     for (const row of epicList.rows) {
       if (row.kind !== "story") continue
       itemsByStory[storyKey(epic.id, row.id)] = parseItemsForStory(
         active,
         epic.id,
-        row.id
+        row.id,
+        boardIndex
       )
     }
   }
@@ -152,7 +160,12 @@ export function buildBoardSnapshot(
     refsById[ref.id] = ref
     const hint =
       ref.kind === "epic" ? "epic" : ref.kind === "story" ? "story" : "item"
-    const detail = loadWorkItemDetailSync(projects, ref.filePath, hint)
+    const detail = loadWorkItemDetailSync(
+      projects,
+      ref.filePath,
+      hint,
+      boardIndex
+    )
     if (detail.ok) {
       detailsByPath[ref.filePath] = detail.detail
     }
@@ -166,18 +179,24 @@ export function buildBoardSnapshot(
     workItems: false,
   } as const
 
+  const metricLeaves = collectMetricLeaves(active, boardIndex)
+
   return {
     version: 1,
     builtAt: new Date().toISOString(),
     project: active,
     projects,
     epics,
-    workItemsView: parseWorkItemsViewForProject(active),
+    workItemsView: parseWorkItemsViewForProject(active, boardIndex),
     workItemsByEpic,
     itemsByStory,
-    statusMetrics: computeProjectStatusMetrics(active),
+    statusMetrics: computeProjectStatusMetrics(
+      active,
+      boardIndex,
+      metricLeaves
+    ),
     countableCompletions: collectCompletedLeafPointSamples(
-      collectMetricLeaves(active)
+      metricLeaves
     ),
     hideCompletedDefaults: { ...hideCompletedDefaults },
     detailsByPath,

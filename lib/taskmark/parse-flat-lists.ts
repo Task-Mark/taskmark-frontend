@@ -11,6 +11,7 @@ import type {
   WorkItemsViewRow,
 } from "@/lib/taskmark/flat-work-item-types"
 import { compareByStatusThenPriority } from "@/lib/taskmark/list-view-mode"
+import type { BoardIndex } from "@/lib/taskmark/board-index"
 import { parseEpicsForProject } from "@/lib/taskmark/parse-epics"
 import { parseItemsForEpic, parseItemsForStory } from "@/lib/taskmark/parse-items"
 import { parseStoriesForEpic } from "@/lib/taskmark/parse-stories"
@@ -19,9 +20,10 @@ import { parseStoriesForEpic } from "@/lib/taskmark/parse-stories"
  * Flat table of every epic, story, and task/bug on the active board.
  */
 export function parseAllWorkItemsForProject(
-  project: DiscoveredProject
+  project: DiscoveredProject,
+  index?: BoardIndex
 ): FlatWorkItemList {
-  const epicList = parseEpicsForProject(project)
+  const epicList = parseEpicsForProject(project, index)
   const rows: FlatWorkItemRow[] = []
   const errors: FlatWorkItemList["errors"] = epicList.errors.map((e) => ({
     filePath: e.filePath,
@@ -48,7 +50,7 @@ export function parseAllWorkItemsForProject(
       project: epic.project,
     })
 
-    const storyList = parseStoriesForEpic(project, epic.id)
+    const storyList = parseStoriesForEpic(project, epic.id, index)
     for (const err of storyList.errors) {
       errors.push({ filePath: err.filePath, message: err.message })
     }
@@ -73,7 +75,7 @@ export function parseAllWorkItemsForProject(
         project: story.project,
       })
 
-      const items = parseItemsForStory(project, epic.id, story.id)
+      const items = parseItemsForStory(project, epic.id, story.id, index)
       for (const err of items.errors) {
         errors.push({ filePath: err.filePath, message: err.message })
       }
@@ -99,7 +101,7 @@ export function parseAllWorkItemsForProject(
       }
     }
 
-    const epicItems = parseItemsForEpic(project, epic.id)
+    const epicItems = parseItemsForEpic(project, epic.id, index)
     for (const err of epicItems.errors) {
       errors.push({ filePath: err.filePath, message: err.message })
     }
@@ -130,9 +132,10 @@ export function parseAllWorkItemsForProject(
 
 /** All stories across every epic, with epic id/title for UI tags. */
 export function parseAllStoriesForProject(
-  project: DiscoveredProject
+  project: DiscoveredProject,
+  index?: BoardIndex
 ): ProjectStoriesFlatList {
-  const epicList = parseEpicsForProject(project)
+  const epicList = parseEpicsForProject(project, index)
   const stories: StoryWithEpicRow[] = []
   const errors: ProjectStoriesFlatList["errors"] = epicList.errors.map((e) => ({
     filePath: e.filePath,
@@ -140,7 +143,7 @@ export function parseAllStoriesForProject(
   }))
 
   for (const epic of epicList.epics) {
-    const storyList = parseStoriesForEpic(project, epic.id)
+    const storyList = parseStoriesForEpic(project, epic.id, index)
     for (const err of storyList.errors) {
       errors.push({ filePath: err.filePath, message: err.message })
     }
@@ -170,9 +173,10 @@ export function parseAllStoriesForProject(
 
 /** All tasks/bugs across the board, with epic and story UI tags. */
 export function parseAllTasksForProject(
-  project: DiscoveredProject
+  project: DiscoveredProject,
+  index?: BoardIndex
 ): ProjectTasksFlatList {
-  const epicList = parseEpicsForProject(project)
+  const epicList = parseEpicsForProject(project, index)
   const items: TaskWithParentsRow[] = []
   const errors: ProjectTasksFlatList["errors"] = epicList.errors.map((e) => ({
     filePath: e.filePath,
@@ -180,13 +184,13 @@ export function parseAllTasksForProject(
   }))
 
   for (const epic of epicList.epics) {
-    const storyList = parseStoriesForEpic(project, epic.id)
+    const storyList = parseStoriesForEpic(project, epic.id, index)
     for (const err of storyList.errors) {
       errors.push({ filePath: err.filePath, message: err.message })
     }
 
     for (const story of storyList.stories) {
-      const storyItems = parseItemsForStory(project, epic.id, story.id)
+      const storyItems = parseItemsForStory(project, epic.id, story.id, index)
       for (const err of storyItems.errors) {
         errors.push({ filePath: err.filePath, message: err.message })
       }
@@ -212,7 +216,7 @@ export function parseAllTasksForProject(
       }
     }
 
-    const epicItems = parseItemsForEpic(project, epic.id)
+    const epicItems = parseItemsForEpic(project, epic.id, index)
     for (const err of epicItems.errors) {
       errors.push({ filePath: err.filePath, message: err.message })
     }
@@ -249,13 +253,14 @@ export function parseAllTasksForProject(
 export function parseWorkItemsForEpic(
   project: DiscoveredProject,
   epicId: string,
-  epicTitle?: string | null
+  epicTitle?: string | null,
+  index?: BoardIndex
 ): EpicWorkItemsList {
   const rows: WorkItemsViewRow[] = []
   const errors: EpicWorkItemsList["errors"] = []
   const title = epicTitle ?? null
 
-  const storyList = parseStoriesForEpic(project, epicId)
+  const storyList = parseStoriesForEpic(project, epicId, index)
   for (const err of storyList.errors) {
     errors.push({ filePath: err.filePath, message: err.message })
   }
@@ -286,7 +291,7 @@ export function parseWorkItemsForEpic(
     })
   }
 
-  const epicItems = parseItemsForEpic(project, epicId)
+  const epicItems = parseItemsForEpic(project, epicId, index)
   for (const err of epicItems.errors) {
     errors.push({ filePath: err.filePath, message: err.message })
   }
@@ -331,9 +336,10 @@ export function parseWorkItemsForEpic(
  * (excludes tasks/bugs that live under a story). Sorted by status then priority.
  */
 export function parseWorkItemsViewForProject(
-  project: DiscoveredProject
+  project: DiscoveredProject,
+  index?: BoardIndex
 ): WorkItemsViewList {
-  const epicList = parseEpicsForProject(project)
+  const epicList = parseEpicsForProject(project, index)
   const rows: WorkItemsViewRow[] = []
   const errors: WorkItemsViewList["errors"] = epicList.errors.map((e) => ({
     filePath: e.filePath,
@@ -341,7 +347,12 @@ export function parseWorkItemsViewForProject(
   }))
 
   for (const epic of epicList.epics) {
-    const epicWorkItems = parseWorkItemsForEpic(project, epic.id, epic.title)
+    const epicWorkItems = parseWorkItemsForEpic(
+      project,
+      epic.id,
+      epic.title,
+      index
+    )
     for (const err of epicWorkItems.errors) {
       errors.push({ filePath: err.filePath, message: err.message })
     }
