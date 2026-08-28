@@ -123,13 +123,13 @@ export function buildAttributionAvatars(
     const name = acc.identity.name || "Unknown"
     if (acc.created && acc.resolved) {
       role = "both"
-      label = `Created and developed by ${name}`
+      label = `Reported and implemented by ${name}`
     } else if (acc.created) {
       role = "created"
-      label = `Created by ${name}`
+      label = `Reported by ${name}`
     } else {
       role = "resolved"
-      label = `Resolved by ${name}`
+      label = `Implemented by ${name}`
     }
     out.push({ identity: acc.identity, role, label })
   }

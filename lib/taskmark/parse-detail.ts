@@ -169,6 +169,7 @@ export function parseWorkItemDetailFromRaw(
       successMetrics: getSection(sections, "Success metrics"),
       storiesMarkdown: getSection(sections, "Stories"),
       children: [],
+      promptFeedback: [],
       commits: parseCommits(getSection(sections, "Commits")),
       workLog: parseWorkLog(getSection(sections, "Work log")),
     }

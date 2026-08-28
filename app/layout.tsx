@@ -19,7 +19,7 @@ const spaceGrotesk = Space_Grotesk({
 })
 
 const siteDescription =
-  "Taskmark — product memory for agent work. Local markdown boards for Cursor with sizing, work logs, and velocity."
+  "Taskmark — product memory for agent work. Local markdown boards for Cursor with static sizing and work logs."
 
 export const viewport: Viewport = {
   themeColor: "#111111",

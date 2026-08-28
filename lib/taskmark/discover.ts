@@ -14,13 +14,10 @@ import {
 import type { DiscoveredProject } from "@/lib/taskmark/types"
 
 function hasBoardMarkers(boardPath: string): boolean {
-  return (
-    fs.existsSync(path.join(boardPath, "INDEX.md")) ||
-    fs.existsSync(path.join(boardPath, "epics"))
-  )
+  return fs.existsSync(path.join(boardPath, "epics"))
 }
 
-/** Single-project layout: `<project>/taskmark/` with INDEX.md or epics/. */
+/** Single-project layout: `<project>/taskmark/` with epics/. */
 export function nestedBoardPath(candidateProjectRoot: string): string | null {
   const boardPath = path.join(candidateProjectRoot, "taskmark")
   try {
@@ -33,7 +30,7 @@ export function nestedBoardPath(candidateProjectRoot: string): string | null {
 
 /**
  * Multi-project layout: dedicated `<name>-taskmark` repo whose root is the board
- * (INDEX.md / epics/ at the folder root — no nested taskmark/).
+ * (`epics/` at the folder root — no nested taskmark/).
  */
 export function flatBoardPath(candidateRoot: string): string | null {
   if (!isDedicatedBoardRepoName(path.basename(candidateRoot))) return null
@@ -95,7 +92,7 @@ function shouldSkipDir(name: string): boolean {
  * Walk a master folder and find Taskmark boards in subfolders.
  *
  * Recognizes:
- * - Single-project: any directory with a nested `taskmark/` board (INDEX.md or epics/)
+ * - Single-project: any directory with a nested `taskmark/epics/` board
  * - Multi-project: dedicated `*-taskmark` folders with board files at the repo root
  *
  * Does not require a board at the master root, but includes the master itself if it

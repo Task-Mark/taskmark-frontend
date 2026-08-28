@@ -64,7 +64,7 @@ export function validateMasterFolder(
       ok: false,
       code: "no_projects",
       error:
-        "No Taskmark projects found in subfolders. Look for a nested taskmark/ board (INDEX.md or epics/), or a dedicated *-taskmark folder with those files at its root.",
+        "No Taskmark projects found in subfolders. Look for a nested taskmark/epics/ board, or a dedicated *-taskmark folder with epics/ at its root.",
     }
   }
 

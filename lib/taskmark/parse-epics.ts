@@ -8,15 +8,13 @@ import type {
   ProjectEpicList,
 } from "@/lib/taskmark/epic-types"
 import {
-  asNumberOrNull,
   asString,
   asStringArray,
   extractFrontmatter,
 } from "@/lib/taskmark/frontmatter"
 import { asContributorList } from "@/lib/taskmark/identity"
-import { readTimingFields } from "@/lib/taskmark/timing"
 import { sortEpicsGeneralFirst } from "@/lib/taskmark/general-epic"
-import { progressUnderEpic } from "@/lib/taskmark/count-leaves"
+import { deriveParentRollup } from "@/lib/taskmark/derive-parents"
 
 function listEpicMarkdownFiles(boardPath: string): string[] {
   const epicsDir = path.join(boardPath, "epics")
@@ -96,24 +94,26 @@ function parseEpicFile(
     }
   }
 
-  const progress = progressUnderEpic(project.boardPath, id)
+  const derived = deriveParentRollup(project.boardPath, id, "epic")
 
   return {
     epic: {
       id,
       title,
-      status: asString(frontmatter.status, "unknown"),
+      status: derived.status,
       priority: asString(frontmatter.priority, "medium"),
-      size: asString(frontmatter.size, "—"),
-      points: asNumberOrNull(frontmatter.points),
-      ...readTimingFields(frontmatter),
+      size: derived.size,
+      points: derived.points,
+      estimateMinutes: derived.estimateMinutes,
+      actualMinutes: derived.actualMinutes,
+      actualMs: derived.actualMs,
       tags: asStringArray(frontmatter.tags),
       reporters: asContributorList(frontmatter.reporters),
-      resolvers: asContributorList(frontmatter.resolvers),
+      resolvers: derived.resolvers,
       created: asString(frontmatter.created),
-      completedAt: asString(frontmatter.completed_at),
-      workItemCount: progress.total,
-      doneWorkItemCount: progress.done,
+      completedAt: derived.completedAt,
+      workItemCount: derived.leafCount,
+      doneWorkItemCount: derived.doneLeafCount,
       filePath,
       project: {
         id: project.id,

@@ -18,6 +18,7 @@ import {
   findWorkItemOnBoard,
 } from "@/lib/taskmark/resolve-work-item"
 import type { WorkItemRef } from "@/lib/taskmark/detail-types"
+import { deriveParentRollup } from "@/lib/taskmark/derive-parents"
 
 function isPathInside(parent: string, child: string): boolean {
   const rel = path.relative(parent, child)
@@ -87,6 +88,30 @@ export function attachChildren(
   return detail
 }
 
+function attachDerivedParentFields(
+  detail: WorkItemDetail,
+  project: DiscoveredProject
+): WorkItemDetail {
+  if (detail.type !== "epic" && detail.type !== "story") return detail
+  const derived = deriveParentRollup(project.boardPath, detail.id, detail.type)
+  return {
+    ...detail,
+    status: derived.status,
+    size: derived.size,
+    points: derived.points,
+    estimateMinutes: derived.estimateMinutes,
+    actualMinutes: derived.actualMinutes,
+    actualMs: derived.actualMs,
+    resolvers: derived.resolvers,
+    updated: derived.updated,
+    startedAt: derived.startedAt,
+    completedAt: derived.completedAt,
+    promptFeedback: derived.promptFeedback,
+    commits: derived.commits,
+    workLog: derived.workLog,
+  }
+}
+
 export function loadWorkItemDetailSync(
   projects: DiscoveredProject[],
   filePath: string,
@@ -124,7 +149,8 @@ export function loadWorkItemDetailSync(
   const result = parseWorkItemDetailFromRaw(raw, resolved, hint)
   if (!result.ok) return result
 
-  return { ok: true, detail: attachChildren(result.detail, project) }
+  const derived = attachDerivedParentFields(result.detail, project)
+  return { ok: true, detail: attachChildren(derived, project) }
 }
 
 export function resolveWorkItemByIdSync(
@@ -175,6 +201,12 @@ export function resolveWorkItemByIdSync(
     }
   }
 
-  const { boardPath: _b, projectId: _p, ...ref } = resolved
+  const ref: WorkItemRef = {
+    kind: resolved.kind,
+    id: resolved.id,
+    title: resolved.title,
+    filePath: resolved.filePath,
+    ...(resolved.itemType ? { itemType: resolved.itemType } : {}),
+  }
   return { ok: true, ref }
 }

@@ -2,16 +2,12 @@ import {
   CalendarDays,
   CheckSquare,
   Layers,
-  TrendingUp,
   Users,
 } from "lucide-react"
 
 import { MetricStatCard } from "@/components/board/metric-stat-card"
 import { ProjectContributorsPanel } from "@/components/board/project-contributors-panel"
-import {
-  formatSpeedPtsPerWeek,
-  type ProjectStatusMetrics,
-} from "@/lib/taskmark/project-metrics-shared"
+import type { ProjectStatusMetrics } from "@/lib/taskmark/project-metrics-shared"
 
 type ProjectStatusMetricsStripProps = {
   metrics: ProjectStatusMetrics
@@ -20,14 +16,12 @@ type ProjectStatusMetricsStripProps = {
 export function ProjectStatusMetricsStrip({
   metrics,
 }: ProjectStatusMetricsStripProps) {
-  const speedLabel = formatSpeedPtsPerWeek(metrics.currentSpeedPtsPerWeek)
-
   return (
     <section
       className="flex flex-col gap-4"
       aria-label="Project status metrics"
     >
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <MetricStatCard
           title="Total work items"
           value={metrics.totalWorkItems}
@@ -52,17 +46,6 @@ export function ProjectStatusMetricsStrip({
           }
           accentClassName="bg-emerald-400"
           icon={<CalendarDays className="size-4" strokeWidth={2.5} />}
-        />
-        <MetricStatCard
-          title="Current speed"
-          value={speedLabel}
-          subtitle={
-            metrics.currentSpeedPtsPerWeek == null
-              ? "No completed tasks yet"
-              : `pts/week · ${metrics.speedWeekCount} active weeks (90d)`
-          }
-          accentClassName="bg-sky-400"
-          icon={<TrendingUp className="size-4" strokeWidth={2.5} />}
         />
       </div>
 

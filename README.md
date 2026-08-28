@@ -82,7 +82,7 @@ Board resolution (bound mode only):
 | Layout | Where to install / run |
 |--------|------------------------|
 | Single-git | Product root (discovers `./taskmark/`) or the `taskmark/` folder |
-| Multi-git | Dedicated sibling `*-taskmark` repo root (`INDEX.md` at root) |
+| Multi-git | Dedicated sibling `*-taskmark` repo root (`epics/` at root) |
 
 You do **not** need to clone `taskmark-frontend`.
 

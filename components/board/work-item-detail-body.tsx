@@ -45,7 +45,7 @@ function MetaGrid({ detail }: { detail: WorkItemMeta }) {
     { label: "Priority", value: <PriorityBadge priority={detail.priority} /> },
     {
       label: "Size",
-      value: detail.type === "epic" ? "—" : detail.size || "—",
+      value: detail.size || "—",
     },
     {
       label: "Points",
@@ -162,6 +162,7 @@ function CommitsTable({ rows }: { rows: CommitRow[] }) {
   if (rows.length === 0) {
     return <p className="text-sm text-muted-foreground">No commits logged.</p>
   }
+  const showLeaf = rows.some((row) => row.leafId)
   return (
     <div className="w-full overflow-x-auto rounded border-2 border-border">
       <table className="w-full text-left text-xs">
@@ -172,6 +173,7 @@ function CommitsTable({ rows }: { rows: CommitRow[] }) {
             <th className="px-2 py-1.5">Date</th>
             <th className="px-2 py-1.5">Author</th>
             <th className="px-2 py-1.5">Message</th>
+            {showLeaf ? <th className="px-2 py-1.5">Leaf</th> : null}
           </tr>
         </thead>
         <tbody>
@@ -184,6 +186,11 @@ function CommitsTable({ rows }: { rows: CommitRow[] }) {
               </td>
               <td className="px-2 py-1.5">{row.author || "—"}</td>
               <td className="px-2 py-1.5">{row.message || "—"}</td>
+              {showLeaf ? (
+                <td className="px-2 py-1.5 whitespace-nowrap">
+                  <RelatedItemButton itemId={row.leafId ?? ""} />
+                </td>
+              ) : null}
             </tr>
           ))}
         </tbody>
@@ -196,6 +203,7 @@ function WorkLogTable({ rows }: { rows: WorkLogRow[] }) {
   if (rows.length === 0) {
     return <p className="text-sm text-muted-foreground">No work sessions logged.</p>
   }
+  const showLeaf = rows.some((row) => row.leafId)
   return (
     <div className="w-full overflow-x-auto rounded border-2 border-border">
       <table className="w-full text-left text-xs">
@@ -206,6 +214,7 @@ function WorkLogTable({ rows }: { rows: WorkLogRow[] }) {
             <th className="px-2 py-1.5">Started</th>
             <th className="px-2 py-1.5">Ended</th>
             <th className="px-2 py-1.5">Summary</th>
+            {showLeaf ? <th className="px-2 py-1.5">Leaf</th> : null}
           </tr>
         </thead>
         <tbody>
@@ -220,6 +229,11 @@ function WorkLogTable({ rows }: { rows: WorkLogRow[] }) {
                 {formatTaskmarkDate(row.ended)}
               </td>
               <td className="px-2 py-1.5">{row.summary || "—"}</td>
+              {showLeaf ? (
+                <td className="px-2 py-1.5 whitespace-nowrap">
+                  <RelatedItemButton itemId={row.leafId ?? ""} />
+                </td>
+              ) : null}
             </tr>
           ))}
         </tbody>
@@ -232,6 +246,7 @@ function PromptTable({ rows }: { rows: PromptFeedbackRow[] }) {
   if (rows.length === 0) {
     return <p className="text-sm text-muted-foreground">No prompts logged.</p>
   }
+  const showLeaf = rows.some((row) => row.leafId)
   return (
     <div className="w-full overflow-x-auto rounded border-2 border-border">
       <table className="w-full text-left text-xs">
@@ -242,6 +257,7 @@ function PromptTable({ rows }: { rows: PromptFeedbackRow[] }) {
             <th className="px-2 py-1.5">Kind</th>
             <th className="px-2 py-1.5">Author</th>
             <th className="px-2 py-1.5">Summary</th>
+            {showLeaf ? <th className="px-2 py-1.5">Leaf</th> : null}
           </tr>
         </thead>
         <tbody>
@@ -254,6 +270,11 @@ function PromptTable({ rows }: { rows: PromptFeedbackRow[] }) {
               <td className="px-2 py-1.5">{row.kind || "—"}</td>
               <td className="px-2 py-1.5">{row.author || "—"}</td>
               <td className="px-2 py-1.5">{row.summary || "—"}</td>
+              {showLeaf ? (
+                <td className="px-2 py-1.5 whitespace-nowrap">
+                  <RelatedItemButton itemId={row.leafId ?? ""} />
+                </td>
+              ) : null}
             </tr>
           ))}
         </tbody>
@@ -284,6 +305,9 @@ function EpicDetailBody({ detail }: { detail: EpicDetail }) {
           childrenItems={detail.children}
           emptyLabel="No stories or epic-direct tasks yet."
         />
+      </Section>
+      <Section title="Prompt & feedback">
+        <PromptTable rows={detail.promptFeedback} />
       </Section>
       <Section title="Commits">
         <CommitsTable rows={detail.commits} />

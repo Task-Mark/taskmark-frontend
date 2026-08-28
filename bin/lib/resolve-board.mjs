@@ -2,10 +2,7 @@ import fs from "node:fs"
 import path from "node:path"
 
 function hasBoardMarkers(boardPath) {
-  return (
-    fs.existsSync(path.join(boardPath, "INDEX.md")) ||
-    fs.existsSync(path.join(boardPath, "epics"))
-  )
+  return fs.existsSync(path.join(boardPath, "epics"))
 }
 
 function isDedicatedBoardRepoName(name) {

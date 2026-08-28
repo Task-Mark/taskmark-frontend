@@ -8,14 +8,12 @@ import type {
   StorySummary,
 } from "@/lib/taskmark/story-types"
 import {
-  asNumberOrNull,
   asString,
   asStringArray,
   extractFrontmatter,
 } from "@/lib/taskmark/frontmatter"
 import { asContributorList } from "@/lib/taskmark/identity"
-import { readTimingFields } from "@/lib/taskmark/timing"
-import { progressUnderStory } from "@/lib/taskmark/count-leaves"
+import { deriveParentRollup } from "@/lib/taskmark/derive-parents"
 
 type EpicFolder = {
   dirName: string
@@ -156,26 +154,28 @@ function parseStoryFile(
     }
   }
 
-  const progress = progressUnderStory(project.boardPath, epicId, id)
+  const derived = deriveParentRollup(project.boardPath, id, "story")
 
   return {
     story: {
       id,
       title,
-      status: asString(frontmatter.status, "unknown"),
+      status: derived.status,
       priority: asString(frontmatter.priority, "medium"),
-      size: asString(frontmatter.size, "—"),
-      points: asNumberOrNull(frontmatter.points),
-      ...readTimingFields(frontmatter),
+      size: derived.size,
+      points: derived.points,
+      estimateMinutes: derived.estimateMinutes,
+      actualMinutes: derived.actualMinutes,
+      actualMs: derived.actualMs,
       tags: asStringArray(frontmatter.tags),
       reporters: asContributorList(frontmatter.reporters),
-      resolvers: asContributorList(frontmatter.resolvers),
+      resolvers: derived.resolvers,
       created: asString(frontmatter.created),
-      completedAt: asString(frontmatter.completed_at),
+      completedAt: derived.completedAt,
       parent: asString(frontmatter.parent),
       epic: asString(frontmatter.epic, epicId),
-      workItemCount: progress.total,
-      doneWorkItemCount: progress.done,
+      workItemCount: derived.leafCount,
+      doneWorkItemCount: derived.doneLeafCount,
       filePath,
       project: {
         id: project.id,

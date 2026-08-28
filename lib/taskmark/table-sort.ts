@@ -27,13 +27,14 @@ export type TableSortState = {
   direction: TableSortDirection
 }
 
-/** T-shirt rank: XS < S < M < L < XL. Unknown / empty sorts last. */
+/** Static t-shirt rank: XS < S < M < L < XL < XXL. */
 const SIZE_RANK: Record<string, number> = {
   XS: 1,
   S: 2,
   M: 3,
   L: 4,
   XL: 5,
+  XXL: 6,
 }
 
 const ID_PREFIX_RANK: Record<string, number> = {
@@ -54,8 +55,8 @@ export function sizeSortRank(size: string | null | undefined): number | null {
 }
 
 /**
- * Natural Taskmark id compare: prefix (E/S/T/B) then numeric suffix.
- * Falls back to case-insensitive string compare.
+ * Natural Taskmark id compare for legacy numeric IDs. Collision-resistant IDs
+ * use the general natural fallback and are never constrained to an NNN shape.
  */
 export function compareTaskmarkIds(a: string, b: string): number {
   const pa = parseTaskmarkId(a)

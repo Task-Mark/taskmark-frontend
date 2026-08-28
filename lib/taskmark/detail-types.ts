@@ -19,6 +19,9 @@ export type PromptFeedbackRow = {
   kind: string
   author: string
   summary: string
+  /** Descendant leaf that contributed this row on a derived parent view. */
+  leafId?: string
+  leafTitle?: string
 }
 
 export type CommitRow = {
@@ -27,6 +30,8 @@ export type CommitRow = {
   date: string
   author: string
   message: string
+  leafId?: string
+  leafTitle?: string
 }
 
 export type WorkLogRow = {
@@ -35,6 +40,8 @@ export type WorkLogRow = {
   started: string
   ended: string
   summary: string
+  leafId?: string
+  leafTitle?: string
 }
 
 export type WorkItemMeta = {
@@ -82,6 +89,7 @@ export type EpicDetail = WorkItemMeta & {
   storiesMarkdown: string
   /** Stories + epic-direct tasks/bugs under this epic. */
   children: DetailChildItem[]
+  promptFeedback: PromptFeedbackRow[]
   commits: CommitRow[]
   workLog: WorkLogRow[]
 }
