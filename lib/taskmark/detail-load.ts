@@ -111,7 +111,6 @@ function attachDerivedParentFields(
     status: derived.status,
     size: derived.size,
     points: derived.points,
-    estimateMinutes: derived.estimateMinutes,
     actualMinutes: derived.actualMinutes,
     actualMs: derived.actualMs,
     resolvers: derived.resolvers,

@@ -5,7 +5,7 @@ import {
   extractFrontmatter,
 } from "@/lib/taskmark/frontmatter"
 import { asContributorList } from "@/lib/taskmark/identity"
-import { readTimingFields } from "@/lib/taskmark/timing"
+import { readActualTimingFromWorkLog } from "@/lib/taskmark/timing"
 import type {
   CommitRow,
   EpicDetail,
@@ -85,6 +85,7 @@ function resolveKind(
 
 function buildMeta(
   frontmatter: Record<string, unknown>,
+  raw: string,
   filePath: string,
   kind: WorkItemKind
 ): WorkItemMeta | null {
@@ -92,7 +93,7 @@ function buildMeta(
   const title = asString(frontmatter.title)
   if (!id || !title) return null
 
-  const timing = readTimingFields(frontmatter)
+  const timing = readActualTimingFromWorkLog(raw)
   return {
     id,
     title,
@@ -101,11 +102,9 @@ function buildMeta(
     priority: asString(frontmatter.priority, "medium"),
     size: asString(frontmatter.size, "—"),
     points: asNumberOrNull(frontmatter.points),
-    estimateMinutes: timing.estimateMinutes,
     actualMinutes: timing.actualMinutes,
     actualMs: timing.actualMs,
     tags: asStringArray(frontmatter.tags),
-    owner: asString(frontmatter.owner),
     reporters: asContributorList(frontmatter.reporters),
     resolvers: asContributorList(frontmatter.resolvers),
     blocked: asBool(frontmatter.blocked),
@@ -147,7 +146,7 @@ export function parseWorkItemDetailFromRaw(
 
   const id = asString(frontmatter.id)
   const kind = resolveKind(frontmatter, id, hint)
-  const meta = buildMeta(frontmatter, filePath, kind)
+  const meta = buildMeta(frontmatter, raw, filePath, kind)
   if (!meta) {
     return {
       ok: false,

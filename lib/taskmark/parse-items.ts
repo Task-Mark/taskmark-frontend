@@ -17,7 +17,7 @@ import {
 import { asContributorList } from "@/lib/taskmark/identity"
 import type { BoardIndex, IndexedLeaf } from "@/lib/taskmark/board-index"
 import { findEpicFolder } from "@/lib/taskmark/parse-stories"
-import { readTimingFields } from "@/lib/taskmark/timing"
+import { readActualTimingFromWorkLog } from "@/lib/taskmark/timing"
 
 type StoryFolder = {
   dirName: string
@@ -188,7 +188,12 @@ function parseItemFile(
       priority: asString(frontmatter.priority, "medium"),
       size: asString(frontmatter.size, "—"),
       points: asNumberOrNull(frontmatter.points),
-      ...readTimingFields(frontmatter),
+      ...(indexed
+        ? {
+            actualMinutes: indexed.actualMinutes,
+            actualMs: indexed.actualMs,
+          }
+        : readActualTimingFromWorkLog(raw)),
       tags: asStringArray(frontmatter.tags),
       reporters: asContributorList(frontmatter.reporters),
       resolvers: asContributorList(frontmatter.resolvers),

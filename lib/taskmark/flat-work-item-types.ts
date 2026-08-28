@@ -12,7 +12,6 @@ export type FlatWorkItemRow = {
   priority: string
   size: string
   points: number | null
-  estimateMinutes: number | null
   actualMinutes: number | null
   actualMs: number | null
   epicId: string | null
@@ -36,7 +35,6 @@ export type StoryWithEpicRow = {
   priority: string
   size: string
   points: number | null
-  estimateMinutes: number | null
   actualMinutes: number | null
   actualMs: number | null
   epicId: string
@@ -60,7 +58,6 @@ export type TaskWithParentsRow = {
   priority: string
   size: string
   points: number | null
-  estimateMinutes: number | null
   actualMinutes: number | null
   actualMs: number | null
   epicId: string
@@ -87,7 +84,6 @@ export type WorkItemsViewRow = {
   priority: string
   size: string
   points: number | null
-  estimateMinutes: number | null
   actualMinutes: number | null
   actualMs: number | null
   epicId: string

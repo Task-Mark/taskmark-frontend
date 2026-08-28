@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react"
 
-import { formatActualDuration, formatDurationMinutes } from "@/lib/format-duration"
+import { formatActualDuration } from "@/lib/format-duration"
 import { formatTaskmarkDate } from "@/lib/format-date"
 import type {
   ChecklistItem,
@@ -69,19 +69,26 @@ function WorkItemTag({
   onOpen: (id: string) => void
 }) {
   return (
-    <Badge
-      variant="outline"
-      title={item.title || item.id}
-      className={cn(
-        "cursor-pointer font-mono text-xs",
-        typeBadgeClass(workItemKindFromId(item.id))
-      )}
-      render={
-        <button type="button" onClick={() => onOpen(item.id)} />
-      }
-    >
-      {item.id}
-    </Badge>
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger
+          render={
+            <Badge
+              variant="outline"
+              title={item.title || item.id}
+              className={cn(
+                "cursor-pointer font-mono text-xs",
+                typeBadgeClass(workItemKindFromId(item.id))
+              )}
+              render={<button type="button" onClick={() => onOpen(item.id)} />}
+            />
+          }
+        >
+          {item.id}
+        </TooltipTrigger>
+        <TooltipContent>{item.title || item.id}</TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   )
 }
 
@@ -141,10 +148,6 @@ function MetaGrid({ detail }: { detail: WorkItemMeta }) {
       value: detail.points == null ? "—" : String(detail.points),
     },
     {
-      label: "Est",
-      value: formatDurationMinutes(detail.estimateMinutes),
-    },
-    {
       label: "Actual",
       value: formatActualDuration(detail.actualMs, detail.actualMinutes),
     },
@@ -156,7 +159,6 @@ function MetaGrid({ detail }: { detail: WorkItemMeta }) {
       label: "Epic",
       value: detail.epic ? <RelatedItemButton itemId={detail.epic} /> : "—",
     },
-    { label: "Owner", value: detail.owner || "—" },
     { label: "Created", value: formatTaskmarkDate(detail.created) },
     { label: "Updated", value: formatTaskmarkDate(detail.updated) },
     { label: "Started", value: formatTaskmarkDate(detail.startedAt) },

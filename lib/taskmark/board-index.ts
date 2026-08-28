@@ -2,11 +2,14 @@ import fs from "node:fs"
 import path from "node:path"
 
 import { asString, extractFrontmatter } from "@/lib/taskmark/frontmatter"
+import { readActualTimingFromWorkLog } from "@/lib/taskmark/timing"
 
 export type IndexedLeaf = {
   filePath: string
   raw: string
   frontmatter: Record<string, unknown>
+  actualMinutes: number | null
+  actualMs: number | null
 }
 
 export type BoardIndex = {
@@ -79,7 +82,12 @@ export function buildBoardIndex(boardPath: string): BoardIndex {
       const id = asString(frontmatter.id)
       if ((type !== "task" && type !== "bug") || !id) continue
 
-      const leaf = { filePath, raw, frontmatter }
+      const leaf = {
+        filePath,
+        raw,
+        frontmatter,
+        ...readActualTimingFromWorkLog(raw),
+      }
       leaves.push(leaf)
       addToMap(leavesByEpic, asString(frontmatter.epic), leaf)
       addToMap(leavesByParent, asString(frontmatter.parent), leaf)

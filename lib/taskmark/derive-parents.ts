@@ -16,7 +16,6 @@ import type {
   RowWorkItemRef,
   WorkLogRow,
 } from "@/lib/taskmark/detail-types"
-import { readTimingFields } from "@/lib/taskmark/timing"
 
 export const STATIC_SIZE_POINTS = {
   XS: 1,
@@ -41,7 +40,6 @@ type LeafRecord = {
   updated: string
   startedAt: string
   completedAt: string
-  estimateMinutes: number | null
   actualMinutes: number | null
   actualMs: number | null
   promptFeedback: PromptFeedbackRow[]
@@ -53,7 +51,6 @@ export type ParentRollup = {
   status: string
   size: string
   points: number
-  estimateMinutes: number
   actualMinutes: number
   actualMs: number
   resolvers: ContributorIdentity[]
@@ -81,7 +78,10 @@ function readLeaf(indexed: IndexedLeaf, includeDetails: boolean): LeafRecord | n
     if (type !== "task" && type !== "bug") return null
     const id = asString(frontmatter.id)
     if (!id) return null
-    const timing = readTimingFields(frontmatter)
+    const timing = {
+      actualMinutes: indexed.actualMinutes,
+      actualMs: indexed.actualMs,
+    }
     const parsed = includeDetails
       ? parseWorkItemDetailFromRaw(raw, filePath, "item")
       : null
@@ -275,10 +275,6 @@ export function deriveParentRollup(
     status,
     size: parentSize(points, leaves.length),
     points,
-    estimateMinutes: leaves.reduce(
-      (sum, leaf) => sum + (leaf.estimateMinutes ?? 0),
-      0
-    ),
     actualMinutes: Math.floor(actualMs / 60_000),
     actualMs,
     resolvers: uniqueResolvers(leaves),

@@ -106,7 +106,6 @@ function parseEpicFile(
       priority: asString(frontmatter.priority, "medium"),
       size: derived.size,
       points: derived.points,
-      estimateMinutes: derived.estimateMinutes,
       actualMinutes: derived.actualMinutes,
       actualMs: derived.actualMs,
       tags: asStringArray(frontmatter.tags),

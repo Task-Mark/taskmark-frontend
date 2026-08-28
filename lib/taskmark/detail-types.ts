@@ -54,11 +54,9 @@ export type WorkItemMeta = {
   priority: string
   size: string
   points: number | null
-  estimateMinutes: number | null
   actualMinutes: number | null
   actualMs: number | null
   tags: string[]
-  owner: string
   reporters: ContributorIdentity[]
   resolvers: ContributorIdentity[]
   blocked: boolean
