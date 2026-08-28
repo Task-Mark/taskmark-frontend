@@ -93,7 +93,7 @@ function WorkItemsCell({ items }: { items?: RowWorkItemRef[] }) {
   const hidden = items.slice(MAX_VISIBLE_WORK_ITEMS)
 
   return (
-    <span className="flex flex-wrap items-center gap-1">
+    <span className="inline-flex flex-nowrap items-center gap-1 align-middle">
       {visible.map((item) => (
         <WorkItemTag key={item.id} item={item} onOpen={openDetailById} />
       ))}
