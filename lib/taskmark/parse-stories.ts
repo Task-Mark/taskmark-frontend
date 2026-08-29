@@ -172,6 +172,7 @@ function parseStoryFile(
       reporters: asContributorList(frontmatter.reporters),
       resolvers: derived.resolvers,
       created: asString(frontmatter.created),
+      updated: asString(frontmatter.updated),
       completedAt: derived.completedAt,
       parent: asString(frontmatter.parent),
       epic: asString(frontmatter.epic, epicId),

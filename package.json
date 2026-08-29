@@ -41,6 +41,7 @@
     "serve": "node ./bin/taskmark.js serve",
     "preview": "node ./bin/taskmark.js preview",
     "prepack": "npm run build",
+    "test": "tsx --test \"lib/**/*.test.ts\"",
     "lint": "eslint"
   },
   "dependencies": {

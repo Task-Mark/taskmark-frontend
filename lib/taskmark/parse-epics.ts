@@ -112,6 +112,7 @@ function parseEpicFile(
       reporters: asContributorList(frontmatter.reporters),
       resolvers: derived.resolvers,
       created: asString(frontmatter.created),
+      updated: asString(frontmatter.updated),
       completedAt: derived.completedAt,
       workItemCount: derived.leafCount,
       doneWorkItemCount: derived.doneLeafCount,

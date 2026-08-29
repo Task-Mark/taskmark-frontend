@@ -92,6 +92,7 @@ export type WorkItemsViewRow = {
   reporters: ContributorIdentity[]
   resolvers: ContributorIdentity[]
   created: string
+  updated: string
   /** Frontmatter completed_at when solved; empty if open. */
   completedAt: string
   /** Child tasks/bugs under a story; 0 for epic-direct leaves. */

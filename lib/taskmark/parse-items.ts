@@ -198,6 +198,7 @@ function parseItemFile(
       reporters: asContributorList(frontmatter.reporters),
       resolvers: asContributorList(frontmatter.resolvers),
       created: asString(frontmatter.created),
+      updated: asString(frontmatter.updated),
       completedAt: asString(frontmatter.completed_at),
       parent: asString(frontmatter.parent, parentId),
       epic: asString(frontmatter.epic, epicId),

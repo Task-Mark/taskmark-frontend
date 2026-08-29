@@ -1,14 +1,11 @@
 import { Suspense } from "react"
-import Link from "next/link"
 import { redirect } from "next/navigation"
 
 import { AppBar } from "@/components/board/app-bar"
-import { EpicList } from "@/components/board/epic-list"
 import { ListViewSwitcher } from "@/components/board/list-view-switcher"
-import { OverallWorkItemsList } from "@/components/board/overall-work-items-list"
+import { OverallTreeList } from "@/components/board/overall-tree-list"
 import { ProjectStatusMetricsStrip } from "@/components/board/project-status-metrics-strip"
 import { StaticBoardApp } from "@/components/board/static-board-app"
-import { TaskList } from "@/components/board/task-list"
 import { WorkItemsList } from "@/components/board/work-items-list"
 import { WorkItemSheetProvider } from "@/components/board/work-item-sheet"
 import { resolveActiveProject } from "@/lib/taskmark/active-project"
@@ -20,7 +17,6 @@ import {
 } from "@/lib/taskmark/cookies"
 import {
   LIST_VIEW_LABELS,
-  boardHref,
   parseListViewMode,
   type ListViewMode,
 } from "@/lib/taskmark/list-view-mode"
@@ -32,6 +28,7 @@ import {
   parseWorkItemsViewForProject,
 } from "@/lib/taskmark/parse-flat-lists"
 import { parseItemsForStory } from "@/lib/taskmark/parse-items"
+import { storyKey } from "@/lib/taskmark/snapshot-types"
 import {
   collectCompletedLeafPointSamples,
   collectMetricLeaves,
@@ -59,7 +56,7 @@ function paramValue(value: string | string[] | undefined): string | null {
 }
 
 function headingForView(view: ListViewMode): string {
-  if (view === "overall") return "Epics"
+  if (view === "overall") return "Overall"
   return LIST_VIEW_LABELS[view]
 }
 
@@ -99,8 +96,6 @@ export async function BoardScreen({ searchParams }: BoardScreenProps) {
     activeView === "overall" && selectedEpicId
       ? paramValue(params.story)
       : null
-  const selectedItemId = paramValue(params.item)
-
   const list = parseEpicsForProject(activeProject, boardIndex)
   const epicCount = list.epics.length
   const errorCount = list.errors.length
@@ -109,37 +104,34 @@ export async function BoardScreen({ searchParams }: BoardScreenProps) {
     ? list.epics.find((e) => e.id === selectedEpicId) ?? null
     : null
 
-  const epicWorkItems =
-    activeView === "overall" && selectedEpicId != null
-      ? parseWorkItemsForEpic(
+  const workItemsByEpic: Record<
+    string,
+    ReturnType<typeof parseWorkItemsForEpic>
+  > = {}
+  const itemsByStory: Record<string, ReturnType<typeof parseItemsForStory>> = {}
+  if (activeView === "overall") {
+    for (const epic of list.epics) {
+      const epicItems = parseWorkItemsForEpic(
+        activeProject,
+        epic.id,
+        epic.title,
+        boardIndex
+      )
+      workItemsByEpic[epic.id] = epicItems
+      for (const row of epicItems.rows) {
+        if (row.kind !== "story") continue
+        itemsByStory[storyKey(epic.id, row.id)] = parseItemsForStory(
           activeProject,
-          selectedEpicId,
-          selectedEpic?.title ?? null,
+          epic.id,
+          row.id,
           boardIndex
         )
-      : null
-
-  const selectedStory =
-    epicWorkItems && selectedStoryId
-      ? (epicWorkItems.rows.find(
-          (row) => row.kind === "story" && row.id === selectedStoryId
-        ) ?? null)
-      : null
-
-  const itemList =
-    activeView === "overall" &&
-    selectedEpicId != null &&
-    selectedStory != null
-      ? parseItemsForStory(
-          activeProject,
-          selectedEpicId,
-          selectedStory.id,
-          boardIndex
-        )
-      : null
+      }
+    }
+  }
 
   const workItemsList =
-    activeView === "overall" || activeView === "workitems"
+    activeView === "workitems"
       ? parseWorkItemsViewForProject(activeProject, boardIndex)
       : null
 
@@ -180,106 +172,34 @@ export async function BoardScreen({ searchParams }: BoardScreenProps) {
                   ? ` · ${workItemsList.rows.length} item${workItemsList.rows.length === 1 ? "" : "s"}`
                   : ""}
                 {activeView === "overall" && selectedEpic
-                  ? ` · selected ${selectedEpic.id}`
+                  ? ` · expanded ${selectedEpic.id}`
                   : activeView === "overall" && selectedEpicId
                     ? ` · epic ${selectedEpicId} not in list`
-                    : activeView === "overall"
-                      ? " · select an epic to view work items"
-                      : ""}
-                {activeView === "overall" && selectedStory
-                  ? ` · story ${selectedStory.id}`
-                  : activeView === "overall" && selectedStoryId
-                    ? ` · story ${selectedStoryId} not in list`
                     : ""}
+                {activeView === "overall" && selectedStoryId
+                  ? ` · story ${selectedStoryId}`
+                  : ""}
               </p>
             </div>
             <ListViewSwitcher
               activeView={activeView}
               selectedEpicId={selectedEpicId}
-              selectedStoryId={selectedStory?.id ?? null}
+              selectedStoryId={selectedStoryId}
             />
           </div>
 
           <ProjectStatusMetricsStrip metrics={statusMetrics} />
 
           {activeView === "overall" ? (
-            <>
-              <EpicList
-                lists={[list]}
-                selectedEpicId={selectedEpicId}
-                countableCompletions={countableCompletions}
-                initialHideCompleted={hideCompletedPrefs.epics}
-              />
-
-              {epicWorkItems ? (
-                <div className="flex flex-col gap-3">
-                  <div className="flex items-baseline justify-between gap-3">
-                    <h2 className="font-head text-2xl tracking-tight">
-                      Work items for{" "}
-                      {epicWorkItems.epicTitle ?? epicWorkItems.epicId}
-                    </h2>
-                    <Link
-                      href={boardHref({
-                        view: "overall",
-                        item: selectedItemId,
-                      })}
-                      className="text-sm text-muted-foreground underline-offset-2 hover:underline"
-                    >
-                      Clear selection
-                    </Link>
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    {epicWorkItems.rows.length} work item
-                    {epicWorkItems.rows.length === 1 ? "" : "s"}
-                    {epicWorkItems.errors.length > 0
-                      ? ` · ${epicWorkItems.errors.length} issue${epicWorkItems.errors.length === 1 ? "" : "s"}`
-                      : ""}
-                    {!selectedStory
-                      ? " · select a story to view its sub tasks"
-                      : ""}
-                  </p>
-                  <OverallWorkItemsList
-                    list={epicWorkItems}
-                    selectedStoryId={selectedStory?.id ?? null}
-                    countableCompletions={countableCompletions}
-                    initialHideCompleted={hideCompletedPrefs.overallWorkItems}
-                  />
-                </div>
-              ) : null}
-
-              {itemList && selectedStory ? (
-                <div className="flex flex-col gap-3">
-                  <div className="flex items-baseline justify-between gap-3">
-                    <h2 className="font-head text-2xl tracking-tight">
-                      Sub Tasks for{" "}
-                      {itemList.storyTitle ?? itemList.storyId}
-                    </h2>
-                    <Link
-                      href={boardHref({
-                        view: "overall",
-                        epic: itemList.epicId,
-                        item: selectedItemId,
-                      })}
-                      className="text-sm text-muted-foreground underline-offset-2 hover:underline"
-                    >
-                      Clear story
-                    </Link>
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    {itemList.items.length} sub task
-                    {itemList.items.length === 1 ? "" : "s"}
-                    {itemList.errors.length > 0
-                      ? ` · ${itemList.errors.length} issue${itemList.errors.length === 1 ? "" : "s"}`
-                      : ""}
-                  </p>
-                  <TaskList
-                    list={itemList}
-                    countableCompletions={countableCompletions}
-                    initialHideCompleted={hideCompletedPrefs.tasks}
-                  />
-                </div>
-              ) : null}
-            </>
+            <OverallTreeList
+              list={list}
+              workItemsByEpic={workItemsByEpic}
+              itemsByStory={itemsByStory}
+              selectedEpicId={selectedEpicId}
+              selectedStoryId={selectedStoryId}
+              countableCompletions={countableCompletions}
+              initialHideCompleted={hideCompletedPrefs.epics}
+            />
           ) : null}
 
           {activeView === "workitems" && workItemsList ? (

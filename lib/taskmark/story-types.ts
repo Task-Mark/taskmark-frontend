@@ -15,6 +15,8 @@ export type StorySummary = {
   resolvers: ContributorIdentity[]
   /** Frontmatter created date (YYYY-MM-DD or ISO). */
   created: string
+  /** Frontmatter updated date (YYYY-MM-DD or ISO). */
+  updated: string
   /** Frontmatter completed_at (ISO) when solved; empty if open. */
   completedAt: string
   parent: string
