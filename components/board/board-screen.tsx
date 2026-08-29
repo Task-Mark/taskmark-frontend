@@ -5,9 +5,9 @@ import { AppBar } from "@/components/board/app-bar"
 import { ChangelogPanel } from "@/components/board/changelog-panel"
 import { ListViewSwitcher } from "@/components/board/list-view-switcher"
 import { OverallTreeList } from "@/components/board/overall-tree-list"
+import { PointsHeatmap } from "@/components/board/points-heatmap"
 import { ProjectStatusMetricsStrip } from "@/components/board/project-status-metrics-strip"
 import { StaticBoardApp } from "@/components/board/static-board-app"
-import { WeeklyPointsHeatmap } from "@/components/board/weekly-points-heatmap"
 import { WorkItemsList } from "@/components/board/work-items-list"
 import { WorkItemSheetProvider } from "@/components/board/work-item-sheet"
 import { resolveActiveProject } from "@/lib/taskmark/active-project"
@@ -198,7 +198,7 @@ export async function BoardScreen({ searchParams }: BoardScreenProps) {
 
           {activeView === "overall" ? (
             <>
-              <WeeklyPointsHeatmap samples={countableCompletions} />
+              <PointsHeatmap samples={countableCompletions} />
               <OverallTreeList
                 list={list}
                 workItemsByEpic={workItemsByEpic}
