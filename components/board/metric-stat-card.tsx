@@ -26,15 +26,15 @@ export function MetricStatCard({
   return (
     <div
       className={cn(
-        "flex min-h-[7.5rem] flex-col justify-between gap-3 border-2 border-black bg-white p-4 shadow-none",
+        "flex min-h-[7.5rem] flex-col justify-between gap-3 border-2 border-black bg-card p-4 shadow-none",
         className
       )}
     >
       <div className="flex items-start justify-between gap-3">
-        <p className="text-sm font-medium text-neutral-800">{title}</p>
+        <p className="text-sm font-medium text-card-foreground">{title}</p>
         <div
           className={cn(
-            "flex size-9 shrink-0 items-center justify-center border-2 border-black text-black shadow-[3px_3px_0_0_#000]",
+            "flex size-9 shrink-0 items-center justify-center border-2 border-black text-black shadow-[3px_3px_0_0_var(--shadow-color)]",
             accentClassName
           )}
           aria-hidden
@@ -43,7 +43,7 @@ export function MetricStatCard({
         </div>
       </div>
       <div className="flex flex-col gap-1">
-        <p className="font-head text-3xl font-bold leading-none tracking-tight text-black tabular-nums sm:text-4xl">
+        <p className="font-head text-3xl font-bold leading-none tracking-tight text-card-foreground tabular-nums sm:text-4xl">
           {value}
         </p>
         {subtitle ? (

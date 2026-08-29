@@ -94,6 +94,14 @@
   --shadow-lg: 9px 9px 0 0 var(--shadow-color);
   --shadow-xl: 14px 14px 0 1px var(--shadow-color);
   --shadow-2xl: 20px 20px 0 2px var(--shadow-color);
+  --surface-gradient: linear-gradient(180deg, #ffffff 0%, #f7f4ff 100%);
+  --surface-glow: radial-gradient(ellipse at top, #eadffe 0%, transparent 55%);
+}
+
+@layer base {
+  body {
+    @apply bg-background text-foreground;
+  }
 }
 
 /* Markdown body: reset outer margins without Tailwind arbitrary :first-child variants
@@ -108,6 +116,16 @@
 .tm-mermaid svg {
   max-width: 100%;
   height: auto;
+}
+
+/* Page surfaces follow the theme tokens instead of a light-only gradient. */
+.tm-surface {
+  background-color: var(--background);
+  background-image: var(--surface-gradient);
+}
+
+.tm-surface-glow {
+  background-image: var(--surface-glow), var(--surface-gradient);
 }
 
 .dark {
@@ -139,6 +157,8 @@
   --chart-5: #7b6df5;
   --radius: 0.25rem;
   --border-w: 2px;
+  --surface-gradient: linear-gradient(180deg, #0f0f0f 0%, #171325 100%);
+  --surface-glow: radial-gradient(ellipse at top, #2f2542 0%, transparent 55%);
   --shadow-xs: 2px 2px 0 0 var(--shadow-color);
   --shadow-sm: 3px 3px 0 0 var(--shadow-color);
   --shadow: 5px 5px 0 0 var(--shadow-color);

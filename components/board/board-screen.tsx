@@ -152,7 +152,7 @@ export async function BoardScreen({ searchParams }: BoardScreenProps) {
 
   return (
     <WorkItemSheetProvider>
-      <div className="min-h-svh bg-[linear-gradient(180deg,_#fff_0%,_#f7f4ff_100%)]">
+      <div className="tm-surface min-h-svh">
         <AppBar
           projects={workspace.projects}
           activeProjectId={activeProject.id}

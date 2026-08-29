@@ -39,7 +39,7 @@ export default async function SetupPage({ searchParams }: SetupPageProps) {
     <div className="relative flex min-h-svh flex-col items-center justify-center px-4 py-16">
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_#eadffe_0%,_transparent_55%),_linear-gradient(180deg,_#fff_0%,_#f7f4ff_100%)]"
+        className="tm-surface-glow pointer-events-none absolute inset-0"
       />
       <div className="relative z-10 flex w-full max-w-xl flex-col items-center gap-8">
         <div className="flex flex-col items-center text-center">

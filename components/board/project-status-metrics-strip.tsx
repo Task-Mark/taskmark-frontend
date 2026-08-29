@@ -49,16 +49,16 @@ export function ProjectStatusMetricsStrip({
         />
       </div>
 
-      <div className="border-2 border-black bg-white p-4">
+      <div className="border-2 border-black bg-card p-4">
         <div className="mb-3 flex items-center gap-2">
           <div
-            className="flex size-8 items-center justify-center border-2 border-black bg-amber-300 text-black shadow-[3px_3px_0_0_#000]"
+            className="flex size-8 items-center justify-center border-2 border-black bg-amber-300 text-black shadow-[3px_3px_0_0_var(--shadow-color)]"
             aria-hidden
           >
             <Users className="size-4" strokeWidth={2.5} />
           </div>
           <div>
-            <h2 className="text-sm font-medium text-neutral-800">
+            <h2 className="text-sm font-medium text-card-foreground">
               Contributors
             </h2>
             <p className="text-xs text-muted-foreground">

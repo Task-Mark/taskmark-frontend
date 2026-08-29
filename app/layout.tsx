@@ -1,8 +1,11 @@
 import type { Metadata, Viewport } from "next"
 import { Archivo_Black, Space_Grotesk } from "next/font/google"
+import Script from "next/script"
 import { BoardDevReloader } from "@/components/board/board-dev-reloader"
+import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/sonner"
 import { SITE } from "@/lib/site"
+import { THEME_INIT_SCRIPT } from "@/lib/theme-cookie"
 import "./globals.css"
 
 const archivoBlack = Archivo_Black({
@@ -76,13 +79,20 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`${archivoBlack.variable} ${spaceGrotesk.variable} font-sans antialiased`}
       >
-        <Toaster />
-        <BoardDevReloader />
-        {children}
+        <Script
+          id="taskmark-theme-init"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }}
+        />
+        <ThemeProvider>
+          <Toaster />
+          <BoardDevReloader />
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   )

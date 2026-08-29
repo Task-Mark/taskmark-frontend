@@ -85,7 +85,7 @@ export function PointsHeatmap({ samples, now }: PointsHeatmapProps) {
 
   return (
     <section
-      className="border-2 border-black bg-white p-4 shadow-[4px_4px_0_0_#000] dark:bg-card"
+      className="border-2 border-black bg-card p-4 shadow-[4px_4px_0_0_var(--shadow-color)]"
       aria-label="Completed story points calendar"
     >
       <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">

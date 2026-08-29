@@ -2,6 +2,7 @@
 
 import { selectActiveProject, openAddProject } from "@/app/setup/actions"
 import { BrandLogo } from "@/components/brand-logo"
+import { ThemeToggle } from "@/components/theme-toggle"
 import { Button } from "@/components/ui/button"
 import { projectOptionLabel } from "@/lib/taskmark/project-label"
 import type { DiscoveredProject } from "@/lib/taskmark/types"
@@ -90,6 +91,8 @@ export function AppBar({
             </Button>
           </form>
         ) : null}
+
+        <ThemeToggle />
       </div>
     </header>
   )
