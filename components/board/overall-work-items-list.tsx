@@ -28,7 +28,10 @@ import {
 import { ListFiltersBar } from "@/components/board/list-filters-bar"
 import { ListPagination } from "@/components/board/list-pagination"
 import { SortableTableHead } from "@/components/board/sortable-table-head"
-import { TypeBadge } from "@/components/board/status-badge"
+import {
+  statusRowClass,
+  TypeBadge,
+} from "@/components/board/status-badge"
 import { TimeframeFilter } from "@/components/board/timeframe-filter"
 import { ViewWorkItemButton } from "@/components/board/work-item-sheet"
 import { AttributionAvatarGroup } from "@/components/board/attribution-avatars"
@@ -251,6 +254,7 @@ export function OverallWorkItemsList({
                           key={`${project.id}:${row.kind}:${row.id}:${row.filePath}`}
                           data-state={selected ? "selected" : undefined}
                           className={cn(
+                            statusRowClass(row.status),
                             selected && "bg-muted/60",
                             "hover:bg-muted/40"
                           )}

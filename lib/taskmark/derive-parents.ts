@@ -135,14 +135,18 @@ function leavesForParent(
     .filter((leaf): leaf is LeafRecord => leaf != null)
 }
 
-function parentStatus(leaves: readonly LeafRecord[]): string {
-  if (leaves.length === 0) return "backlog"
-  const statuses = leaves.map((leaf) => leaf.status.trim().toLowerCase())
+export function deriveParentStatus(statusesInput: readonly string[]): string {
+  if (statusesInput.length === 0) return "backlog"
+  const statuses = statusesInput.map((status) => status.trim().toLowerCase())
   const terminal = statuses.every(
-    (status) => status === "done" || status === "cancelled"
+    (status) =>
+      status === "done" || status === "shelved" || status === "cancelled"
   )
   if (terminal && statuses.some((status) => status === "done")) return "done"
-  if (statuses.every((status) => status === "cancelled")) return "cancelled"
+  if (terminal && statuses.some((status) => status === "shelved")) {
+    return "shelved"
+  }
+  if (terminal) return "cancelled"
   if (statuses.every((status) => status === "backlog")) return "backlog"
   return "in_progress"
 }
@@ -260,15 +264,18 @@ export function deriveParentRollup(
   includeDetails = false
 ): ParentRollup {
   const leaves = leavesForParent(parentId, kind, index, includeDetails)
-  const status = parentStatus(leaves)
+  const status = deriveParentStatus(leaves.map((leaf) => leaf.status))
   const points = leaves.reduce((sum, leaf) => sum + leaf.points, 0)
   const actualMs = leaves.reduce(
     (sum, leaf) =>
       sum + (leaf.actualMs ?? (leaf.actualMinutes ?? 0) * 60_000),
     0
   )
-  const doneLeaves = leaves.filter(
-    (leaf) => leaf.status.trim().toLowerCase() === "done"
+  const completedLeaves = leaves.filter(
+    (leaf) =>
+      leaf.status.trim().toLowerCase() === "done" ||
+      leaf.status.trim().toLowerCase() === "shelved" ||
+      leaf.status.trim().toLowerCase() === "cancelled"
   )
 
   return {
@@ -281,8 +288,8 @@ export function deriveParentRollup(
     updated: selectDate(leaves.map((leaf) => leaf.updated), "max"),
     startedAt: selectDate(leaves.map((leaf) => leaf.startedAt), "min"),
     completedAt:
-      status === "done"
-        ? selectDate(doneLeaves.map((leaf) => leaf.completedAt), "max")
+      completedLeaves.length === leaves.length
+        ? selectDate(completedLeaves.map((leaf) => leaf.completedAt), "max")
         : "",
     promptFeedback: sortByDate(
       groupRowsByContent(
@@ -311,6 +318,6 @@ export function deriveParentRollup(
       (row) => row.started
     ).map((row, position) => ({ ...row, session: String(position + 1) })),
     leafCount: leaves.length,
-    doneLeafCount: doneLeaves.length,
+    doneLeafCount: completedLeaves.length,
   }
 }

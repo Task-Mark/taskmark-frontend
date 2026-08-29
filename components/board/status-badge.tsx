@@ -9,6 +9,8 @@ export function statusBadgeClass(status: string): string {
   switch (status) {
     case "done":
       return "border-black bg-[var(--chart-4)] text-black"
+    case "shelved":
+      return "border-black border-dashed bg-[var(--chart-2)]/45 text-foreground"
     case "in_progress":
       return "border-black bg-[var(--chart-1)] text-black"
     case "blocked":
@@ -20,6 +22,12 @@ export function statusBadgeClass(status: string): string {
     default:
       return "border-black bg-card text-foreground"
   }
+}
+
+export function statusRowClass(status: string): string | undefined {
+  return status.trim().toLowerCase() === "shelved"
+    ? "bg-[var(--chart-2)]/10 text-muted-foreground"
+    : undefined
 }
 
 export function typeBadgeClass(type: string): string {

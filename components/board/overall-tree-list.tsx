@@ -12,7 +12,10 @@ import {
 } from "@/components/board/date-tooltip"
 import { ListFiltersBar } from "@/components/board/list-filters-bar"
 import { ListPagination } from "@/components/board/list-pagination"
-import { TypeBadge } from "@/components/board/status-badge"
+import {
+  statusRowClass,
+  TypeBadge,
+} from "@/components/board/status-badge"
 import { TimeframeFilter } from "@/components/board/timeframe-filter"
 import { ViewWorkItemButton } from "@/components/board/work-item-sheet"
 import {
@@ -118,6 +121,7 @@ function TreeNodeRow({
         onKeyDown={onKeyDown}
         className={cn(
           "grid min-h-12 grid-cols-[minmax(0,1fr)_auto] items-center gap-2 border-b px-2 py-1.5 outline-none transition-colors hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring sm:grid-cols-[minmax(0,1fr)_5rem_5rem_4rem_5rem_2.5rem]",
+          statusRowClass(node.status),
           selected && "bg-muted/60"
         )}
       >

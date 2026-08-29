@@ -45,9 +45,10 @@ export function boardHref(opts: {
 const STATUS_RANK: Record<string, number> = {
   backlog: 0,
   in_progress: 1,
-  done: 2,
-  blocked: 3,
-  cancelled: 4,
+  blocked: 2,
+  done: 3,
+  shelved: 4,
+  cancelled: 5,
 }
 
 const PRIORITY_RANK: Record<string, number> = {
@@ -66,9 +67,9 @@ export function prioritySortRank(priority: string): number {
 }
 
 /**
- * Primary: status (backlog → in_progress → done);
+ * Primary: status, with every incomplete state before terminal outcomes;
  * For open statuses: priority (highest first), then created (newest first);
- * For done/cancelled: solved date only (completedAt newest first; no priority);
+ * For done/shelved/cancelled: solved date only (completedAt newest first; no priority);
  * then id.
  */
 export function compareByStatusThenPriority(
@@ -104,7 +105,7 @@ export function compareByStatusThenPriority(
 
 function usesCompletedDate(status: string): boolean {
   const s = status.trim().toLowerCase()
-  return s === "done" || s === "cancelled"
+  return s === "done" || s === "shelved" || s === "cancelled"
 }
 
 function compareByDateThenId(

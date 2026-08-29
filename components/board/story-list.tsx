@@ -27,6 +27,7 @@ import { ChildProgressBar } from "@/components/board/child-progress-bar"
 import { ListFiltersBar } from "@/components/board/list-filters-bar"
 import { ListPagination } from "@/components/board/list-pagination"
 import { SortableTableHead } from "@/components/board/sortable-table-head"
+import { statusRowClass } from "@/components/board/status-badge"
 import { TimeframeFilter } from "@/components/board/timeframe-filter"
 import { ViewWorkItemButton } from "@/components/board/work-item-sheet"
 import { AttributionAvatarGroup } from "@/components/board/attribution-avatars"
@@ -250,6 +251,7 @@ export function StoryList({
                           key={`${project.id}:${story.id}:${story.filePath}`}
                           data-state={selected ? "selected" : undefined}
                           className={cn(
+                            statusRowClass(story.status),
                             selected && "bg-muted/60",
                             "hover:bg-muted/40"
                           )}

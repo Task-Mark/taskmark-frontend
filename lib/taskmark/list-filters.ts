@@ -87,10 +87,15 @@ export function matchesWorkItemSearch(
 }
 
 export function isCompletedStatus(status: string): boolean {
-  return status.trim().toLowerCase() === "done"
+  const normalized = status.trim().toLowerCase()
+  return (
+    normalized === "done" ||
+    normalized === "shelved" ||
+    normalized === "cancelled"
+  )
 }
 
-/** True when every child is done (and there is at least one child). */
+/** True when every child is terminal (and there is at least one child). */
 export function isChildProgressComplete(
   done?: number,
   total?: number

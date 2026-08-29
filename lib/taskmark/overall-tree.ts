@@ -33,7 +33,11 @@ export type OverallTreeNode = {
 
 export function isOverallNodeComplete(status: string): boolean {
   const normalized = status.trim().toLowerCase()
-  return normalized === "done" || normalized === "cancelled"
+  return (
+    normalized === "done" ||
+    normalized === "shelved" ||
+    normalized === "cancelled"
+  )
 }
 
 function timestamp(value: string): number {

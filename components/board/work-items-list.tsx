@@ -22,6 +22,7 @@ import { ParentTagBadge } from "@/components/board/parent-tag-badge"
 import { ChildProgressBar } from "@/components/board/child-progress-bar"
 import {
   PriorityBadge,
+  statusRowClass,
   TypeBadge,
 } from "@/components/board/status-badge"
 import {
@@ -282,6 +283,7 @@ export function WorkItemsList({
                       return (
                         <TableRow
                           key={`${project.id}:${row.kind}:${row.id}:${row.filePath}`}
+                          className={statusRowClass(row.status)}
                         >
                           <TableCell className="w-10 pr-0">
                             <ViewWorkItemButton

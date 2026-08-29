@@ -34,10 +34,11 @@ function node(
   }
 }
 
-test("sorts incomplete before done and cancelled, then by dates and id", () => {
+test("sorts incomplete before done, shelved, and cancelled", () => {
   const rows = [
     node("T-4", { status: "done", created: "2026-08-29" }),
     node("T-3", { status: "cancelled", created: "2026-08-30" }),
+    node("T-6", { status: "shelved", created: "2026-08-31" }),
     node("T-2", { created: "2026-08-28", updated: "2026-08-29" }),
     node("T-1", { created: "2026-08-28", updated: "2026-08-30" }),
     node("T-0", { created: "2026-08-28", updated: "2026-08-30" }),
@@ -46,7 +47,7 @@ test("sorts incomplete before done and cancelled, then by dates and id", () => {
 
   assert.deepEqual(
     rows.sort(compareOverallNodes).map((row) => row.id),
-    ["T-5", "T-0", "T-1", "T-2", "T-3", "T-4"]
+    ["T-5", "T-0", "T-1", "T-2", "T-6", "T-3", "T-4"]
   )
 })
 
@@ -118,6 +119,31 @@ test("hide-completed retains completed ancestors with incomplete descendants", (
   })
 
   assert.equal(filtered[0]?.children[0]?.children[0]?.id, "T-1")
+})
+
+test("hide-completed removes shelved branches", () => {
+  const tree = [
+    node("E-1", {
+      kind: "epic",
+      status: "shelved",
+      children: [
+        node("S-1", {
+          kind: "story",
+          status: "shelved",
+          children: [node("T-1", { status: "shelved" })],
+        }),
+      ],
+    }),
+  ]
+
+  assert.deepEqual(
+    filterOverallTree(tree, {
+      query: "",
+      hideCompleted: true,
+      timeframe: { mode: "none" },
+    }),
+    []
+  )
 })
 
 test("only a search reveals ancestors, so toggles keep the expansion state", () => {

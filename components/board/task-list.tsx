@@ -18,7 +18,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { TypeBadge } from "@/components/board/status-badge"
+import {
+  statusRowClass,
+  TypeBadge,
+} from "@/components/board/status-badge"
 import {
   IdCreatedTooltip,
   StatusWithSolvedTooltip,
@@ -244,6 +247,7 @@ export function TaskList({
                     {pageRows.map((item) => (
                       <TableRow
                         key={`${project.id}:${item.id}:${item.filePath}`}
+                        className={statusRowClass(item.status)}
                       >
                         <TableCell className="w-10 pr-0">
                           <ViewWorkItemButton
