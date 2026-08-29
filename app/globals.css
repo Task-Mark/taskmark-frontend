@@ -105,6 +105,11 @@
   margin-bottom: 0;
 }
 
+.tm-mermaid svg {
+  max-width: 100%;
+  height: auto;
+}
+
 .dark {
   --background: #0f0f0f;
   --foreground: #fafafa;

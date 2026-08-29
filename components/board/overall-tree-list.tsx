@@ -120,7 +120,7 @@ function TreeNodeRow({
         data-state={selected ? "selected" : undefined}
         onKeyDown={onKeyDown}
         className={cn(
-          "grid min-h-12 grid-cols-[minmax(0,1fr)_auto] items-center gap-2 border-b px-2 py-1.5 outline-none transition-colors hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring sm:grid-cols-[minmax(0,1fr)_5rem_5rem_4rem_5rem_2.5rem]",
+          "grid min-h-12 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 border-b px-2 py-1.5 outline-none transition-colors hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring sm:grid-cols-[minmax(0,1fr)_5rem_5rem_4rem_5.5rem_3rem]",
           statusRowClass(node.status),
           selected && "bg-muted/60"
         )}
@@ -197,7 +197,7 @@ function TreeNodeRow({
             />
           )}
         </div>
-        <div className="hidden justify-end sm:flex">
+        <div className="hidden justify-end sm:flex pl-2">
           <ViewWorkItemButton
             label={`View details for ${node.id}`}
             itemRef={{
@@ -217,7 +217,7 @@ function TreeNodeRow({
             }}
           />
         </div>
-        <div className="col-span-2 flex justify-end sm:hidden">
+        <div className="col-span-2 flex justify-end sm:hidden pt-0.5">
           <ViewWorkItemButton
             label={`View details for ${node.id}`}
             itemRef={{
@@ -429,13 +429,13 @@ export function OverallTreeList({
             ) : (
               <>
                 <div className="overflow-hidden rounded-md border" role="tree">
-                  <div className="hidden grid-cols-[minmax(0,1fr)_5rem_5rem_4rem_5rem_2.5rem] gap-2 border-b bg-muted/30 px-2 py-2 text-xs font-medium text-muted-foreground sm:grid">
+                  <div className="hidden grid-cols-[minmax(0,1fr)_5rem_5rem_4rem_5.5rem_3rem] gap-x-3 border-b bg-muted/30 px-2 py-2 text-xs font-medium text-muted-foreground sm:grid">
                     <span>Work</span>
                     <span>Size</span>
                     <span className="text-center">People</span>
                     <span>Items</span>
                     <span className="text-center">Status</span>
-                    <span className="sr-only">Actions</span>
+                    <span className="sr-only pl-2">Actions</span>
                   </div>
                   {pageRows.map((node) => (
                     <TreeNodeRow

@@ -1,9 +1,21 @@
 "use client"
 
+import { isValidElement, type ReactNode } from "react"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 
+import { MermaidDiagram } from "@/components/board/mermaid-diagram"
 import { cn } from "@/lib/utils"
+
+function mermaidSourceFromPreChildren(children: ReactNode): string | null {
+  const child = Array.isArray(children) ? children[0] : children
+  if (!isValidElement<{ className?: string; children?: ReactNode }>(child)) {
+    return null
+  }
+  const className = child.props.className ?? ""
+  if (!className.includes("language-mermaid")) return null
+  return String(child.props.children ?? "").replace(/\n$/, "")
+}
 
 type MarkdownContentProps = {
   text: string
@@ -71,7 +83,15 @@ export function MarkdownContent({
               ol: ({ children }) => <span>{children}</span>,
               li: ({ children }) => <span>{children} </span>,
             }
-          : undefined
+          : {
+              pre({ children }) {
+                const mermaidSource = mermaidSourceFromPreChildren(children)
+                if (mermaidSource !== null) {
+                  return <MermaidDiagram chart={mermaidSource} />
+                }
+                return <pre>{children}</pre>
+              },
+            }
       }
     >
       {trimmed}
