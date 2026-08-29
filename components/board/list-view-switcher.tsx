@@ -6,8 +6,8 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   LIST_VIEW_LABELS,
-  LIST_VIEW_MODES,
   boardHref,
+  listViewModes,
   type ListViewMode,
 } from "@/lib/taskmark/list-view-mode"
 
@@ -15,16 +15,19 @@ type ListViewSwitcherProps = {
   activeView: ListViewMode
   selectedEpicId?: string | null
   selectedStoryId?: string | null
+  hasChangelog?: boolean
 }
 
 function ListViewSwitcherInner({
   activeView,
   selectedEpicId = null,
   selectedStoryId = null,
+  hasChangelog = false,
 }: ListViewSwitcherProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const itemId = searchParams.get("item")
+  const modes = listViewModes(hasChangelog)
 
   return (
     <Tabs
@@ -43,7 +46,7 @@ function ListViewSwitcherInner({
       }}
     >
       <TabsList aria-label="Board list view">
-        {LIST_VIEW_MODES.map((mode) => (
+        {modes.map((mode) => (
           <TabsTrigger key={mode} value={mode}>
             {LIST_VIEW_LABELS[mode]}
           </TabsTrigger>
@@ -54,12 +57,13 @@ function ListViewSwitcherInner({
 }
 
 export function ListViewSwitcher(props: ListViewSwitcherProps) {
+  const modes = listViewModes(props.hasChangelog ?? false)
   return (
     <React.Suspense
       fallback={
         <Tabs value={props.activeView}>
           <TabsList aria-label="Board list view">
-            {LIST_VIEW_MODES.map((mode) => (
+            {modes.map((mode) => (
               <TabsTrigger key={mode} value={mode} disabled>
                 {LIST_VIEW_LABELS[mode]}
               </TabsTrigger>

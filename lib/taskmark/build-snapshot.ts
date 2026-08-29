@@ -17,6 +17,7 @@ import {
   storyKey,
 } from "@/lib/taskmark/snapshot-types"
 import type { DiscoveredProject } from "@/lib/taskmark/types"
+import { loadBoardChangelogMarkdown } from "@/lib/taskmark/load-changelog"
 import { loadWorkspace } from "@/lib/taskmark/workspace"
 import { asString, extractFrontmatter } from "@/lib/taskmark/frontmatter"
 
@@ -198,6 +199,7 @@ export function buildBoardSnapshot(
     countableCompletions: collectCompletedLeafPointSamples(
       metricLeaves
     ),
+    changelogMarkdown: loadBoardChangelogMarkdown(active.boardPath),
     hideCompletedDefaults: { ...hideCompletedDefaults },
     detailsByPath,
     refsById,

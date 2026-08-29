@@ -2,10 +2,12 @@ import { Suspense } from "react"
 import { redirect } from "next/navigation"
 
 import { AppBar } from "@/components/board/app-bar"
+import { ChangelogPanel } from "@/components/board/changelog-panel"
 import { ListViewSwitcher } from "@/components/board/list-view-switcher"
 import { OverallTreeList } from "@/components/board/overall-tree-list"
 import { ProjectStatusMetricsStrip } from "@/components/board/project-status-metrics-strip"
 import { StaticBoardApp } from "@/components/board/static-board-app"
+import { WeeklyPointsHeatmap } from "@/components/board/weekly-points-heatmap"
 import { WorkItemsList } from "@/components/board/work-items-list"
 import { WorkItemSheetProvider } from "@/components/board/work-item-sheet"
 import { resolveActiveProject } from "@/lib/taskmark/active-project"
@@ -27,6 +29,7 @@ import {
   parseWorkItemsForEpic,
   parseWorkItemsViewForProject,
 } from "@/lib/taskmark/parse-flat-lists"
+import { loadBoardChangelogMarkdown } from "@/lib/taskmark/load-changelog"
 import { parseItemsForStory } from "@/lib/taskmark/parse-items"
 import { storyKey } from "@/lib/taskmark/snapshot-types"
 import {
@@ -89,7 +92,9 @@ export async function BoardScreen({ searchParams }: BoardScreenProps) {
 
   const params = await searchParams
   const boardIndex = buildBoardIndex(activeProject.boardPath)
-  const activeView = parseListViewMode(params.view)
+  const changelogMarkdown = loadBoardChangelogMarkdown(activeProject.boardPath)
+  const hasChangelog = changelogMarkdown != null
+  const activeView = parseListViewMode(params.view, { hasChangelog })
   const selectedEpicId =
     activeView === "overall" ? paramValue(params.epic) : null
   const selectedStoryId =
@@ -185,21 +190,25 @@ export async function BoardScreen({ searchParams }: BoardScreenProps) {
               activeView={activeView}
               selectedEpicId={selectedEpicId}
               selectedStoryId={selectedStoryId}
+              hasChangelog={hasChangelog}
             />
           </div>
 
           <ProjectStatusMetricsStrip metrics={statusMetrics} />
 
           {activeView === "overall" ? (
-            <OverallTreeList
-              list={list}
-              workItemsByEpic={workItemsByEpic}
-              itemsByStory={itemsByStory}
-              selectedEpicId={selectedEpicId}
-              selectedStoryId={selectedStoryId}
-              countableCompletions={countableCompletions}
-              initialHideCompleted={hideCompletedPrefs.epics}
-            />
+            <>
+              <WeeklyPointsHeatmap samples={countableCompletions} />
+              <OverallTreeList
+                list={list}
+                workItemsByEpic={workItemsByEpic}
+                itemsByStory={itemsByStory}
+                selectedEpicId={selectedEpicId}
+                selectedStoryId={selectedStoryId}
+                countableCompletions={countableCompletions}
+                initialHideCompleted={hideCompletedPrefs.epics}
+              />
+            </>
           ) : null}
 
           {activeView === "workitems" && workItemsList ? (
@@ -208,6 +217,10 @@ export async function BoardScreen({ searchParams }: BoardScreenProps) {
               countableCompletions={countableCompletions}
               initialHideCompleted={hideCompletedPrefs.workItems}
             />
+          ) : null}
+
+          {activeView === "changelog" && changelogMarkdown ? (
+            <ChangelogPanel markdown={changelogMarkdown} />
           ) : null}
         </div>
       </div>

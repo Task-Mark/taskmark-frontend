@@ -25,6 +25,8 @@ export type BoardSnapshot = {
   itemsByStory: Record<string, StoryItemList>
   statusMetrics: ProjectStatusMetrics
   countableCompletions: SolvedCompletionSample[]
+  /** Board-root CHANGELOG.md; null when missing or whitespace-only. */
+  changelogMarkdown: string | null
   hideCompletedDefaults: Record<HideCompletedCookieKey, boolean>
   /** Absolute file path → detail (children attached) */
   detailsByPath: Record<string, WorkItemDetail>

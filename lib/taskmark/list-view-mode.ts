@@ -1,4 +1,4 @@
-export const LIST_VIEW_MODES = ["overall", "workitems"] as const
+export const LIST_VIEW_MODES = ["overall", "workitems", "changelog"] as const
 
 export type ListViewMode = (typeof LIST_VIEW_MODES)[number]
 
@@ -7,17 +7,27 @@ export const DEFAULT_LIST_VIEW_MODE: ListViewMode = "overall"
 export const LIST_VIEW_LABELS: Record<ListViewMode, string> = {
   overall: "Overall",
   workitems: "Work items",
+  changelog: "Changelog",
 }
 
 /** Legacy view query values that map to Work items. */
 const LEGACY_WORKITEMS_VIEWS = new Set(["all", "stories", "tasks", "workitems"])
 
+export function listViewModes(hasChangelog: boolean): ListViewMode[] {
+  if (hasChangelog) return [...LIST_VIEW_MODES]
+  return LIST_VIEW_MODES.filter((mode) => mode !== "changelog")
+}
+
 export function parseListViewMode(
-  value: string | string[] | undefined
+  value: string | string[] | undefined,
+  options?: { hasChangelog?: boolean }
 ): ListViewMode {
   const raw = typeof value === "string" ? value.trim().toLowerCase() : ""
   if (raw === "overall") return "overall"
   if (LEGACY_WORKITEMS_VIEWS.has(raw)) return "workitems"
+  if (raw === "changelog") {
+    return options?.hasChangelog ? "changelog" : DEFAULT_LIST_VIEW_MODE
+  }
   return DEFAULT_LIST_VIEW_MODE
 }
 

@@ -4,9 +4,11 @@ import * as React from "react"
 import { useSearchParams } from "next/navigation"
 
 import { AppBar } from "@/components/board/app-bar"
+import { ChangelogPanel } from "@/components/board/changelog-panel"
 import { ListViewSwitcher } from "@/components/board/list-view-switcher"
 import { OverallTreeList } from "@/components/board/overall-tree-list"
 import { ProjectStatusMetricsStrip } from "@/components/board/project-status-metrics-strip"
+import { WeeklyPointsHeatmap } from "@/components/board/weekly-points-heatmap"
 import { WorkItemsList } from "@/components/board/work-items-list"
 import { WorkItemSheetProvider } from "@/components/board/work-item-sheet"
 import {
@@ -29,7 +31,13 @@ export function StaticBoardApp({ snapshot }: { snapshot: BoardSnapshot }) {
   }, [snapshot])
 
   const searchParams = useSearchParams()
-  const activeView = parseListViewMode(searchParams.get("view") ?? undefined)
+  const changelogMarkdown = snapshot.changelogMarkdown?.trim()
+    ? snapshot.changelogMarkdown
+    : null
+  const hasChangelog = changelogMarkdown != null
+  const activeView = parseListViewMode(searchParams.get("view") ?? undefined, {
+    hasChangelog,
+  })
   const selectedEpicId =
     activeView === "overall" ? searchParams.get("epic")?.trim() || null : null
   const selectedStoryId =
@@ -89,21 +97,25 @@ export function StaticBoardApp({ snapshot }: { snapshot: BoardSnapshot }) {
               activeView={activeView}
               selectedEpicId={selectedEpicId}
               selectedStoryId={selectedStoryId}
+              hasChangelog={hasChangelog}
             />
           </div>
 
           <ProjectStatusMetricsStrip metrics={statusMetrics} />
 
           {activeView === "overall" ? (
-            <OverallTreeList
-              list={list}
-              workItemsByEpic={snapshot.workItemsByEpic}
-              itemsByStory={snapshot.itemsByStory}
-              selectedEpicId={selectedEpicId}
-              selectedStoryId={selectedStoryId}
-              countableCompletions={countableCompletions}
-              initialHideCompleted={hideCompletedPrefs.epics}
-            />
+            <>
+              <WeeklyPointsHeatmap samples={countableCompletions} />
+              <OverallTreeList
+                list={list}
+                workItemsByEpic={snapshot.workItemsByEpic}
+                itemsByStory={snapshot.itemsByStory}
+                selectedEpicId={selectedEpicId}
+                selectedStoryId={selectedStoryId}
+                countableCompletions={countableCompletions}
+                initialHideCompleted={hideCompletedPrefs.epics}
+              />
+            </>
           ) : null}
 
           {activeView === "workitems" ? (
@@ -112,6 +124,10 @@ export function StaticBoardApp({ snapshot }: { snapshot: BoardSnapshot }) {
               countableCompletions={countableCompletions}
               initialHideCompleted={hideCompletedPrefs.workItems}
             />
+          ) : null}
+
+          {activeView === "changelog" && changelogMarkdown ? (
+            <ChangelogPanel markdown={changelogMarkdown} />
           ) : null}
         </div>
       </div>
