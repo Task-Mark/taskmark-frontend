@@ -3,10 +3,11 @@
  * Counts stories/tasks/bugs; Current Speed = 90-day weekly points average.
  */
 
-import { addDays } from "date-fns"
+import { addDays, endOfISOWeek, setISOWeek, setISOWeekYear } from "date-fns"
 
 import type { ContributorIdentity } from "@/lib/taskmark/identity"
 import type { BoardIndex } from "@/lib/taskmark/board-index"
+import { isCompletedStatus } from "@/lib/taskmark/list-filters"
 import { parseEpicsForProject } from "@/lib/taskmark/parse-epics"
 import { parseItemsForEpic, parseItemsForStory } from "@/lib/taskmark/parse-items"
 import { parseStoriesForEpic } from "@/lib/taskmark/parse-stories"
@@ -30,14 +31,14 @@ export type MetricLeafKind = "epic" | "story" | "task" | "bug"
 export type MetricLeaf = {
   kind: MetricLeafKind
   id: string
+  /** Story id for story items; epic id for epic-direct items; empty for epics/stories. */
+  parentId: string
   status: string
   points: number
   completedAt: string
   reporters: ContributorIdentity[]
   resolvers: ContributorIdentity[]
 }
-
-const COUNTABLE_KINDS = new Set<MetricLeafKind>(["story", "task", "bug"])
 
 function emailKey(email: string, name: string): string {
   const e = email.trim().toLowerCase()
@@ -72,21 +73,30 @@ export function collectUniqueContributors(
 }
 
 /**
- * Total / complete counts for stories + bugs + tasks.
- * Excludes epics and cancelled items.
+ * Total / complete counts for stories with children + bugs + tasks.
+ * Excludes epics and childless stories (those stay derived backlog).
+ * Complete uses the same terminal set as board lists: done, shelved, cancelled.
  */
 export function aggregateWorkItemCounts(leaves: readonly MetricLeaf[]): {
   total: number
   complete: number
 } {
+  const storiesWithChildren = new Set<string>()
+  for (const leaf of leaves) {
+    if (leaf.kind !== "task" && leaf.kind !== "bug") continue
+    if (leaf.parentId) storiesWithChildren.add(leaf.parentId)
+  }
+
   let total = 0
   let complete = 0
   for (const leaf of leaves) {
-    if (!COUNTABLE_KINDS.has(leaf.kind)) continue
-    const status = leaf.status.trim().toLowerCase()
-    if (status === "cancelled") continue
+    if (leaf.kind === "epic") continue
+    if (leaf.kind === "story" && !storiesWithChildren.has(leaf.id)) continue
+    if (leaf.kind !== "story" && leaf.kind !== "task" && leaf.kind !== "bug") {
+      continue
+    }
     total += 1
-    if (status === "done") complete += 1
+    if (isCompletedStatus(leaf.status)) complete += 1
   }
   return { total, complete }
 }
@@ -134,8 +144,8 @@ export function collectCompletedLeafPointSamples(
 /**
  * Current Speed: average weekly story points of done tasks/bugs.
  *
- * - Anchor = most recently completed task/bug (`completed_at`); look back 90 days.
- * - Exclude the **current** ISO week (incomplete / in progress).
+ * - Anchor = most recently completed task/bug on or before `now`; look back 90 days.
+ * - Exclude the **current** ISO week of `now` (incomplete / in progress).
  * - Exclude weeks with **0** points (idle/hold — not in numerator or denominator).
  * - Average = sum(non-zero past weeks) / count(those weeks).
  */
@@ -143,7 +153,7 @@ export function computeCurrentSpeedPtsPerWeek(
   leaves: readonly MetricLeaf[],
   now: Date = new Date()
 ): { average: number | null; weekCount: number } {
-  const doneLeaves = leaves.filter(isCompletedTaskBugLeaf)
+  const doneLeaves = completionsAsOf(leaves, now)
 
   let latest: Date | null = null
   for (const leaf of doneLeaves) {
@@ -188,6 +198,65 @@ export function computeCurrentSpeedPtsPerWeek(
   return { average: sum / considered.length, weekCount: considered.length }
 }
 
+/** Peak of Current Speed evaluated at each ISO week end from first completion through `now`. */
+export function computePeakCurrentSpeedPtsPerWeek(
+  leaves: readonly MetricLeaf[],
+  now: Date = new Date()
+): { peak: number | null; weekLabel: string | null } {
+  const doneLeaves = completionsAsOf(leaves, now)
+  let earliest: Date | null = null
+  for (const leaf of doneLeaves) {
+    const d = parseTaskmarkDate(leaf.completedAt)
+    if (!d) continue
+    if (!earliest || d.getTime() < earliest.getTime()) earliest = d
+  }
+  if (!earliest) return { peak: null, weekLabel: null }
+
+  const weeks = isoWeeksInclusive(earliest, now)
+  let peak = Number.NEGATIVE_INFINITY
+  let peakWeek: { year: number; week: number } | null = null
+  const nowParts = isoWeekParts(now)
+
+  for (const w of weeks) {
+    const asOf =
+      w.year === nowParts.year && w.week === nowParts.week
+        ? now
+        : endOfGivenIsoWeek(w.year, w.week)
+    const { average } = computeCurrentSpeedPtsPerWeek(leaves, asOf)
+    if (average == null) continue
+    if (average > peak) {
+      peak = average
+      peakWeek = w
+    }
+  }
+
+  if (!Number.isFinite(peak) || peakWeek == null) {
+    return { peak: null, weekLabel: null }
+  }
+  return {
+    peak,
+    weekLabel: isoWeekCountKey(peakWeek.year, peakWeek.week),
+  }
+}
+
+function completionsAsOf(
+  leaves: readonly MetricLeaf[],
+  asOf: Date
+): MetricLeaf[] {
+  const cutoff = asOf.getTime()
+  return leaves.filter((leaf) => {
+    if (!isCompletedTaskBugLeaf(leaf)) return false
+    const d = parseTaskmarkDate(leaf.completedAt)
+    if (!d) return false
+    return d.getTime() <= cutoff
+  })
+}
+
+function endOfGivenIsoWeek(year: number, week: number): Date {
+  const seed = setISOWeek(setISOWeekYear(new Date(year, 0, 4), year), week)
+  return endOfISOWeek(seed)
+}
+
 export function computeCurrentWeekPointsDone(
   leaves: readonly MetricLeaf[],
   now: Date = new Date()
@@ -217,6 +286,7 @@ export function collectMetricLeaves(
     leaves.push({
       kind: "epic",
       id: epic.id,
+      parentId: "",
       status: epic.status,
       points: epic.points ?? 0,
       completedAt: epic.completedAt,
@@ -229,6 +299,7 @@ export function collectMetricLeaves(
       leaves.push({
         kind: "story",
         id: story.id,
+        parentId: epic.id,
         status: story.status,
         points: story.points ?? 0,
         completedAt: story.completedAt,
@@ -241,6 +312,7 @@ export function collectMetricLeaves(
         leaves.push({
           kind: item.type,
           id: item.id,
+          parentId: story.id,
           status: item.status,
           points: item.points ?? 0,
           completedAt: item.completedAt,
@@ -255,6 +327,7 @@ export function collectMetricLeaves(
       leaves.push({
         kind: item.type,
         id: item.id,
+        parentId: epic.id,
         status: item.status,
         points: item.points ?? 0,
         completedAt: item.completedAt,
@@ -276,12 +349,15 @@ export function computeProjectStatusMetrics(
   const { total, complete } = aggregateWorkItemCounts(leaves)
   const currentWeekPointsDone = computeCurrentWeekPointsDone(leaves)
   const speed = computeCurrentSpeedPtsPerWeek(leaves)
+  const peak = computePeakCurrentSpeedPtsPerWeek(leaves)
   return {
     totalWorkItems: total,
     completeWorkItems: complete,
     currentWeekPointsDone,
     currentSpeedPtsPerWeek: speed.average,
     speedWeekCount: speed.weekCount,
+    peakSpeedPtsPerWeek: peak.peak,
+    peakSpeedWeekLabel: peak.weekLabel,
     contributors: collectUniqueContributors(leaves),
   }
 }

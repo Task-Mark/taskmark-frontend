@@ -1,16 +1,31 @@
 import {
   CalendarDays,
   CheckSquare,
-  Layers,
+  Gauge as GaugeIcon,
   Users,
 } from "lucide-react"
 
 import { MetricStatCard } from "@/components/board/metric-stat-card"
 import { ProjectContributorsPanel } from "@/components/board/project-contributors-panel"
-import type { ProjectStatusMetrics } from "@/lib/taskmark/project-metrics-shared"
+import { VelocityGauge } from "@/components/board/velocity-gauge"
+import {
+  formatSpeedPtsPerWeek,
+  type ProjectStatusMetrics,
+} from "@/lib/taskmark/project-metrics-shared"
 
 type ProjectStatusMetricsStripProps = {
   metrics: ProjectStatusMetrics
+}
+
+function velocitySubtitle(metrics: ProjectStatusMetrics): string {
+  if (
+    metrics.currentSpeedPtsPerWeek == null ||
+    metrics.peakSpeedPtsPerWeek == null ||
+    metrics.peakSpeedWeekLabel == null
+  ) {
+    return "No completed points yet"
+  }
+  return `Peak ${formatSpeedPtsPerWeek(metrics.peakSpeedPtsPerWeek)} pts/week in ${metrics.peakSpeedWeekLabel}`
 }
 
 export function ProjectStatusMetricsStrip({
@@ -21,18 +36,11 @@ export function ProjectStatusMetricsStrip({
       className="flex flex-col gap-4"
       aria-label="Project status metrics"
     >
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <MetricStatCard
-          title="Total work items"
-          value={metrics.totalWorkItems}
-          subtitle="Stories, bugs, and tasks"
-          accentClassName="bg-violet-400"
-          icon={<Layers className="size-4" strokeWidth={2.5} />}
-        />
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <MetricStatCard
           title="Complete work items"
-          value={metrics.completeWorkItems}
-          subtitle="Status done"
+          value={`${metrics.totalWorkItems}/${metrics.completeWorkItems}`}
+          subtitle="Stories, bugs, and tasks"
           accentClassName="bg-pink-400"
           icon={<CheckSquare className="size-4" strokeWidth={2.5} />}
         />
@@ -47,6 +55,24 @@ export function ProjectStatusMetricsStrip({
           accentClassName="bg-emerald-400"
           icon={<CalendarDays className="size-4" strokeWidth={2.5} />}
         />
+        <div className="flex min-h-[7.5rem] flex-col justify-between gap-2 border-2 border-black bg-card p-4 shadow-none sm:col-span-2">
+          <div className="flex items-start justify-between gap-3">
+            <p className="text-sm font-medium text-card-foreground">Velocity</p>
+            <div
+              className="flex size-9 shrink-0 items-center justify-center border-2 border-black bg-[#C4A1FF] text-black shadow-[3px_3px_0_0_var(--shadow-color)]"
+              aria-hidden
+            >
+              <GaugeIcon className="size-4" strokeWidth={2.5} />
+            </div>
+          </div>
+          <VelocityGauge
+            currentPtsPerWeek={metrics.currentSpeedPtsPerWeek}
+            peakPtsPerWeek={metrics.peakSpeedPtsPerWeek}
+          />
+          <p className="text-xs text-muted-foreground">
+            {velocitySubtitle(metrics)}
+          </p>
+        </div>
       </div>
 
       <div className="border-2 border-black bg-card p-4">

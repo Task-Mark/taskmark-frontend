@@ -23,6 +23,7 @@
   "menuAccent": "subtle",
   "registries": {
     "@retroui": "https://retroui.dev/r/radix/{name}.json",
-    "@retroui-base": "https://retroui.dev/r/base/{name}.json"
+    "@retroui-base": "https://retroui.dev/r/base/{name}.json",
+    "@bklit": "https://ui.bklit.com/r/{name}.json"
   }
 }
