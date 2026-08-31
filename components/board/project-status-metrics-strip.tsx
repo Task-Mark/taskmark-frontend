@@ -9,12 +9,24 @@ import { MetricStatCard } from "@/components/board/metric-stat-card"
 import { ProjectContributorsPanel } from "@/components/board/project-contributors-panel"
 import { VelocityGauge } from "@/components/board/velocity-gauge"
 import {
+  formatCompactNumber,
+  formatExactNumber,
+} from "@/lib/format-compact-number"
+import {
   formatSpeedPtsPerWeek,
   type ProjectStatusMetrics,
 } from "@/lib/taskmark/project-metrics-shared"
 
 type ProjectStatusMetricsStripProps = {
   metrics: ProjectStatusMetrics
+}
+
+function completeWorkItemsValue(metrics: ProjectStatusMetrics): string {
+  return `${formatCompactNumber(metrics.totalWorkItems)}/${formatCompactNumber(metrics.completeWorkItems)}`
+}
+
+function completeWorkItemsExact(metrics: ProjectStatusMetrics): string {
+  return `${formatExactNumber(metrics.totalWorkItems)}/${formatExactNumber(metrics.completeWorkItems)}`
 }
 
 function velocitySubtitle(metrics: ProjectStatusMetrics): string {
@@ -28,6 +40,17 @@ function velocitySubtitle(metrics: ProjectStatusMetrics): string {
   return `Peak ${formatSpeedPtsPerWeek(metrics.peakSpeedPtsPerWeek)} pts/week in ${metrics.peakSpeedWeekLabel}`
 }
 
+function velocitySubtitleExact(metrics: ProjectStatusMetrics): string | undefined {
+  if (
+    metrics.currentSpeedPtsPerWeek == null ||
+    metrics.peakSpeedPtsPerWeek == null ||
+    metrics.peakSpeedWeekLabel == null
+  ) {
+    return undefined
+  }
+  return `Peak ${formatExactNumber(Math.round(metrics.peakSpeedPtsPerWeek))} pts/week in ${metrics.peakSpeedWeekLabel}`
+}
+
 export function ProjectStatusMetricsStrip({
   metrics,
 }: ProjectStatusMetricsStripProps) {
@@ -39,14 +62,28 @@ export function ProjectStatusMetricsStrip({
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <MetricStatCard
           title="Complete work items"
-          value={`${metrics.totalWorkItems}/${metrics.completeWorkItems}`}
+          value={
+            <span
+              aria-label={completeWorkItemsExact(metrics)}
+              title={completeWorkItemsExact(metrics)}
+            >
+              {completeWorkItemsValue(metrics)}
+            </span>
+          }
           subtitle="Stories, bugs, and tasks"
           accentClassName="bg-pink-400"
           icon={<CheckSquare className="size-4" strokeWidth={2.5} />}
         />
         <MetricStatCard
           title="Current week"
-          value={metrics.currentWeekPointsDone}
+          value={
+            <span
+              aria-label={formatExactNumber(metrics.currentWeekPointsDone)}
+              title={formatExactNumber(metrics.currentWeekPointsDone)}
+            >
+              {formatCompactNumber(metrics.currentWeekPointsDone)}
+            </span>
+          }
           subtitle={
             metrics.currentWeekPointsDone > 0
               ? "pts done this ISO week"
@@ -69,7 +106,10 @@ export function ProjectStatusMetricsStrip({
             currentPtsPerWeek={metrics.currentSpeedPtsPerWeek}
             peakPtsPerWeek={metrics.peakSpeedPtsPerWeek}
           />
-          <p className="text-xs text-muted-foreground">
+          <p
+            className="text-xs text-muted-foreground"
+            title={velocitySubtitleExact(metrics)}
+          >
             {velocitySubtitle(metrics)}
           </p>
         </div>

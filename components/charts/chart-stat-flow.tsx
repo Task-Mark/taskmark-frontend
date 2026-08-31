@@ -29,9 +29,10 @@ function formatStatValue(
   value: number,
   formatOptions: ChartStatFlowFormat,
   prefix?: string,
-  suffix?: string
+  suffix?: string,
+  locales?: Intl.LocalesArgument
 ): string {
-  const formatted = new Intl.NumberFormat(undefined, formatOptions).format(
+  const formatted = new Intl.NumberFormat(locales, formatOptions).format(
     value
   );
   return `${prefix ?? ""}${formatted}${suffix ?? ""}`;
@@ -66,6 +67,7 @@ export interface ChartStatFlowProps {
   value: number;
   label: string;
   formatOptions?: ChartStatFlowFormat;
+  locales?: Intl.LocalesArgument;
   prefix?: string;
   suffix?: string;
   valueClassName?: string;
@@ -81,6 +83,7 @@ export function ChartStatFlow({
   value,
   label,
   formatOptions = defaultChartStatFlowFormat,
+  locales,
   prefix,
   suffix,
   valueClassName = "text-2xl font-bold",
@@ -89,8 +92,8 @@ export function ChartStatFlow({
 }: ChartStatFlowProps) {
   const numberFlowReady = useNumberFlowElementReady();
   const staticValue = useMemo(
-    () => formatStatValue(value, formatOptions, prefix, suffix),
-    [value, formatOptions, prefix, suffix]
+    () => formatStatValue(value, formatOptions, prefix, suffix, locales),
+    [value, formatOptions, prefix, suffix, locales]
   );
 
   return (
@@ -105,6 +108,7 @@ export function ChartStatFlow({
           <NumberFlow
             format={formatOptions}
             isolate
+            locales={locales}
             prefix={prefix}
             suffix={suffix}
             value={value}

@@ -22,6 +22,7 @@ export interface GaugeLabelShellProps {
   prefix?: string;
   suffix?: string;
   formatOptions?: ChartStatFlowFormat;
+  locales?: Intl.LocalesArgument;
   align?: GaugeLabelAlign;
   className?: string;
 }
@@ -38,6 +39,7 @@ export function GaugeLabelShell({
   prefix,
   suffix,
   formatOptions = defaultChartStatFlowFormat,
+  locales,
   align = "center",
   className,
 }: GaugeLabelShellProps) {
@@ -57,6 +59,7 @@ export function GaugeLabelShell({
           chartCenterLabelClassName,
           "text-[length:var(--chart-foreground-muted)]"
         )}
+        locales={locales}
         prefix={prefix}
         suffix={suffix}
         value={centerValue}

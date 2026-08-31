@@ -1,6 +1,11 @@
 "use client"
 
 import { Gauge } from "@/components/charts/gauge"
+import {
+  COMPACT_INTEGER_FORMAT_OPTIONS,
+  COMPACT_NUMBER_LOCALES,
+  formatExactNumber,
+} from "@/lib/format-compact-number"
 import { cn } from "@/lib/utils"
 
 type VelocityGaugeProps = {
@@ -30,19 +35,29 @@ export function VelocityGauge({
     ? Math.min(100, Math.max(0, (currentPtsPerWeek / peakPtsPerWeek) * 100))
     : 0
 
+  const displaySpeed =
+    hasSpeed && currentPtsPerWeek != null ? Math.round(currentPtsPerWeek) : null
+
+  const exactSpeed =
+    displaySpeed != null
+      ? `${formatExactNumber(displaySpeed)} pts / week`
+      : undefined
+
   return (
     <div
+      aria-label={exactSpeed}
       className={cn(
         "velocity-gauge min-w-0 w-full",
         "[&_.font-bold]:font-head",
         "[&_.text-chart-label]:text-muted-foreground",
         className
       )}
+      title={exactSpeed}
     >
       <Gauge
         orientation="linear"
         value={fill}
-        centerValue={hasSpeed ? currentPtsPerWeek : undefined}
+        centerValue={displaySpeed ?? undefined}
         defaultLabel="pts / week"
         labelPlacement="top"
         labelAlign="start"
@@ -56,11 +71,8 @@ export function VelocityGauge({
         activeGradient={["#EADFFE", "#C4A1FF"]}
         inactiveFill="#EADFFE"
         inactiveFillOpacity={0.55}
-        formatOptions={{
-          notation: "standard",
-          maximumFractionDigits: 1,
-          minimumFractionDigits: 0,
-        }}
+        locales={COMPACT_NUMBER_LOCALES}
+        formatOptions={COMPACT_INTEGER_FORMAT_OPTIONS}
       />
     </div>
   )

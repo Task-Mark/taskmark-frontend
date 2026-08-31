@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
 import { parseTaskmarkDate } from "@/lib/format-date"
+import { formatCompactNumber } from "@/lib/format-compact-number"
 import {
   DEFAULT_TIMEFRAME_FILTER,
   deriveYearWeekBounds,
@@ -75,15 +76,6 @@ function isoWeekDateSpan(
   return { start: startOfISOWeek(date), end: endOfISOWeek(date) }
 }
 
-const compactPointsFormatter = new Intl.NumberFormat("en", {
-  notation: "compact",
-  compactDisplay: "short",
-  maximumFractionDigits: 1,
-})
-
-function formatCompactPoints(points: number): string {
-  return compactPointsFormatter.format(points)
-}
 
 function PointsBadge({
   points,
@@ -97,7 +89,7 @@ function PointsBadge({
   }
   return (
     <span className={cn("tabular-nums text-muted-foreground", className)}>
-      {formatCompactPoints(points)}
+      {formatCompactNumber(points)}
     </span>
   )
 }
@@ -306,7 +298,7 @@ export function TimeframeFilter({
             className="text-[9px] leading-none tabular-nums text-muted-foreground opacity-80"
             title={`${points} story point${points === 1 ? "" : "s"}`}
           >
-            {formatCompactPoints(points)}
+            {formatCompactNumber(points)}
           </span>
         ) : (
           <span className="text-[9px] leading-none opacity-0">0</span>

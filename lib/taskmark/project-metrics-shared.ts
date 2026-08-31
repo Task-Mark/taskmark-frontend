@@ -1,3 +1,4 @@
+import { formatCompactNumber } from "@/lib/format-compact-number"
 import type { ContributorIdentity } from "@/lib/taskmark/identity"
 
 /** Shared metrics shape — safe for client components (no fs). */
@@ -17,9 +18,8 @@ export type ProjectStatusMetrics = {
   contributors: ContributorIdentity[]
 }
 
-/** Format average pts/week for display (one decimal when needed). */
+/** Format average pts/week for display (whole numbers, compact when large). */
 export function formatSpeedPtsPerWeek(value: number | null): string {
   if (value == null || !Number.isFinite(value)) return "—"
-  const rounded = Math.round(value * 10) / 10
-  return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1)
+  return formatCompactNumber(Math.round(value))
 }

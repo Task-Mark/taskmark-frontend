@@ -59,6 +59,7 @@ export interface GaugeProps {
   prefix?: string;
   suffix?: string;
   formatOptions?: ChartStatFlowFormat;
+  locales?: Intl.LocalesArgument;
   /** Label position for `orientation="linear"`. Arc gauges always overlay center. */
   labelPlacement?: GaugeLabelPlacement;
   /** Cross-axis alignment (start / center / end), same model as chart legend */
@@ -468,6 +469,7 @@ function GaugeLinearInner(props: GaugeInnerProps) {
     formatOptions = defaultChartStatFlowFormat,
     labelPlacement = "top",
     labelAlign = "start",
+    locales,
     inactiveFill,
     activeFill,
     notchLengthPercent = 100,
@@ -605,6 +607,7 @@ function GaugeLinearInner(props: GaugeInnerProps) {
         centerValue={centerValue}
         defaultLabel={defaultLabel}
         formatOptions={formatOptions}
+        locales={locales}
         prefix={prefix}
         suffix={suffix}
       />
