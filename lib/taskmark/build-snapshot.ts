@@ -18,6 +18,7 @@ import {
 } from "@/lib/taskmark/snapshot-types"
 import type { DiscoveredProject } from "@/lib/taskmark/types"
 import { loadBoardChangelogMarkdown } from "@/lib/taskmark/load-changelog"
+import { loadBoardReports } from "@/lib/taskmark/load-reports"
 import { loadWorkspace } from "@/lib/taskmark/workspace"
 import { asString, extractFrontmatter } from "@/lib/taskmark/frontmatter"
 
@@ -200,6 +201,7 @@ export function buildBoardSnapshot(
       metricLeaves
     ),
     changelogMarkdown: loadBoardChangelogMarkdown(active.boardPath),
+    reports: loadBoardReports(active.boardPath),
     hideCompletedDefaults: { ...hideCompletedDefaults },
     detailsByPath,
     refsById,

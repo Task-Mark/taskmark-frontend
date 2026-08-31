@@ -1,4 +1,9 @@
-export const LIST_VIEW_MODES = ["overall", "workitems", "changelog"] as const
+export const LIST_VIEW_MODES = [
+  "overall",
+  "workitems",
+  "changelog",
+  "reports",
+] as const
 
 export type ListViewMode = (typeof LIST_VIEW_MODES)[number]
 
@@ -8,25 +13,40 @@ export const LIST_VIEW_LABELS: Record<ListViewMode, string> = {
   overall: "Overall",
   workitems: "Work items",
   changelog: "Changelog",
+  reports: "Reports",
 }
 
 /** Legacy view query values that map to Work items. */
 const LEGACY_WORKITEMS_VIEWS = new Set(["all", "stories", "tasks", "workitems"])
 
-export function listViewModes(hasChangelog: boolean): ListViewMode[] {
-  if (hasChangelog) return [...LIST_VIEW_MODES]
-  return LIST_VIEW_MODES.filter((mode) => mode !== "changelog")
+/** Views that only exist while their board files do. */
+export type ListViewAvailability = {
+  hasChangelog?: boolean
+  hasReports?: boolean
+}
+
+export function listViewModes(
+  availability?: ListViewAvailability
+): ListViewMode[] {
+  return LIST_VIEW_MODES.filter((mode) => {
+    if (mode === "changelog") return availability?.hasChangelog === true
+    if (mode === "reports") return availability?.hasReports === true
+    return true
+  })
 }
 
 export function parseListViewMode(
   value: string | string[] | undefined,
-  options?: { hasChangelog?: boolean }
+  availability?: ListViewAvailability
 ): ListViewMode {
   const raw = typeof value === "string" ? value.trim().toLowerCase() : ""
   if (raw === "overall") return "overall"
   if (LEGACY_WORKITEMS_VIEWS.has(raw)) return "workitems"
   if (raw === "changelog") {
-    return options?.hasChangelog ? "changelog" : DEFAULT_LIST_VIEW_MODE
+    return availability?.hasChangelog ? "changelog" : DEFAULT_LIST_VIEW_MODE
+  }
+  if (raw === "reports") {
+    return availability?.hasReports ? "reports" : DEFAULT_LIST_VIEW_MODE
   }
   return DEFAULT_LIST_VIEW_MODE
 }

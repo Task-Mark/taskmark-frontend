@@ -7,6 +7,7 @@ import { ListViewSwitcher } from "@/components/board/list-view-switcher"
 import { OverallTreeList } from "@/components/board/overall-tree-list"
 import { PointsHeatmap } from "@/components/board/points-heatmap"
 import { ProjectStatusMetricsStrip } from "@/components/board/project-status-metrics-strip"
+import { ReportsPanel } from "@/components/board/reports-panel"
 import { StaticBoardApp } from "@/components/board/static-board-app"
 import { WorkItemsList } from "@/components/board/work-items-list"
 import { WorkItemSheetProvider } from "@/components/board/work-item-sheet"
@@ -30,6 +31,7 @@ import {
   parseWorkItemsViewForProject,
 } from "@/lib/taskmark/parse-flat-lists"
 import { loadBoardChangelogMarkdown } from "@/lib/taskmark/load-changelog"
+import { loadBoardReports } from "@/lib/taskmark/load-reports"
 import { parseItemsForStory } from "@/lib/taskmark/parse-items"
 import { storyKey } from "@/lib/taskmark/snapshot-types"
 import {
@@ -43,13 +45,20 @@ import { loadWorkspace } from "@/lib/taskmark/workspace"
 // Keep this import so `taskmark dev` can touch the token module and refresh RSC.
 void DEV_RELOAD_TOKEN
 
+export type BoardSearchParams = {
+  view?: string | string[]
+  epic?: string | string[]
+  story?: string | string[]
+  item?: string | string[]
+}
+
+/**
+ * Next only fills the `searchParams` promise it hands to the page component, so
+ * pages must await it and pass the resolved query down; awaiting the promise
+ * here instead resolves to `{}` and every view falls back to Overall.
+ */
 type BoardScreenProps = {
-  searchParams: Promise<{
-    view?: string | string[]
-    epic?: string | string[]
-    story?: string | string[]
-    item?: string | string[]
-  }>
+  searchParams: BoardSearchParams
 }
 
 
@@ -90,11 +99,16 @@ export async function BoardScreen({ searchParams }: BoardScreenProps) {
     redirect("/setup")
   }
 
-  const params = await searchParams
+  const params = searchParams
   const boardIndex = buildBoardIndex(activeProject.boardPath)
   const changelogMarkdown = loadBoardChangelogMarkdown(activeProject.boardPath)
   const hasChangelog = changelogMarkdown != null
-  const activeView = parseListViewMode(params.view, { hasChangelog })
+  const reports = loadBoardReports(activeProject.boardPath)
+  const hasReports = reports.length > 0
+  const activeView = parseListViewMode(params.view, {
+    hasChangelog,
+    hasReports,
+  })
   const selectedEpicId =
     activeView === "overall" ? paramValue(params.epic) : null
   const selectedStoryId =
@@ -191,6 +205,7 @@ export async function BoardScreen({ searchParams }: BoardScreenProps) {
               selectedEpicId={selectedEpicId}
               selectedStoryId={selectedStoryId}
               hasChangelog={hasChangelog}
+              hasReports={hasReports}
             />
           </div>
 
@@ -221,6 +236,10 @@ export async function BoardScreen({ searchParams }: BoardScreenProps) {
 
           {activeView === "changelog" && changelogMarkdown ? (
             <ChangelogPanel markdown={changelogMarkdown} />
+          ) : null}
+
+          {activeView === "reports" && hasReports ? (
+            <ReportsPanel reports={reports} />
           ) : null}
         </div>
       </div>

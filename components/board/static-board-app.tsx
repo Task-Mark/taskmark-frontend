@@ -9,6 +9,7 @@ import { ListViewSwitcher } from "@/components/board/list-view-switcher"
 import { OverallTreeList } from "@/components/board/overall-tree-list"
 import { PointsHeatmap } from "@/components/board/points-heatmap"
 import { ProjectStatusMetricsStrip } from "@/components/board/project-status-metrics-strip"
+import { ReportsPanel } from "@/components/board/reports-panel"
 import { WorkItemsList } from "@/components/board/work-items-list"
 import { WorkItemSheetProvider } from "@/components/board/work-item-sheet"
 import {
@@ -35,8 +36,11 @@ export function StaticBoardApp({ snapshot }: { snapshot: BoardSnapshot }) {
     ? snapshot.changelogMarkdown
     : null
   const hasChangelog = changelogMarkdown != null
+  const reports = snapshot.reports ?? []
+  const hasReports = reports.length > 0
   const activeView = parseListViewMode(searchParams.get("view") ?? undefined, {
     hasChangelog,
+    hasReports,
   })
   const selectedEpicId =
     activeView === "overall" ? searchParams.get("epic")?.trim() || null : null
@@ -98,6 +102,7 @@ export function StaticBoardApp({ snapshot }: { snapshot: BoardSnapshot }) {
               selectedEpicId={selectedEpicId}
               selectedStoryId={selectedStoryId}
               hasChangelog={hasChangelog}
+              hasReports={hasReports}
             />
           </div>
 
@@ -128,6 +133,10 @@ export function StaticBoardApp({ snapshot }: { snapshot: BoardSnapshot }) {
 
           {activeView === "changelog" && changelogMarkdown ? (
             <ChangelogPanel markdown={changelogMarkdown} />
+          ) : null}
+
+          {activeView === "reports" && hasReports ? (
+            <ReportsPanel reports={reports} />
           ) : null}
         </div>
       </div>

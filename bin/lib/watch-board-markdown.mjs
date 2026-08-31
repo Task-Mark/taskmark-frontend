@@ -10,8 +10,13 @@ const IGNORE_DIRS = new Set([
   ".taskmark-ui-build",
 ])
 
+// Hidden directories holding board markdown the UI renders.
+const WATCHED_DOT_DIRS = new Set([".reports"])
+
 function shouldIgnoreDir(name) {
-  return IGNORE_DIRS.has(name) || name.startsWith(".")
+  if (IGNORE_DIRS.has(name)) return true
+  if (WATCHED_DOT_DIRS.has(name)) return false
+  return name.startsWith(".")
 }
 
 function latestMarkdownMtime(boardRoot) {

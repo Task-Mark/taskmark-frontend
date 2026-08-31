@@ -7,6 +7,7 @@ import type {
 } from "@/lib/taskmark/flat-work-item-types"
 import type { StoryItemList } from "@/lib/taskmark/item-types"
 import type { ProjectStatusMetrics } from "@/lib/taskmark/project-metrics-shared"
+import type { BoardReport } from "@/lib/taskmark/report-types"
 import type { SolvedCompletionSample } from "@/lib/taskmark/timeframe-filters"
 import type { DiscoveredProject } from "@/lib/taskmark/types"
 
@@ -27,6 +28,11 @@ export type BoardSnapshot = {
   countableCompletions: SolvedCompletionSample[]
   /** Board-root CHANGELOG.md; null when missing or whitespace-only. */
   changelogMarkdown: string | null
+  /**
+   * Board `.reports/` files, newest first. Optional so snapshots built before
+   * reports existed still load.
+   */
+  reports?: BoardReport[]
   hideCompletedDefaults: Record<HideCompletedCookieKey, boolean>
   /** Absolute file path → detail (children attached) */
   detailsByPath: Record<string, WorkItemDetail>

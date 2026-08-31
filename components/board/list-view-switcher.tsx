@@ -16,6 +16,7 @@ type ListViewSwitcherProps = {
   selectedEpicId?: string | null
   selectedStoryId?: string | null
   hasChangelog?: boolean
+  hasReports?: boolean
 }
 
 function ListViewSwitcherInner({
@@ -23,11 +24,12 @@ function ListViewSwitcherInner({
   selectedEpicId = null,
   selectedStoryId = null,
   hasChangelog = false,
+  hasReports = false,
 }: ListViewSwitcherProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const itemId = searchParams.get("item")
-  const modes = listViewModes(hasChangelog)
+  const modes = listViewModes({ hasChangelog, hasReports })
 
   return (
     <Tabs
@@ -57,7 +59,10 @@ function ListViewSwitcherInner({
 }
 
 export function ListViewSwitcher(props: ListViewSwitcherProps) {
-  const modes = listViewModes(props.hasChangelog ?? false)
+  const modes = listViewModes({
+    hasChangelog: props.hasChangelog ?? false,
+    hasReports: props.hasReports ?? false,
+  })
   return (
     <React.Suspense
       fallback={
