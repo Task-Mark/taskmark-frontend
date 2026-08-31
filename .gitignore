@@ -18,6 +18,7 @@
 /out/
 /public/taskmark-snapshot.json
 /.taskmark-build/
+/.taskmark-ui-dev/
 
 # production
 /build

@@ -19,25 +19,11 @@ import path from "node:path"
 import { fileURLToPath } from "node:url"
 
 import { resolveServeBoard } from "../bin/lib/resolve-board.mjs"
+import { stageUiPackage, underNodeModules } from "../bin/lib/stage-ui.mjs"
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const packageRoot = path.resolve(__dirname, "..")
 const requireFromPackage = createRequire(path.join(packageRoot, "package.json"))
-
-const STAGE_COPY = [
-  "app",
-  "components",
-  "hooks",
-  "lib",
-  "public",
-  "scripts",
-  "next.config.ts",
-  "postcss.config.mjs",
-  "tsconfig.json",
-  "tsconfig.snapshot.json",
-  "components.json",
-  "package.json",
-]
 
 function parseArgs(argv) {
   const args = { board: null, out: null }
@@ -95,40 +81,16 @@ function loadEsbuild(fromRoot) {
   }
 }
 
-function underNodeModules(dir) {
-  return dir.split(path.sep).includes("node_modules")
-}
-
-/**
- * Next refuses to transpile app sources living under node_modules.
- * Copy the package to a board-local stage and reuse the board's node_modules.
- */
+/** A static export must never reuse the dev stage's incremental `.next`. */
 function stagePackageForBuild(board) {
   if (!underNodeModules(packageRoot)) {
     return { root: packageRoot, staged: false }
   }
-
-  const stageDir = path.join(board, ".taskmark-ui-build")
-  fs.rmSync(stageDir, { recursive: true, force: true })
-  fs.mkdirSync(stageDir, { recursive: true })
-
-  for (const name of STAGE_COPY) {
-    const src = path.join(packageRoot, name)
-    if (!fs.existsSync(src)) continue
-    fs.cpSync(src, path.join(stageDir, name), { recursive: true })
-  }
-
-  const boardModules = path.join(board, "node_modules")
-  const stageModules = path.join(stageDir, "node_modules")
-  if (fs.existsSync(boardModules)) {
-    fs.symlinkSync(boardModules, stageModules, "dir")
-  } else {
-    const pkgModules = path.join(packageRoot, "node_modules")
-    if (fs.existsSync(pkgModules)) {
-      fs.symlinkSync(pkgModules, stageModules, "dir")
-    }
-  }
-
+  const stageDir = stageUiPackage({
+    packageRoot,
+    stageDir: path.join(board, ".taskmark-ui-build"),
+    board,
+  })
   console.log(`[taskmark build] staged UI at ${stageDir}`)
   return { root: stageDir, staged: true }
 }

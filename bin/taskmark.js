@@ -2,11 +2,13 @@
 import { spawn } from "node:child_process"
 import fs from "node:fs"
 import http from "node:http"
+import net from "node:net"
 import path from "node:path"
 import { createRequire } from "node:module"
 import { fileURLToPath } from "node:url"
 
 import { resolveServeBoard } from "./lib/resolve-board.mjs"
+import { stageUiForDev } from "./lib/stage-ui.mjs"
 import { startStaticServer } from "./lib/static-preview.mjs"
 import { watchBoardMarkdown } from "./lib/watch-board-markdown.mjs"
 
@@ -187,13 +189,8 @@ Reinstall @taskmark/ui or rebuild the package.`)
   return nextDir
 }
 
-function touchDevReloadToken() {
-  const tokenFile = path.join(
-    packageRoot,
-    "lib",
-    "taskmark",
-    "dev-reload-token.ts"
-  )
+function touchDevReloadToken(root) {
+  const tokenFile = path.join(root, "lib", "taskmark", "dev-reload-token.ts")
   const stamp = String(Date.now())
   fs.writeFileSync(
     tokenFile,
@@ -247,6 +244,31 @@ function waitForServer(port, timeoutMs = 60_000) {
     }
     tryOnce()
   })
+}
+
+function isPortFree(port) {
+  return new Promise((resolve) => {
+    const probe = net.createServer()
+    probe.once("error", () => resolve(false))
+    probe.once("listening", () => probe.close(() => resolve(true)))
+    probe.listen(port, "0.0.0.0")
+  })
+}
+
+/**
+ * Next reports a busy port as a raw EADDRINUSE stack. Fail earlier with the
+ * options that actually unblock the user, and never silently switch ports:
+ * two boards on two ports are harder to reason about than one clear error.
+ */
+async function ensurePortFreeOrExit(port, command) {
+  if (await isPortFree(port)) return
+  console.error(`Port ${port} is already in use.
+
+Another Taskmark board or a leftover process is listening on it.
+
+Use another port:  npx taskmark ${command} --port ${port + 1}
+Find the process:  lsof -i :${port}`)
+  process.exit(1)
 }
 
 function callerCwd() {
@@ -339,6 +361,8 @@ async function serve(args) {
     process.exit(1)
   }
 
+  await ensurePortFreeOrExit(port, workspace ? "open" : "serve")
+
   console.log(`Taskmark UI`)
   if (workspace) {
     console.log(`  mode:   workspace (choose projects in the browser)`)
@@ -395,6 +419,22 @@ async function dev(args) {
   const url = `http://localhost:${port}`
   const nextBin = resolveNextBin()
 
+  await ensurePortFreeOrExit(port, "dev")
+
+  let stage
+  try {
+    stage = stageUiForDev({
+      packageRoot,
+      board: workspace ? null : resolved.boardPath,
+    })
+  } catch (err) {
+    console.error(
+      `Failed to stage the UI for development: ${err?.message || err}`
+    )
+    process.exit(1)
+  }
+  const devRoot = stage.root
+
   console.log(`Taskmark UI (dev)`)
   if (workspace) {
     console.log(`  mode:   workspace (choose projects in the browser)`)
@@ -408,12 +448,15 @@ async function dev(args) {
       ? `  watch:  off (no single board bound)`
       : `  watch:  **/*.md under board`
   )
+  if (stage.staged) {
+    console.log(`  stage:  ${devRoot}`)
+  }
 
   const child = spawn(
     process.execPath,
     [nextBin, "dev", "--webpack", "-H", "0.0.0.0", "-p", String(port)],
     {
-      cwd: packageRoot,
+      cwd: devRoot,
       env: {
         ...process.env,
         PORT: String(port),
@@ -436,7 +479,7 @@ async function dev(args) {
         if (debounce) clearTimeout(debounce)
         debounce = setTimeout(() => {
           try {
-            touchDevReloadToken()
+            touchDevReloadToken(devRoot)
             console.log(`[taskmark] board markdown changed — refreshing`)
           } catch (err) {
             console.warn(

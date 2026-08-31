@@ -8,6 +8,7 @@ const IGNORE_DIRS = new Set([
   ".next",
   "dist",
   ".taskmark-ui-build",
+  ".taskmark-ui-dev",
 ])
 
 // Hidden directories holding board markdown the UI renders.

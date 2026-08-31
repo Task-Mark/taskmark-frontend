@@ -20,6 +20,15 @@ function resolveBoardRoot(): string | null {
   return null
 }
 
+const SKIP_DIRS = new Set([
+  "node_modules",
+  ".git",
+  "out",
+  ".next",
+  ".taskmark-ui-build",
+  ".taskmark-ui-dev",
+])
+
 function walkMarkdownFiles(root: string, out: string[] = []): string[] {
   let entries: fs.Dirent[]
   try {
@@ -28,7 +37,7 @@ function walkMarkdownFiles(root: string, out: string[] = []): string[] {
     return out
   }
   for (const entry of entries) {
-    if (entry.name === "node_modules" || entry.name === ".git" || entry.name === "out") {
+    if (SKIP_DIRS.has(entry.name)) {
       continue
     }
     const full = path.join(root, entry.name)
