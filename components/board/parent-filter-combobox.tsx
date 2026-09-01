@@ -59,7 +59,7 @@ export function ParentFilterCombobox({
     >
       <ComboboxChips
         ref={anchor}
-        className={cn(FILTER_CHIPS_FIELD_CLASS, "min-w-[16rem] max-w-md")}
+        className={cn(FILTER_CHIPS_FIELD_CLASS, "min-w-0 w-full max-w-none sm:min-w-[16rem] sm:max-w-md")}
       >
         {selected.map((opt) => (
           <ComboboxChip key={opt.key}>{opt.chipLabel}</ComboboxChip>

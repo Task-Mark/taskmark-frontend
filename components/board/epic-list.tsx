@@ -35,6 +35,7 @@ import { usePersistedHideCompleted } from "@/hooks/use-persisted-hide-completed"
 import { useTableSort } from "@/hooks/use-table-sort"
 import { cn } from "@/lib/utils"
 import { displayFileName } from "@/lib/display-path"
+import { HIDE_COMPLETED_DEFAULT } from "@/lib/taskmark/constants"
 import type { EpicSummary, ProjectEpicList } from "@/lib/taskmark/epic-types"
 import { isGeneralEpic } from "@/lib/taskmark/general-epic"
 import {
@@ -69,7 +70,7 @@ function ProjectEpicCard({
   errors,
   selectedEpicId,
   countableCompletions = [],
-  initialHideCompleted = false,
+  initialHideCompleted = HIDE_COMPLETED_DEFAULT,
 }: {
   project: ProjectEpicList["project"]
   epics: EpicSummary[]
@@ -79,10 +80,8 @@ function ProjectEpicCard({
   initialHideCompleted?: boolean
 }) {
   const [query, setQuery] = useState("")
-  const [hideCompleted, setHideCompleted] = usePersistedHideCompleted(
-    "epics",
-    initialHideCompleted
-  )
+  const [hideCompleted, setHideCompleted] =
+    usePersistedHideCompleted(initialHideCompleted)
   const { sort, onSort } = useTableSort()
   const [timeframe, setTimeframe] = useState<TimeframeFilterState>(
     DEFAULT_TIMEFRAME_FILTER
@@ -330,7 +329,7 @@ export function EpicList({
   lists,
   selectedEpicId = null,
   countableCompletions = [],
-  initialHideCompleted = false,
+  initialHideCompleted = HIDE_COMPLETED_DEFAULT,
 }: EpicListProps) {
   if (lists.length === 0) {
     return (

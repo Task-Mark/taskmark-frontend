@@ -44,7 +44,7 @@ export function TagsMultiselectFilter({
     >
       <ComboboxChips
         ref={anchor}
-        className={cn(FILTER_CHIPS_FIELD_CLASS, "min-w-[12rem] max-w-xs")}
+        className={cn(FILTER_CHIPS_FIELD_CLASS, "min-w-0 w-full max-w-none sm:min-w-[12rem] sm:max-w-xs")}
       >
         {value.map((tag) => (
           <ComboboxChip key={tag}>{tag}</ComboboxChip>

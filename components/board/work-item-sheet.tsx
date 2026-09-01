@@ -40,6 +40,7 @@ import {
   resolveWorkItemByIdFromSnapshot,
 } from "@/lib/taskmark/snapshot-client"
 import { displayFileName } from "@/lib/display-path"
+import { cn } from "@/lib/utils"
 
 const isStatic =
   process.env.NEXT_PUBLIC_TASKMARK_STATIC === "1" ||
@@ -626,9 +627,11 @@ export function WorkItemSheetProvider({
 export function ViewWorkItemButton({
   itemRef,
   label,
+  className,
 }: {
   itemRef: WorkItemRef
   label?: string
+  className?: string
 }) {
   const { openDetail } = useWorkItemSheet()
   return (
@@ -636,7 +639,7 @@ export function ViewWorkItemButton({
       type="button"
       variant="ghost"
       size="icon-sm"
-      className="shrink-0"
+      className={cn("shrink-0", className)}
       aria-label={label ?? `View ${itemRef.id}`}
       onClick={(e) => {
         e.preventDefault()

@@ -4,7 +4,10 @@ import * as React from "react"
 import { ChevronRightIcon } from "lucide-react"
 
 import { AttributionAvatarGroup } from "@/components/board/attribution-avatars"
-import { ChildProgressBar } from "@/components/board/child-progress-bar"
+import {
+  ChildProgressBar,
+  ChildProgressCount,
+} from "@/components/board/child-progress-bar"
 import {
   IdCreatedTooltip,
   SizeWithPointsTooltip,
@@ -29,6 +32,7 @@ import { Button } from "@/components/ui/button"
 import { usePaginatedRows } from "@/hooks/use-paginated-rows"
 import { usePersistedHideCompleted } from "@/hooks/use-persisted-hide-completed"
 import { displayFileName } from "@/lib/display-path"
+import { HIDE_COMPLETED_DEFAULT } from "@/lib/taskmark/constants"
 import type { ProjectEpicList } from "@/lib/taskmark/epic-types"
 import type { EpicWorkItemsList } from "@/lib/taskmark/flat-work-item-types"
 import type { StoryItemList } from "@/lib/taskmark/item-types"
@@ -119,22 +123,24 @@ function TreeNodeRow({
         tabIndex={0}
         data-state={selected ? "selected" : undefined}
         onKeyDown={onKeyDown}
+        style={
+          {
+            "--tkmd-indent": `${Math.max(0, level - 1) * 12}px`,
+          } as React.CSSProperties
+        }
         className={cn(
-          "grid min-h-12 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 border-b px-2 py-1.5 outline-none transition-colors hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring sm:grid-cols-[minmax(0,1fr)_5rem_5rem_4rem_5.5rem_3rem]",
+          "grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-1.5 gap-y-1.5 border-b px-2 py-2 outline-none transition-colors hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring sm:min-h-12 sm:grid-cols-[minmax(0,1fr)_5rem_5rem_4rem_5.5rem_3rem] sm:gap-x-3 sm:gap-y-2 sm:py-1.5",
           statusRowClass(node.status),
           selected && "bg-muted/60"
         )}
       >
-        <div
-          className="flex min-w-0 items-center gap-1.5"
-          style={{ paddingInlineStart: `${Math.max(0, level - 1) * 12}px` }}
-        >
+        <div className="contents sm:flex sm:min-w-0 sm:items-center sm:gap-1.5 sm:ps-[var(--tkmd-indent)]">
           {expandable ? (
             <Button
               type="button"
               variant="ghost"
               size="icon"
-              className="size-11 shrink-0 sm:size-9"
+              className="row-span-2 size-8 shrink-0 ms-[var(--tkmd-indent)] sm:row-span-1 sm:size-9 sm:ms-0"
               aria-label={`${isExpanded ? "Collapse" : "Expand"} ${node.id}`}
               aria-expanded={isExpanded}
               onClick={() => onToggle(node.id)}
@@ -147,21 +153,56 @@ function TreeNodeRow({
               />
             </Button>
           ) : (
-            <span className="w-11 shrink-0 sm:w-9" aria-hidden />
+            <span
+              className="row-span-2 w-8 shrink-0 ms-[var(--tkmd-indent)] sm:row-span-1 sm:w-9 sm:ms-0"
+              aria-hidden
+            />
           )}
-          <TypeBadge type={node.kind} />
-          <div className="min-w-0">
-            <div className="flex min-w-0 flex-wrap items-baseline gap-x-2">
+          <TypeBadge type={node.kind} className="hidden sm:inline-flex" />
+          <div className="min-w-0 sm:flex-1">
+            <div className="hidden min-w-0 flex-wrap items-baseline gap-x-2 sm:flex">
               <IdCreatedTooltip id={node.id} created={node.created} />
               <span className="min-w-0 break-words font-medium leading-snug">
                 {node.title}
               </span>
             </div>
+            <p
+              className="min-w-0 truncate font-medium leading-snug sm:hidden"
+              title={node.title}
+            >
+              {node.title}
+            </p>
           </div>
+          <ViewWorkItemButton
+            className="row-span-2 size-8 shrink-0 sm:hidden"
+            label={`View details for ${node.id}`}
+            itemRef={{
+              kind:
+                node.kind === "epic"
+                  ? "epic"
+                  : node.kind === "story"
+                    ? "story"
+                    : "item",
+              id: node.id,
+              title: node.title,
+              filePath: node.filePath,
+              itemType:
+                node.kind === "task" || node.kind === "bug"
+                  ? node.kind
+                  : undefined,
+            }}
+          />
         </div>
-        <div className="sm:hidden">
+        <div className="col-start-2 row-start-2 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1.5 text-xs sm:hidden">
+          <IdCreatedTooltip id={node.id} created={node.created} />
+          <TypeBadge type={node.kind} />
+          <SizeWithPointsTooltip size={node.size} points={node.points} />
+          <AttributionAvatarGroup
+            reporters={node.reporters}
+            resolvers={node.resolvers}
+          />
           {node.children.length > 0 ? (
-            <ChildProgressBar
+            <ChildProgressCount
               done={node.doneWorkItemCount}
               total={node.workItemCount}
             />
@@ -217,26 +258,6 @@ function TreeNodeRow({
             }}
           />
         </div>
-        <div className="col-span-2 flex justify-end sm:hidden pt-0.5">
-          <ViewWorkItemButton
-            label={`View details for ${node.id}`}
-            itemRef={{
-              kind:
-                node.kind === "epic"
-                  ? "epic"
-                  : node.kind === "story"
-                    ? "story"
-                    : "item",
-              id: node.id,
-              title: node.title,
-              filePath: node.filePath,
-              itemType:
-                node.kind === "task" || node.kind === "bug"
-                  ? node.kind
-                  : undefined,
-            }}
-          />
-        </div>
       </div>
       {isExpanded ? (
         <div role="group">
@@ -255,7 +276,7 @@ function TreeNodeRow({
           ) : (
             <p
               className="border-b py-3 pr-3 text-sm text-muted-foreground"
-              style={{ paddingInlineStart: `${level * 12 + 44}px` }}
+              style={{ paddingInlineStart: `${level * 12 + 32}px` }}
             >
               {emptyMessage}
             </p>
@@ -273,7 +294,7 @@ export function OverallTreeList({
   selectedEpicId = null,
   selectedStoryId = null,
   countableCompletions = [],
-  initialHideCompleted = false,
+  initialHideCompleted = HIDE_COMPLETED_DEFAULT,
 }: OverallTreeListProps) {
   const { project, errors } = list
   const tree = React.useMemo(
@@ -281,10 +302,8 @@ export function OverallTreeList({
     [list, workItemsByEpic, itemsByStory]
   )
   const [query, setQuery] = React.useState("")
-  const [hideCompleted, setHideCompleted] = usePersistedHideCompleted(
-    "epics",
-    initialHideCompleted
-  )
+  const [hideCompleted, setHideCompleted] =
+    usePersistedHideCompleted(initialHideCompleted)
   const [timeframe, setTimeframe] = React.useState<TimeframeFilterState>(
     DEFAULT_TIMEFRAME_FILTER
   )

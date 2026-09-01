@@ -106,6 +106,8 @@ function attachDerivedParentFields(
     index,
     true
   )
+  // Structural leaf: nothing to roll up, so its own fields stand.
+  if (derived.leafCount === 0) return detail
   return {
     ...detail,
     status: derived.status,

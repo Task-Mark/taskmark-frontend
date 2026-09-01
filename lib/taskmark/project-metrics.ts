@@ -3,7 +3,7 @@
  * Counts stories/tasks/bugs; Current Speed = 90-day weekly points average.
  */
 
-import { addDays, endOfISOWeek, setISOWeek, setISOWeekYear } from "date-fns"
+import { addDays } from "date-fns"
 
 import type { ContributorIdentity } from "@/lib/taskmark/identity"
 import type { BoardIndex } from "@/lib/taskmark/board-index"
@@ -142,17 +142,18 @@ export function collectCompletedLeafPointSamples(
 }
 
 /**
- * Current Speed: average weekly story points of done tasks/bugs.
+ * Completed points per ISO week inside the speed window.
  *
  * - Anchor = most recently completed task/bug on or before `now`; look back 90 days.
  * - Exclude the **current** ISO week of `now` (incomplete / in progress).
- * - Exclude weeks with **0** points (idle/hold — not in numerator or denominator).
- * - Average = sum(non-zero past weeks) / count(those weeks).
+ * - Weeks with no completions stay in the map as 0 (idle/hold).
+ *
+ * Returns null when nothing has been completed yet.
  */
-export function computeCurrentSpeedPtsPerWeek(
+function weeklyPointsInSpeedWindow(
   leaves: readonly MetricLeaf[],
-  now: Date = new Date()
-): { average: number | null; weekCount: number } {
+  now: Date
+): Map<string, number> | null {
   const doneLeaves = completionsAsOf(leaves, now)
 
   let latest: Date | null = null
@@ -161,11 +162,11 @@ export function computeCurrentSpeedPtsPerWeek(
     if (!d) continue
     if (!latest || d.getTime() > latest.getTime()) latest = d
   }
-  if (!latest) return { average: null, weekCount: 0 }
+  if (!latest) return null
 
   const windowStart = addDays(latest, -90)
   const weeks = isoWeeksInclusive(windowStart, latest)
-  if (weeks.length === 0) return { average: null, weekCount: 0 }
+  if (weeks.length === 0) return null
 
   const current = isoWeekParts(now)
   const currentKey = isoWeekCountKey(current.year, current.week)
@@ -190,6 +191,22 @@ export function computeCurrentSpeedPtsPerWeek(
     pointsByWeek.set(key, (pointsByWeek.get(key) ?? 0) + pts)
   }
 
+  return pointsByWeek
+}
+
+/**
+ * Current Speed: average weekly story points of done tasks/bugs.
+ *
+ * Weeks with **0** points are idle/hold and count in neither the numerator
+ * nor the denominator.
+ */
+export function computeCurrentSpeedPtsPerWeek(
+  leaves: readonly MetricLeaf[],
+  now: Date = new Date()
+): { average: number | null; weekCount: number } {
+  const pointsByWeek = weeklyPointsInSpeedWindow(leaves, now)
+  if (!pointsByWeek) return { average: null, weekCount: 0 }
+
   // Only weeks with completed points contribute to the average
   const considered = [...pointsByWeek.values()].filter((pts) => pts > 0)
   if (considered.length === 0) return { average: null, weekCount: 0 }
@@ -198,45 +215,29 @@ export function computeCurrentSpeedPtsPerWeek(
   return { average: sum / considered.length, weekCount: considered.length }
 }
 
-/** Peak of Current Speed evaluated at each ISO week end from first completion through `now`. */
-export function computePeakCurrentSpeedPtsPerWeek(
+/**
+ * Peak: best single ISO week inside the same 90-day window as Current Speed,
+ * so the gauge measures the current average against the best recent week.
+ * Ties report the week that reached it first.
+ */
+export function computePeakWeeklyPoints(
   leaves: readonly MetricLeaf[],
   now: Date = new Date()
 ): { peak: number | null; weekLabel: string | null } {
-  const doneLeaves = completionsAsOf(leaves, now)
-  let earliest: Date | null = null
-  for (const leaf of doneLeaves) {
-    const d = parseTaskmarkDate(leaf.completedAt)
-    if (!d) continue
-    if (!earliest || d.getTime() < earliest.getTime()) earliest = d
-  }
-  if (!earliest) return { peak: null, weekLabel: null }
+  const pointsByWeek = weeklyPointsInSpeedWindow(leaves, now)
+  if (!pointsByWeek) return { peak: null, weekLabel: null }
 
-  const weeks = isoWeeksInclusive(earliest, now)
-  let peak = Number.NEGATIVE_INFINITY
-  let peakWeek: { year: number; week: number } | null = null
-  const nowParts = isoWeekParts(now)
-
-  for (const w of weeks) {
-    const asOf =
-      w.year === nowParts.year && w.week === nowParts.week
-        ? now
-        : endOfGivenIsoWeek(w.year, w.week)
-    const { average } = computeCurrentSpeedPtsPerWeek(leaves, asOf)
-    if (average == null) continue
-    if (average > peak) {
-      peak = average
-      peakWeek = w
+  let peak = 0
+  let weekLabel: string | null = null
+  for (const [key, pts] of pointsByWeek) {
+    if (pts > peak) {
+      peak = pts
+      weekLabel = key
     }
   }
 
-  if (!Number.isFinite(peak) || peakWeek == null) {
-    return { peak: null, weekLabel: null }
-  }
-  return {
-    peak,
-    weekLabel: isoWeekCountKey(peakWeek.year, peakWeek.week),
-  }
+  if (weekLabel == null) return { peak: null, weekLabel: null }
+  return { peak, weekLabel }
 }
 
 function completionsAsOf(
@@ -250,11 +251,6 @@ function completionsAsOf(
     if (!d) return false
     return d.getTime() <= cutoff
   })
-}
-
-function endOfGivenIsoWeek(year: number, week: number): Date {
-  const seed = setISOWeek(setISOWeekYear(new Date(year, 0, 4), year), week)
-  return endOfISOWeek(seed)
 }
 
 export function computeCurrentWeekPointsDone(
@@ -349,7 +345,7 @@ export function computeProjectStatusMetrics(
   const { total, complete } = aggregateWorkItemCounts(leaves)
   const currentWeekPointsDone = computeCurrentWeekPointsDone(leaves)
   const speed = computeCurrentSpeedPtsPerWeek(leaves)
-  const peak = computePeakCurrentSpeedPtsPerWeek(leaves)
+  const peak = computePeakWeeklyPoints(leaves)
   return {
     totalWorkItems: total,
     completeWorkItems: complete,

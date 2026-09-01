@@ -36,6 +36,7 @@ import { usePersistedHideCompleted } from "@/hooks/use-persisted-hide-completed"
 import { useTableSort } from "@/hooks/use-table-sort"
 import { cn } from "@/lib/utils"
 import { displayFileName } from "@/lib/display-path"
+import { HIDE_COMPLETED_DEFAULT } from "@/lib/taskmark/constants"
 import type { EpicStoryList } from "@/lib/taskmark/story-types"
 import {
   DEFAULT_TIMEFRAME_FILTER,
@@ -66,15 +67,13 @@ export function StoryList({
   list,
   selectedStoryId = null,
   countableCompletions = [],
-  initialHideCompleted = false,
+  initialHideCompleted = HIDE_COMPLETED_DEFAULT,
 }: StoryListProps) {
   const { project, epicId, epicTitle, stories, errors } = list
   const heading = epicTitle ? `${epicId}: ${epicTitle}` : epicId
   const [query, setQuery] = useState("")
-  const [hideCompleted, setHideCompleted] = usePersistedHideCompleted(
-    "stories",
-    initialHideCompleted
-  )
+  const [hideCompleted, setHideCompleted] =
+    usePersistedHideCompleted(initialHideCompleted)
   const [timeframe, setTimeframe] = useState<TimeframeFilterState>(
     DEFAULT_TIMEFRAME_FILTER
   )

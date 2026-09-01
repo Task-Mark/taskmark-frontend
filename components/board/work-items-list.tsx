@@ -32,6 +32,8 @@ import {
 } from "@/components/board/date-tooltip"
 import { ListFiltersBar } from "@/components/board/list-filters-bar"
 import { ListPagination } from "@/components/board/list-pagination"
+import { MobileSortSelect } from "@/components/board/mobile-sort-select"
+import { MobileWorkItemRow } from "@/components/board/mobile-work-item-row"
 import { SortableTableHead } from "@/components/board/sortable-table-head"
 import { TimeframeFilter } from "@/components/board/timeframe-filter"
 import { ViewWorkItemButton } from "@/components/board/work-item-sheet"
@@ -39,6 +41,7 @@ import { AttributionAvatarGroup } from "@/components/board/attribution-avatars"
 import { usePaginatedRows } from "@/hooks/use-paginated-rows"
 import { usePersistedHideCompleted } from "@/hooks/use-persisted-hide-completed"
 import { useTableSort } from "@/hooks/use-table-sort"
+import { HIDE_COMPLETED_DEFAULT } from "@/lib/taskmark/constants"
 import type { WorkItemsViewList } from "@/lib/taskmark/flat-work-item-types"
 import { displayFileName } from "@/lib/display-path"
 import {
@@ -65,20 +68,18 @@ type WorkItemsListProps = {
 export function WorkItemsList({
   list,
   countableCompletions,
-  initialHideCompleted = false,
+  initialHideCompleted = HIDE_COMPLETED_DEFAULT,
 }: WorkItemsListProps) {
   const { project, rows, errors } = list
   const [query, setQuery] = useState("")
-  const [hideCompleted, setHideCompleted] = usePersistedHideCompleted(
-    "workItems",
-    initialHideCompleted
-  )
+  const [hideCompleted, setHideCompleted] =
+    usePersistedHideCompleted(initialHideCompleted)
   const [parentKeys, setParentKeys] = useState<string[]>([])
   const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [timeframe, setTimeframe] = useState<TimeframeFilterState>(
     DEFAULT_TIMEFRAME_FILTER
   )
-  const { sort, onSort } = useTableSort()
+  const { sort, onSort, setSort } = useTableSort()
 
   const parentOptions = useMemo(() => buildParentFilterOptions(rows), [rows])
   const tagOptions = useMemo(() => collectUniqueTags(rows), [rows])
@@ -212,6 +213,48 @@ export function WorkItemsList({
               </p>
             ) : (
               <>
+                <MobileSortSelect
+                  id={`workitems-sort-${project.id}`}
+                  sort={sort}
+                  onSortChange={setSort}
+                  className="sm:hidden"
+                />
+                <div className="overflow-hidden rounded-md border sm:hidden">
+                  {pageRows.map((row) => {
+                    const sheetKind = row.kind === "story" ? "story" : "item"
+                    return (
+                      <MobileWorkItemRow
+                        key={`${project.id}:${row.kind}:${row.id}:${row.filePath}`}
+                        id={row.id}
+                        title={row.title}
+                        created={row.created}
+                        kind={row.kind}
+                        status={row.status}
+                        completedAt={row.completedAt}
+                        size={row.size}
+                        points={row.points}
+                        reporters={row.reporters}
+                        resolvers={row.resolvers}
+                        priority={row.priority}
+                        epicId={row.epicId}
+                        epicTitle={row.epicTitle}
+                        workItemCount={row.workItemCount}
+                        doneWorkItemCount={row.doneWorkItemCount}
+                        itemRef={{
+                          kind: sheetKind,
+                          id: row.id,
+                          title: row.title,
+                          filePath: row.filePath,
+                          itemType:
+                            row.kind === "task" || row.kind === "bug"
+                              ? row.kind
+                              : undefined,
+                        }}
+                      />
+                    )
+                  })}
+                </div>
+                <div className="hidden sm:block">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -356,6 +399,7 @@ export function WorkItemsList({
                     })}
                   </TableBody>
                 </Table>
+                </div>
                 <ListPagination
                   page={page}
                   totalPages={totalPages}

@@ -156,7 +156,14 @@ function parseStoryFile(
     }
   }
 
-  const derived = deriveParentRollup(project.boardPath, id, "story", index)
+  const derived = deriveParentRollup(
+    project.boardPath,
+    id,
+    "story",
+    index,
+    false,
+    frontmatter
+  )
 
   return {
     story: {

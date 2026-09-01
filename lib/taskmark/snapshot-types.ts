@@ -1,4 +1,3 @@
-import type { HideCompletedCookieKey } from "@/lib/taskmark/constants"
 import type { WorkItemDetail, WorkItemRef } from "@/lib/taskmark/detail-types"
 import type { ProjectEpicList } from "@/lib/taskmark/epic-types"
 import type {
@@ -33,7 +32,11 @@ export type BoardSnapshot = {
    * reports existed still load.
    */
   reports?: BoardReport[]
-  hideCompletedDefaults: Record<HideCompletedCookieKey, boolean>
+  /**
+   * Hide completed seed for the first paint. Optional so snapshots built
+   * before the shared preference existed still load.
+   */
+  hideCompleted?: boolean
   /** Absolute file path → detail (children attached) */
   detailsByPath: Record<string, WorkItemDetail>
   /** Work item id → ref for sheet open-by-id */

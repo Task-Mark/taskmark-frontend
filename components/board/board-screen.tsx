@@ -15,7 +15,7 @@ import { resolveActiveProject } from "@/lib/taskmark/active-project"
 import { buildBoardIndex } from "@/lib/taskmark/board-index"
 import {
   getActiveProjectCookie,
-  getHideCompletedCookies,
+  getHideCompletedCookie,
   getMasterFoldersCookie,
 } from "@/lib/taskmark/cookies"
 import {
@@ -89,7 +89,7 @@ export async function BoardScreen({ searchParams }: BoardScreenProps) {
   }
 
   const savedActiveId = await getActiveProjectCookie()
-  const hideCompletedPrefs = await getHideCompletedCookies()
+  const hideCompleted = await getHideCompletedCookie()
   const activeProject = resolveActiveProject(
     workspace.projects,
     // Autoconfig: prefer the bound board; ignore stale active-project cookies.
@@ -221,7 +221,7 @@ export async function BoardScreen({ searchParams }: BoardScreenProps) {
                 selectedEpicId={selectedEpicId}
                 selectedStoryId={selectedStoryId}
                 countableCompletions={countableCompletions}
-                initialHideCompleted={hideCompletedPrefs.epics}
+                initialHideCompleted={hideCompleted}
               />
             </>
           ) : null}
@@ -230,7 +230,7 @@ export async function BoardScreen({ searchParams }: BoardScreenProps) {
             <WorkItemsList
               list={workItemsList}
               countableCompletions={countableCompletions}
-              initialHideCompleted={hideCompletedPrefs.workItems}
+              initialHideCompleted={hideCompleted}
             />
           ) : null}
 

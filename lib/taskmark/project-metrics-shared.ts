@@ -11,9 +11,9 @@ export type ProjectStatusMetrics = {
   currentSpeedPtsPerWeek: number | null
   /** Weeks included in the speed average (0 when no speed). */
   speedWeekCount: number
-  /** Highest Current Speed (same 90-day rule) across week ends from first completion through now. */
+  /** Points of the best single ISO week inside the same 90-day window. */
   peakSpeedPtsPerWeek: number | null
-  /** ISO week of the peak (`2026-W18`); null when there is no speed. */
+  /** ISO week of that peak (`2026-W18`); null when there is no speed. */
   peakSpeedWeekLabel: string | null
   contributors: ContributorIdentity[]
 }

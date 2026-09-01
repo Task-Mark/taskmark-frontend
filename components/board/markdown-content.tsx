@@ -1,6 +1,6 @@
 "use client"
 
-import { isValidElement, type ReactNode } from "react"
+import { Children, isValidElement, type ReactNode } from "react"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 
@@ -22,6 +22,8 @@ type MarkdownContentProps = {
   className?: string
   /** Inline-only rendering (no block elements) for checklist labels. */
   inline?: boolean
+  /** Replace GFM tables with labelled cards below the `sm` breakpoint. */
+  responsiveTables?: boolean
 }
 
 const proseClassName = cn(
@@ -49,6 +51,74 @@ const proseClassName = cn(
   "[&_img]:my-2 [&_img]:max-w-full [&_img]:rounded"
 )
 
+function elementChildren(node: ReactNode): ReactNode[] {
+  if (!isValidElement<{ children?: ReactNode }>(node)) return []
+  return Children.toArray(node.props.children)
+}
+
+function hasElementType(node: ReactNode, type: string) {
+  return isValidElement(node) && node.type === type
+}
+
+function ResponsiveMarkdownTable({ children }: { children?: ReactNode }) {
+  const sections = Children.toArray(children)
+  const head = sections.find((node) => hasElementType(node, "thead"))
+  const body = sections.find((node) => hasElementType(node, "tbody"))
+  const headerRow = elementChildren(head).find((node) =>
+    hasElementType(node, "tr")
+  )
+  const headers = elementChildren(headerRow).map(
+    (cell) => elementChildren(cell)[0] ?? "—"
+  )
+  const rows = elementChildren(body).filter((node) =>
+    hasElementType(node, "tr")
+  )
+
+  return (
+    <>
+      <div className="hidden w-full overflow-x-auto sm:block">
+        <table>{children}</table>
+      </div>
+      <div role="list" className="my-2 flex flex-col gap-2 sm:hidden">
+        {rows.map((row, rowIndex) => {
+          const cells = elementChildren(row)
+          return (
+            <article
+              key={rowIndex}
+              role="listitem"
+              className="min-w-0 rounded border-2 border-border bg-card p-3 shadow-sm"
+            >
+              <dl className="grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
+                {cells.map((cell, cellIndex) => (
+                  <div
+                    key={cellIndex}
+                    className={cn(
+                      "min-w-0",
+                      cellIndex === 0 && "col-span-full border-b border-border pb-2"
+                    )}
+                  >
+                    <dt className="text-muted-foreground">
+                      {headers[cellIndex] ?? `Column ${cellIndex + 1}`}
+                    </dt>
+                    <dd
+                      className={cn(
+                        "mt-0.5 break-words",
+                        cellIndex === 0 && "text-sm font-medium"
+                      )}
+                    >
+                      {elementChildren(cell)}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </article>
+          )
+        })}
+      </div>
+    </>
+  )
+}
+
 /**
  * Render Taskmark markdown body sections (GFM: tables, strikethrough, task lists).
  */
@@ -56,6 +126,7 @@ export function MarkdownContent({
   text,
   className,
   inline = false,
+  responsiveTables = false,
 }: MarkdownContentProps) {
   const trimmed = text.trim()
   if (!trimmed) {
@@ -91,6 +162,7 @@ export function MarkdownContent({
                 }
                 return <pre>{children}</pre>
               },
+              ...(responsiveTables ? { table: ResponsiveMarkdownTable } : {}),
             }
       }
     >

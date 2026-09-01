@@ -25,7 +25,7 @@ export function ListSearchBox({
     <div
       className={cn(
         FILTER_CHIPS_FIELD_CLASS,
-        "min-w-[12rem] flex-1 max-w-sm",
+        "min-w-0 w-full flex-1 max-w-none sm:min-w-[12rem] sm:max-w-sm",
         className
       )}
     >

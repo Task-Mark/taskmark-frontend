@@ -40,6 +40,7 @@ import { usePersistedHideCompleted } from "@/hooks/use-persisted-hide-completed"
 import { useTableSort } from "@/hooks/use-table-sort"
 import { cn } from "@/lib/utils"
 import { displayFileName } from "@/lib/display-path"
+import { HIDE_COMPLETED_DEFAULT } from "@/lib/taskmark/constants"
 import type { EpicWorkItemsList } from "@/lib/taskmark/flat-work-item-types"
 import {
   DEFAULT_TIMEFRAME_FILTER,
@@ -65,15 +66,13 @@ export function OverallWorkItemsList({
   list,
   selectedStoryId = null,
   countableCompletions = [],
-  initialHideCompleted = false,
+  initialHideCompleted = HIDE_COMPLETED_DEFAULT,
 }: OverallWorkItemsListProps) {
   const { project, epicId, epicTitle, rows, errors } = list
   const heading = epicTitle ? `${epicId}: ${epicTitle}` : epicId
   const [query, setQuery] = useState("")
-  const [hideCompleted, setHideCompleted] = usePersistedHideCompleted(
-    "overallWorkItems",
-    initialHideCompleted
-  )
+  const [hideCompleted, setHideCompleted] =
+    usePersistedHideCompleted(initialHideCompleted)
   const [timeframe, setTimeframe] = useState<TimeframeFilterState>(
     DEFAULT_TIMEFRAME_FILTER
   )

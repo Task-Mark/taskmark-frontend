@@ -12,6 +12,7 @@ import { ProjectStatusMetricsStrip } from "@/components/board/project-status-met
 import { ReportsPanel } from "@/components/board/reports-panel"
 import { WorkItemsList } from "@/components/board/work-items-list"
 import { WorkItemSheetProvider } from "@/components/board/work-item-sheet"
+import { HIDE_COMPLETED_DEFAULT } from "@/lib/taskmark/constants"
 import {
   LIST_VIEW_LABELS,
   parseListViewMode,
@@ -52,7 +53,7 @@ export function StaticBoardApp({ snapshot }: { snapshot: BoardSnapshot }) {
   const list = snapshot.epics
   const epicCount = list.epics.length
   const errorCount = list.errors.length
-  const hideCompletedPrefs = snapshot.hideCompletedDefaults
+  const hideCompleted = snapshot.hideCompleted ?? HIDE_COMPLETED_DEFAULT
   const countableCompletions = snapshot.countableCompletions
   const statusMetrics = snapshot.statusMetrics
   const workItemsList = snapshot.workItemsView
@@ -118,7 +119,7 @@ export function StaticBoardApp({ snapshot }: { snapshot: BoardSnapshot }) {
                 selectedEpicId={selectedEpicId}
                 selectedStoryId={selectedStoryId}
                 countableCompletions={countableCompletions}
-                initialHideCompleted={hideCompletedPrefs.epics}
+                initialHideCompleted={hideCompleted}
               />
             </>
           ) : null}
@@ -127,7 +128,7 @@ export function StaticBoardApp({ snapshot }: { snapshot: BoardSnapshot }) {
             <WorkItemsList
               list={workItemsList}
               countableCompletions={countableCompletions}
-              initialHideCompleted={hideCompletedPrefs.workItems}
+              initialHideCompleted={hideCompleted}
             />
           ) : null}
 

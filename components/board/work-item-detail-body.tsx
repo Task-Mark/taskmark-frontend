@@ -100,7 +100,7 @@ function WorkItemsCell({ items }: { items?: RowWorkItemRef[] }) {
   const hidden = items.slice(MAX_VISIBLE_WORK_ITEMS)
 
   return (
-    <span className="inline-flex flex-nowrap items-center gap-1 align-middle">
+    <span className="inline-flex flex-wrap items-center gap-1 align-middle">
       {visible.map((item) => (
         <WorkItemTag key={item.id} item={item} onOpen={openDetailById} />
       ))}
@@ -212,7 +212,7 @@ function Section({
 }
 
 function ProseBlock({ text }: { text: string }) {
-  return <MarkdownContent text={text} />
+  return <MarkdownContent text={text} responsiveTables />
 }
 
 function Checklist({ items, raw }: { items: ChecklistItem[]; raw: string }) {
@@ -249,44 +249,120 @@ function Checklist({ items, raw }: { items: ChecklistItem[]; raw: string }) {
   )
 }
 
+type MobileLogField = {
+  label: string
+  value: ReactNode
+  mono?: boolean
+}
+
+function MobileLogCards({
+  rows,
+}: {
+  rows: {
+    key: string
+    primaryLabel: string
+    primaryValue: ReactNode
+    fields: MobileLogField[]
+    workItems?: RowWorkItemRef[]
+  }[]
+}) {
+  return (
+    <div role="list" className="flex flex-col gap-2 sm:hidden">
+      {rows.map((row) => (
+        <article
+          key={row.key}
+          role="listitem"
+          className="min-w-0 rounded border-2 border-border bg-card p-3 shadow-sm"
+        >
+          <p className="font-head text-[0.6875rem] font-semibold uppercase tracking-wide text-muted-foreground">
+            {row.primaryLabel}
+          </p>
+          <div className="mt-1 break-words text-sm font-medium leading-snug">
+            {row.primaryValue}
+          </div>
+          <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 border-t border-border pt-2.5 text-xs">
+            {row.fields.map((field) => (
+              <div key={field.label} className="min-w-0">
+                <dt className="text-muted-foreground">{field.label}</dt>
+                <dd
+                  className={cn(
+                    "mt-0.5 break-words font-medium",
+                    field.mono && "font-mono"
+                  )}
+                >
+                  {field.value}
+                </dd>
+              </div>
+            ))}
+            {(row.workItems?.length ?? 0) > 0 ? (
+              <div className="col-span-full min-w-0">
+                <dt className="text-muted-foreground">Work items</dt>
+                <dd className="mt-1">
+                  <WorkItemsCell items={row.workItems} />
+                </dd>
+              </div>
+            ) : null}
+          </dl>
+        </article>
+      ))}
+    </div>
+  )
+}
+
 function CommitsTable({ rows }: { rows: CommitRow[] }) {
   if (rows.length === 0) {
     return <p className="text-sm text-muted-foreground">No commits logged.</p>
   }
   const showWorkItems = rows.some((row) => (row.workItems?.length ?? 0) > 0)
   return (
-    <div className="w-full overflow-x-auto rounded border-2 border-border">
-      <table className="w-full text-left text-xs">
-        <thead className="bg-muted/50 font-head">
-          <tr>
-            <th className="px-2 py-1.5">SHA</th>
-            <th className="px-2 py-1.5">Repo</th>
-            <th className="px-2 py-1.5">Date</th>
-            <th className="px-2 py-1.5">Author</th>
-            <th className="px-2 py-1.5">Message</th>
-            {showWorkItems ? <th className="px-2 py-1.5">Work items</th> : null}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row, i) => (
-            <tr key={`${row.sha}:${i}`} className="border-t border-border">
-              <td className="px-2 py-1.5 font-mono">{row.sha || "—"}</td>
-              <td className="px-2 py-1.5">{row.repo || "—"}</td>
-              <td className="px-2 py-1.5 whitespace-nowrap">
-                {formatTaskmarkDate(row.date)}
-              </td>
-              <td className="px-2 py-1.5">{row.author || "—"}</td>
-              <td className="px-2 py-1.5">{row.message || "—"}</td>
-              {showWorkItems ? (
-                <td className="px-2 py-1.5 whitespace-nowrap">
-                  <WorkItemsCell items={row.workItems} />
-                </td>
-              ) : null}
+    <>
+      <MobileLogCards
+        rows={rows.map((row, i) => ({
+          key: `${row.sha}:${i}`,
+          primaryLabel: "Message",
+          primaryValue: row.message || "—",
+          fields: [
+            { label: "SHA", value: row.sha || "—", mono: true },
+            { label: "Repository", value: row.repo || "—" },
+            { label: "Date", value: formatTaskmarkDate(row.date) },
+            { label: "Author", value: row.author || "—" },
+          ],
+          workItems: row.workItems,
+        }))}
+      />
+      <div className="hidden w-full overflow-x-auto rounded border-2 border-border sm:block">
+        <table className="w-full text-left text-xs">
+          <thead className="bg-muted/50 font-head">
+            <tr>
+              <th className="px-2 py-1.5">SHA</th>
+              <th className="px-2 py-1.5">Repo</th>
+              <th className="px-2 py-1.5">Date</th>
+              <th className="px-2 py-1.5">Author</th>
+              <th className="px-2 py-1.5">Message</th>
+              {showWorkItems ? <th className="px-2 py-1.5">Work items</th> : null}
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody>
+            {rows.map((row, i) => (
+              <tr key={`${row.sha}:${i}`} className="border-t border-border">
+                <td className="px-2 py-1.5 font-mono">{row.sha || "—"}</td>
+                <td className="px-2 py-1.5">{row.repo || "—"}</td>
+                <td className="px-2 py-1.5 whitespace-nowrap">
+                  {formatTaskmarkDate(row.date)}
+                </td>
+                <td className="px-2 py-1.5">{row.author || "—"}</td>
+                <td className="px-2 py-1.5">{row.message || "—"}</td>
+                {showWorkItems ? (
+                  <td className="px-2 py-1.5 whitespace-nowrap">
+                    <WorkItemsCell items={row.workItems} />
+                  </td>
+                ) : null}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </>
   )
 }
 
@@ -296,40 +372,56 @@ function WorkLogTable({ rows }: { rows: WorkLogRow[] }) {
   }
   const showWorkItems = rows.some((row) => (row.workItems?.length ?? 0) > 0)
   return (
-    <div className="w-full overflow-x-auto rounded border-2 border-border">
-      <table className="w-full text-left text-xs">
-        <thead className="bg-muted/50 font-head">
-          <tr>
-            <th className="px-2 py-1.5">#</th>
-            <th className="px-2 py-1.5">Actor</th>
-            <th className="px-2 py-1.5">Started</th>
-            <th className="px-2 py-1.5">Ended</th>
-            <th className="px-2 py-1.5">Summary</th>
-            {showWorkItems ? <th className="px-2 py-1.5">Work items</th> : null}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row, i) => (
-            <tr key={`${row.session}:${i}`} className="border-t border-border">
-              <td className="px-2 py-1.5 font-mono">{row.session || "—"}</td>
-              <td className="px-2 py-1.5">{row.actor || "—"}</td>
-              <td className="px-2 py-1.5 whitespace-nowrap">
-                {formatTaskmarkDate(row.started)}
-              </td>
-              <td className="px-2 py-1.5 whitespace-nowrap">
-                {formatTaskmarkDate(row.ended)}
-              </td>
-              <td className="px-2 py-1.5">{row.summary || "—"}</td>
-              {showWorkItems ? (
-                <td className="px-2 py-1.5 whitespace-nowrap">
-                  <WorkItemsCell items={row.workItems} />
-                </td>
-              ) : null}
+    <>
+      <MobileLogCards
+        rows={rows.map((row, i) => ({
+          key: `${row.session}:${i}`,
+          primaryLabel: "Summary",
+          primaryValue: row.summary || "—",
+          fields: [
+            { label: "Session", value: row.session || "—", mono: true },
+            { label: "Actor", value: row.actor || "—" },
+            { label: "Started", value: formatTaskmarkDate(row.started) },
+            { label: "Ended", value: formatTaskmarkDate(row.ended) },
+          ],
+          workItems: row.workItems,
+        }))}
+      />
+      <div className="hidden w-full overflow-x-auto rounded border-2 border-border sm:block">
+        <table className="w-full text-left text-xs">
+          <thead className="bg-muted/50 font-head">
+            <tr>
+              <th className="px-2 py-1.5">#</th>
+              <th className="px-2 py-1.5">Actor</th>
+              <th className="px-2 py-1.5">Started</th>
+              <th className="px-2 py-1.5">Ended</th>
+              <th className="px-2 py-1.5">Summary</th>
+              {showWorkItems ? <th className="px-2 py-1.5">Work items</th> : null}
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody>
+            {rows.map((row, i) => (
+              <tr key={`${row.session}:${i}`} className="border-t border-border">
+                <td className="px-2 py-1.5 font-mono">{row.session || "—"}</td>
+                <td className="px-2 py-1.5">{row.actor || "—"}</td>
+                <td className="px-2 py-1.5 whitespace-nowrap">
+                  {formatTaskmarkDate(row.started)}
+                </td>
+                <td className="px-2 py-1.5 whitespace-nowrap">
+                  {formatTaskmarkDate(row.ended)}
+                </td>
+                <td className="px-2 py-1.5">{row.summary || "—"}</td>
+                {showWorkItems ? (
+                  <td className="px-2 py-1.5 whitespace-nowrap">
+                    <WorkItemsCell items={row.workItems} />
+                  </td>
+                ) : null}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </>
   )
 }
 
@@ -339,38 +431,54 @@ function PromptTable({ rows }: { rows: PromptFeedbackRow[] }) {
   }
   const showWorkItems = rows.some((row) => (row.workItems?.length ?? 0) > 0)
   return (
-    <div className="w-full overflow-x-auto rounded border-2 border-border">
-      <table className="w-full text-left text-xs">
-        <thead className="bg-muted/50 font-head">
-          <tr>
-            <th className="px-2 py-1.5">#</th>
-            <th className="px-2 py-1.5">When</th>
-            <th className="px-2 py-1.5">Kind</th>
-            <th className="px-2 py-1.5">Author</th>
-            <th className="px-2 py-1.5">Summary</th>
-            {showWorkItems ? <th className="px-2 py-1.5">Work items</th> : null}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row, i) => (
-            <tr key={`${row.index}:${i}`} className="border-t border-border">
-              <td className="px-2 py-1.5 font-mono">{row.index || "—"}</td>
-              <td className="px-2 py-1.5 whitespace-nowrap">
-                {formatTaskmarkDate(row.when)}
-              </td>
-              <td className="px-2 py-1.5">{row.kind || "—"}</td>
-              <td className="px-2 py-1.5">{row.author || "—"}</td>
-              <td className="px-2 py-1.5">{row.summary || "—"}</td>
-              {showWorkItems ? (
-                <td className="px-2 py-1.5 whitespace-nowrap">
-                  <WorkItemsCell items={row.workItems} />
-                </td>
-              ) : null}
+    <>
+      <MobileLogCards
+        rows={rows.map((row, i) => ({
+          key: `${row.index}:${i}`,
+          primaryLabel: "Summary",
+          primaryValue: row.summary || "—",
+          fields: [
+            { label: "Entry", value: row.index || "—", mono: true },
+            { label: "When", value: formatTaskmarkDate(row.when) },
+            { label: "Kind", value: row.kind || "—" },
+            { label: "Author", value: row.author || "—" },
+          ],
+          workItems: row.workItems,
+        }))}
+      />
+      <div className="hidden w-full overflow-x-auto rounded border-2 border-border sm:block">
+        <table className="w-full text-left text-xs">
+          <thead className="bg-muted/50 font-head">
+            <tr>
+              <th className="px-2 py-1.5">#</th>
+              <th className="px-2 py-1.5">When</th>
+              <th className="px-2 py-1.5">Kind</th>
+              <th className="px-2 py-1.5">Author</th>
+              <th className="px-2 py-1.5">Summary</th>
+              {showWorkItems ? <th className="px-2 py-1.5">Work items</th> : null}
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody>
+            {rows.map((row, i) => (
+              <tr key={`${row.index}:${i}`} className="border-t border-border">
+                <td className="px-2 py-1.5 font-mono">{row.index || "—"}</td>
+                <td className="px-2 py-1.5 whitespace-nowrap">
+                  {formatTaskmarkDate(row.when)}
+                </td>
+                <td className="px-2 py-1.5">{row.kind || "—"}</td>
+                <td className="px-2 py-1.5">{row.author || "—"}</td>
+                <td className="px-2 py-1.5">{row.summary || "—"}</td>
+                {showWorkItems ? (
+                  <td className="px-2 py-1.5 whitespace-nowrap">
+                    <WorkItemsCell items={row.workItems} />
+                  </td>
+                ) : null}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </>
   )
 }
 

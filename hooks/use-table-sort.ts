@@ -11,6 +11,7 @@ import {
 export function useTableSort(initial: TableSortState | null = null): {
   sort: TableSortState | null
   onSort: (key: TableSortKey) => void
+  setSort: (next: TableSortState | null) => void
 } {
   const [sort, setSort] = useState<TableSortState | null>(initial)
 
@@ -18,5 +19,5 @@ export function useTableSort(initial: TableSortState | null = null): {
     setSort((current) => toggleTableSort(current, key))
   }, [])
 
-  return { sort, onSort }
+  return { sort, onSort, setSort }
 }

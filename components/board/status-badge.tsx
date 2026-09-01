@@ -70,9 +70,15 @@ export function StatusBadge({ status }: { status: string }) {
   )
 }
 
-export function TypeBadge({ type }: { type: string }) {
+export function TypeBadge({
+  type,
+  className,
+}: {
+  type: string
+  className?: string
+}) {
   return (
-    <Badge variant="outline" className={cn(typeBadgeClass(type))}>
+    <Badge variant="outline" className={cn(typeBadgeClass(type), className)}>
       {type}
     </Badge>
   )

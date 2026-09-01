@@ -96,7 +96,14 @@ function parseEpicFile(
     }
   }
 
-  const derived = deriveParentRollup(project.boardPath, id, "epic", index)
+  const derived = deriveParentRollup(
+    project.boardPath,
+    id,
+    "epic",
+    index,
+    false,
+    frontmatter
+  )
 
   return {
     epic: {

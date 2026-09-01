@@ -3,6 +3,7 @@ import path from "node:path"
 
 import { loadWorkItemDetailSync } from "@/lib/taskmark/detail-load"
 import { buildBoardIndex } from "@/lib/taskmark/board-index"
+import { HIDE_COMPLETED_DEFAULT } from "@/lib/taskmark/constants"
 import type { WorkItemRef } from "@/lib/taskmark/detail-types"
 import { parseEpicsForProject } from "@/lib/taskmark/parse-epics"
 import { parseWorkItemsForEpic, parseWorkItemsViewForProject } from "@/lib/taskmark/parse-flat-lists"
@@ -173,14 +174,6 @@ export function buildBoardSnapshot(
     }
   }
 
-  const hideCompletedDefaults = {
-    epics: false,
-    stories: false,
-    tasks: false,
-    overallWorkItems: false,
-    workItems: false,
-  } as const
-
   const metricLeaves = collectMetricLeaves(active, boardIndex)
 
   return {
@@ -202,7 +195,7 @@ export function buildBoardSnapshot(
     ),
     changelogMarkdown: loadBoardChangelogMarkdown(active.boardPath),
     reports: loadBoardReports(active.boardPath),
-    hideCompletedDefaults: { ...hideCompletedDefaults },
+    hideCompleted: HIDE_COMPLETED_DEFAULT,
     detailsByPath,
     refsById,
   }

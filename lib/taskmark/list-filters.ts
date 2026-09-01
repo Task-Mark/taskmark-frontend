@@ -1,5 +1,6 @@
 /** Pure helpers for board list search and filters (client-side). */
 
+import { HIDE_COMPLETED_DEFAULT } from "@/lib/taskmark/constants"
 import {
   DEFAULT_TIMEFRAME_FILTER,
   passesTimeframeFilter,
@@ -51,7 +52,7 @@ export type ListFilterState = {
 
 export const DEFAULT_LIST_FILTER_STATE: ListFilterState = {
   query: "",
-  hideCompleted: false,
+  hideCompleted: HIDE_COMPLETED_DEFAULT,
   parentKeys: [],
   selectedTags: [],
   timeframe: DEFAULT_TIMEFRAME_FILTER,

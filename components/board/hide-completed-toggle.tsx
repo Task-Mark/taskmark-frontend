@@ -11,7 +11,10 @@ type HideCompletedToggleProps = {
   className?: string
 }
 
-/** Default off — completed rows remain visible until the user enables this. */
+/**
+ * Default on, shared by every list — completed rows stay hidden until the
+ * user turns this off.
+ */
 export function HideCompletedToggle({
   checked,
   onCheckedChange,

@@ -4,7 +4,7 @@ import test from "node:test"
 import {
   aggregateWorkItemCounts,
   computeCurrentSpeedPtsPerWeek,
-  computePeakCurrentSpeedPtsPerWeek,
+  computePeakWeeklyPoints,
   type MetricLeaf,
 } from "./project-metrics"
 
@@ -82,30 +82,40 @@ test("current speed with now matches as-of today", () => {
   assert.equal(today.weekCount, 2)
 })
 
-test("peak is above current when an older high week left the 90-day window", () => {
+test("peak reports the best week, not the best rolling average", () => {
   const leaves = [
-    leaf({ id: "T-peak", completedAt: "2026-05-01", points: 40 }),
-    leaf({ id: "T-a", completedAt: "2026-08-13", points: 5 }),
-    leaf({ id: "T-b", completedAt: "2026-08-20", points: 5 }),
+    leaf({ id: "T-a", completedAt: "2026-07-02", points: 20 }),
+    leaf({ id: "T-best", completedAt: "2026-08-11", points: 142 }),
+    leaf({ id: "T-b", completedAt: "2026-08-20", points: 49 }),
   ]
   const current = computeCurrentSpeedPtsPerWeek(leaves, NOW)
-  const peak = computePeakCurrentSpeedPtsPerWeek(leaves, NOW)
-  assert.equal(current.average, 5)
-  assert.ok(peak.peak != null && peak.peak > (current.average ?? 0))
-  assert.equal(peak.peak, 40)
-  assert.ok(peak.weekLabel)
+  const peak = computePeakWeeklyPoints(leaves, NOW)
+  assert.equal(current.average, 211 / 3) // (20 + 142 + 49) / 3
+  assert.equal(peak.peak, 142)
+  assert.equal(peak.weekLabel, "2026-W33")
 })
 
-test("peak equals current when throughput never dropped", () => {
+test("peak ignores a bigger week older than the 90-day window", () => {
+  const leaves = [
+    leaf({ id: "T-ancient", completedAt: "2026-01-15", points: 400 }),
+    leaf({ id: "T-a", completedAt: "2026-08-13", points: 5 }),
+    leaf({ id: "T-b", completedAt: "2026-08-20", points: 9 }),
+  ]
+  const peak = computePeakWeeklyPoints(leaves, NOW)
+  assert.equal(peak.peak, 9)
+  assert.equal(peak.weekLabel, "2026-W34")
+})
+
+test("peak equals current when every week scored the same", () => {
   const leaves = [
     leaf({ id: "T-a", completedAt: "2026-08-13", points: 8 }),
     leaf({ id: "T-b", completedAt: "2026-08-20", points: 8 }),
   ]
   const current = computeCurrentSpeedPtsPerWeek(leaves, NOW)
-  const peak = computePeakCurrentSpeedPtsPerWeek(leaves, NOW)
+  const peak = computePeakWeeklyPoints(leaves, NOW)
   assert.equal(current.average, 8)
   assert.equal(peak.peak, 8)
-  assert.ok(peak.peak != null && peak.peak >= current.average!)
+  assert.equal(peak.weekLabel, "2026-W33")
 })
 
 test("no completions yields null speed and null peak", () => {
@@ -116,7 +126,7 @@ test("no completions yields null speed and null peak", () => {
     average: null,
     weekCount: 0,
   })
-  assert.deepEqual(computePeakCurrentSpeedPtsPerWeek(leaves, NOW), {
+  assert.deepEqual(computePeakWeeklyPoints(leaves, NOW), {
     peak: null,
     weekLabel: null,
   })
@@ -128,7 +138,7 @@ test("zero-point weeks are ignored in current speed and peak", () => {
     leaf({ id: "T-real", completedAt: "2026-08-20", points: 12 }),
   ]
   const current = computeCurrentSpeedPtsPerWeek(leaves, NOW)
-  const peak = computePeakCurrentSpeedPtsPerWeek(leaves, NOW)
+  const peak = computePeakWeeklyPoints(leaves, NOW)
   assert.equal(current.average, 12)
   assert.equal(current.weekCount, 1)
   assert.equal(peak.peak, 12)

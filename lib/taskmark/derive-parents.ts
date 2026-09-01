@@ -255,15 +255,40 @@ function sortByDate<T>(rows: T[], date: (row: T) => string): T[] {
   })
 }
 
+/**
+ * A parent with no task/bug descendants is a structural leaf, so its own
+ * frontmatter stays authoritative instead of rolling up an empty set.
+ */
+function ownRollup(frontmatter: Record<string, unknown>): ParentRollup {
+  return {
+    status: asString(frontmatter.status, "backlog"),
+    size: asString(frontmatter.size, "—"),
+    points: leafPoints(frontmatter),
+    actualMinutes: 0,
+    actualMs: 0,
+    resolvers: asContributorList(frontmatter.resolvers),
+    updated: asString(frontmatter.updated),
+    startedAt: asString(frontmatter.started_at),
+    completedAt: asString(frontmatter.completed_at),
+    promptFeedback: [],
+    commits: [],
+    workLog: [],
+    leafCount: 0,
+    doneLeafCount: 0,
+  }
+}
+
 /** Derive every mutable parent field exclusively from task/bug leaves. */
 export function deriveParentRollup(
   boardPath: string,
   parentId: string,
   kind: ParentKind,
   index: BoardIndex = buildBoardIndex(boardPath),
-  includeDetails = false
+  includeDetails = false,
+  own?: Record<string, unknown> | null
 ): ParentRollup {
   const leaves = leavesForParent(parentId, kind, index, includeDetails)
+  if (leaves.length === 0 && own) return ownRollup(own)
   const status = deriveParentStatus(leaves.map((leaf) => leaf.status))
   const points = leaves.reduce((sum, leaf) => sum + leaf.points, 0)
   const actualMs = leaves.reduce(

@@ -13,18 +13,13 @@ export const MASTER_FOLDERS_COOKIE_MAX_AGE = MASTER_FOLDER_COOKIE_MAX_AGE
 
 export const ACTIVE_PROJECT_COOKIE_MAX_AGE = MASTER_FOLDER_COOKIE_MAX_AGE
 
-/** Per-list Hide completed prefs (client-readable; not httpOnly) */
+/** Shared Hide completed pref, one for every list (client-readable) */
 export const HIDE_COMPLETED_COOKIE_MAX_AGE = MASTER_FOLDER_COOKIE_MAX_AGE
 
-export const HIDE_COMPLETED_COOKIES = {
-  epics: "taskmark_hide_completed_epics",
-  stories: "taskmark_hide_completed_stories",
-  tasks: "taskmark_hide_completed_tasks",
-  overallWorkItems: "taskmark_hide_completed_overall_work_items",
-  workItems: "taskmark_hide_completed_work_items",
-} as const
+export const HIDE_COMPLETED_COOKIE = "taskmark_hide_completed"
 
-export type HideCompletedCookieKey = keyof typeof HIDE_COMPLETED_COOKIES
+/** Completed work stays hidden until the user asks to see it. */
+export const HIDE_COMPLETED_DEFAULT = true
 
 /** How deep to walk under the master folder when discovering boards */
 export const DISCOVERY_MAX_DEPTH = 3

@@ -35,6 +35,7 @@ import { AttributionAvatarGroup } from "@/components/board/attribution-avatars"
 import { usePaginatedRows } from "@/hooks/use-paginated-rows"
 import { usePersistedHideCompleted } from "@/hooks/use-persisted-hide-completed"
 import { useTableSort } from "@/hooks/use-table-sort"
+import { HIDE_COMPLETED_DEFAULT } from "@/lib/taskmark/constants"
 import type { StoryItemList } from "@/lib/taskmark/item-types"
 import { displayFileName } from "@/lib/display-path"
 import {
@@ -64,15 +65,13 @@ type TaskListProps = {
 export function TaskList({
   list,
   countableCompletions = [],
-  initialHideCompleted = false,
+  initialHideCompleted = HIDE_COMPLETED_DEFAULT,
 }: TaskListProps) {
   const { project, storyId, storyTitle, items, errors } = list
   const heading = storyTitle ? `${storyId}: ${storyTitle}` : storyId
   const [query, setQuery] = useState("")
-  const [hideCompleted, setHideCompleted] = usePersistedHideCompleted(
-    "tasks",
-    initialHideCompleted
-  )
+  const [hideCompleted, setHideCompleted] =
+    usePersistedHideCompleted(initialHideCompleted)
   const [timeframe, setTimeframe] = useState<TimeframeFilterState>(
     DEFAULT_TIMEFRAME_FILTER
   )
