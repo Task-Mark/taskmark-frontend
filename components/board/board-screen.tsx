@@ -10,6 +10,7 @@ import { ProjectStatusMetricsStrip } from "@/components/board/project-status-met
 import { ReportsPanel } from "@/components/board/reports-panel"
 import { StaticBoardApp } from "@/components/board/static-board-app"
 import { WorkItemsList } from "@/components/board/work-items-list"
+import { LiveBoardDetailLoaders } from "@/components/board/live-board-detail-loaders"
 import { WorkItemSheetProvider } from "@/components/board/work-item-sheet"
 import { resolveActiveProject } from "@/lib/taskmark/active-project"
 import { buildBoardIndex } from "@/lib/taskmark/board-index"
@@ -166,6 +167,7 @@ export async function BoardScreen({ searchParams }: BoardScreenProps) {
 
   return (
     <WorkItemSheetProvider>
+      <LiveBoardDetailLoaders />
       <div className="tm-surface min-h-svh">
         <AppBar
           projects={workspace.projects}

@@ -23,6 +23,32 @@ import { loadBoardReports } from "@/lib/taskmark/load-reports"
 import { loadWorkspace } from "@/lib/taskmark/workspace"
 import { asString, extractFrontmatter } from "@/lib/taskmark/frontmatter"
 
+function toBoardRelative(boardPath: string, filePath: string): string {
+  const relative = path.relative(boardPath, filePath)
+  if (!relative || relative.startsWith("..") || path.isAbsolute(relative)) {
+    return filePath.replaceAll("\\", "/")
+  }
+  return relative.split(path.sep).join("/")
+}
+
+function relativizeValue(value: unknown, boardPath: string): unknown {
+  if (Array.isArray(value)) {
+    return value.map((item) => relativizeValue(item, boardPath))
+  }
+  if (value && typeof value === "object") {
+    const out: Record<string, unknown> = {}
+    for (const [key, nested] of Object.entries(value as Record<string, unknown>)) {
+      if (key === "filePath" && typeof nested === "string") {
+        out[key] = toBoardRelative(boardPath, nested)
+      } else {
+        out[key] = relativizeValue(nested, boardPath)
+      }
+    }
+    return out
+  }
+  return value
+}
+
 function toRef(
   meta: { id: string; title: string; type: string },
   filePath: string
@@ -175,30 +201,37 @@ export function buildBoardSnapshot(
   }
 
   const metricLeaves = collectMetricLeaves(active, boardIndex)
+  const boardPath = active.boardPath
+  const snapshot = relativizeValue(
+    {
+      version: 1,
+      builtAt: new Date().toISOString(),
+      project: active,
+      projects,
+      epics,
+      workItemsView: parseWorkItemsViewForProject(active, boardIndex),
+      workItemsByEpic,
+      itemsByStory,
+      statusMetrics: computeProjectStatusMetrics(
+        active,
+        boardIndex,
+        metricLeaves
+      ),
+      countableCompletions: collectCompletedLeafPointSamples(metricLeaves),
+      changelogMarkdown: loadBoardChangelogMarkdown(boardPath),
+      reports: loadBoardReports(boardPath),
+      hideCompleted: HIDE_COMPLETED_DEFAULT,
+      detailsByPath,
+      refsById,
+    },
+    boardPath
+  ) as BoardSnapshot
 
-  return {
-    version: 1,
-    builtAt: new Date().toISOString(),
-    project: active,
-    projects,
-    epics,
-    workItemsView: parseWorkItemsViewForProject(active, boardIndex),
-    workItemsByEpic,
-    itemsByStory,
-    statusMetrics: computeProjectStatusMetrics(
-      active,
-      boardIndex,
-      metricLeaves
-    ),
-    countableCompletions: collectCompletedLeafPointSamples(
-      metricLeaves
-    ),
-    changelogMarkdown: loadBoardChangelogMarkdown(active.boardPath),
-    reports: loadBoardReports(active.boardPath),
-    hideCompleted: HIDE_COMPLETED_DEFAULT,
-    detailsByPath,
-    refsById,
+  const relativeDetails: BoardSnapshot["detailsByPath"] = {}
+  for (const [filePath, detail] of Object.entries(snapshot.detailsByPath)) {
+    relativeDetails[toBoardRelative(boardPath, filePath)] = detail
   }
+  return { ...snapshot, detailsByPath: relativeDetails }
 }
 
 /** Build snapshot from env/cwd autoconfig (no cookies). */

@@ -8,6 +8,7 @@ import { createRequire } from "node:module"
 import { fileURLToPath } from "node:url"
 
 import { resolveServeBoard } from "./lib/resolve-board.mjs"
+import { loadBoardEnv, runBoardSync } from "./lib/sync-board.mjs"
 import { stageUiForDev } from "./lib/stage-ui.mjs"
 import { startStaticServer } from "./lib/static-preview.mjs"
 import { watchBoardMarkdown } from "./lib/watch-board-markdown.mjs"
@@ -24,6 +25,7 @@ function printHelp() {
   taskmark serve [options]
   taskmark dev [options]
   taskmark build [options]
+  taskmark sync [options]
   taskmark preview [options]
 
 Commands:
@@ -32,7 +34,9 @@ Commands:
   open               Always start in workspace mode (setup / project picker)
   serve              Start the prebuilt UI bound to one resolved board (port ${DEFAULT_PORT})
   dev                Next.js development server with board markdown live reload
+                     (cloud sync watch starts when TASKMARK_SYNC_TOKEN is set)
   build              Production static HTML export for Vercel / static hosting
+  sync               Push board markdown to Taskmark Cloud (needs TASKMARK_SYNC_TOKEN)
   preview            Serve an existing static export (default: <board>/out)
 
 Options:
@@ -40,6 +44,8 @@ Options:
   --board <path>     Board or product root (sets TASKMARK_BOARD)
   --workspace, -w    Force multi-project / setup mode (skip local board binding)
   --out <dir>        Static output directory for build/preview (default: <board>/out)
+  --sync             Also push markdown changes to Taskmark Cloud (serve; implicit on dev when TASKMARK_SYNC_TOKEN is set)
+  --watch            Keep syncing when markdown changes (sync command)
   --no-open          Do not open a browser (default / open / serve / preview / dev)
   --help, -h         Show help
 
@@ -76,6 +82,8 @@ function parseArgs(argv) {
     open: true,
     workspace: false,
     help: false,
+    sync: false,
+    watch: false,
   }
   const rest = [...argv]
   if (rest.length === 0) {
@@ -92,6 +100,10 @@ function parseArgs(argv) {
       args.open = false
     } else if (token === "--workspace" || token === "-w") {
       args.workspace = true
+    } else if (token === "--sync") {
+      args.sync = true
+    } else if (token === "--watch") {
+      args.watch = true
     } else if (token === "--port" || token === "-p") {
       args.port = rest.shift()
     } else if (token === "--board") {
@@ -275,6 +287,16 @@ function callerCwd() {
   return process.env.INIT_CWD || process.cwd()
 }
 
+async function maybeStartCloudSync(args, boardPath) {
+  if (!args.sync) return () => {}
+  try {
+    return await runBoardSync({ boardPath, watch: true })
+  } catch (err) {
+    console.error(`[taskmark sync] ${err.message || err}`)
+    return () => {}
+  }
+}
+
 function isWorkspaceRun(args) {
   return args.command === "open" || args.workspace === true
 }
@@ -390,7 +412,11 @@ async function serve(args) {
     }
   )
 
-  const shutdown = attachChildLifecycle(child)
+  let stopSync = () => {}
+  if (!workspace && args.sync) {
+    stopSync = await maybeStartCloudSync(args, resolved.boardPath)
+  }
+  const shutdown = attachChildLifecycle(child, stopSync)
 
   const hosted =
     Boolean(process.env.VERCEL) ||
@@ -489,8 +515,16 @@ async function dev(args) {
         }, 200)
       })
 
+  let stopSync = () => {}
+  if (!workspace) {
+    loadBoardEnv(resolved.boardPath)
+    if (args.sync || process.env.TASKMARK_SYNC_TOKEN?.trim()) {
+      stopSync = await maybeStartCloudSync({ ...args, sync: true }, resolved.boardPath)
+    }
+  }
   const shutdown = attachChildLifecycle(child, () => {
     stopWatch()
+    stopSync()
     if (debounce) clearTimeout(debounce)
   })
 
@@ -613,6 +647,27 @@ Pick projects in UI: npx taskmark open`)
   if (args.command === "preview") {
     try {
       await preview(args)
+    } catch (err) {
+      console.error(String(err?.message || err))
+      process.exit(1)
+    }
+    return
+  }
+  if (args.command === "sync") {
+    try {
+      const resolved = resolveBoardOrExit(args.board, "sync")
+      const stop = await runBoardSync({
+        boardPath: resolved.boardPath,
+        watch: Boolean(args.watch),
+      })
+      if (!args.watch) return
+      const halt = () => {
+        stop()
+        process.exit(0)
+      }
+      process.on("SIGINT", halt)
+      process.on("SIGTERM", halt)
+      await new Promise(() => {})
     } catch (err) {
       console.error(String(err?.message || err))
       process.exit(1)
