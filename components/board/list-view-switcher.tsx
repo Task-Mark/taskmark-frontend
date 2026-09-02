@@ -3,7 +3,7 @@
 import * as React from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Tabs, TabsList, TabsTrigger } from "@taskmark/components/ui/tabs"
 import {
   LIST_VIEW_LABELS,
   boardHref,

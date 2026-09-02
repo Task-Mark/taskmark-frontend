@@ -7,8 +7,8 @@ import {
   TypeBadge,
 } from "@/components/board/status-badge"
 import { useWorkItemSheet } from "@/components/board/work-item-sheet"
-import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
+import { Button } from "@taskmark/components/ui/button"
+import { cn } from "@taskmark/components"
 
 type DetailChildrenListProps = {
   childrenItems: DetailChildItem[]

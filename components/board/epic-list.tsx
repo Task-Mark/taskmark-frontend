@@ -10,7 +10,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
+} from "@taskmark/components/ui/table"
 import {
   Card,
   CardAction,
@@ -18,7 +18,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
+} from "@taskmark/components/ui/card"
 import {
   IdCreatedTooltip,
 } from "@/components/board/date-tooltip"
@@ -33,7 +33,7 @@ import { AttributionAvatarGroup } from "@/components/board/attribution-avatars"
 import { usePaginatedRows } from "@/hooks/use-paginated-rows"
 import { usePersistedHideCompleted } from "@/hooks/use-persisted-hide-completed"
 import { useTableSort } from "@/hooks/use-table-sort"
-import { cn } from "@/lib/utils"
+import { cn } from "@taskmark/components"
 import { displayFileName } from "@/lib/display-path"
 import { HIDE_COMPLETED_DEFAULT } from "@/lib/taskmark/constants"
 import type { EpicSummary, ProjectEpicList } from "@/lib/taskmark/epic-types"

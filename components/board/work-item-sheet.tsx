@@ -6,8 +6,8 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation"
 
 import { WorkItemDetailBody, WorkItemDetailHeaderBadges } from "@/components/board/work-item-detail-body"
 import { TypeBadge } from "@/components/board/status-badge"
-import { Button } from "@/components/ui/button"
-import { Spinner } from "@/components/ui/spinner"
+import { Button } from "@taskmark/components/ui/button"
+import { Spinner } from "@taskmark/components/ui/spinner"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -15,20 +15,20 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb"
+} from "@taskmark/components/ui/breadcrumb"
 import {
   Sheet,
   SheetContent,
   SheetDescription,
   SheetHeader,
   SheetTitle,
-} from "@/components/ui/sheet"
+} from "@taskmark/components/ui/sheet"
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip"
+} from "@taskmark/components/ui/tooltip"
 import type {
   WorkItemDetail,
   WorkItemDetailResult,
@@ -40,7 +40,7 @@ import {
   resolveWorkItemByIdFromSnapshot,
 } from "@/lib/taskmark/snapshot-client"
 import { displayFileName } from "@/lib/display-path"
-import { cn } from "@/lib/utils"
+import { cn } from "@taskmark/components"
 
 const isStatic =
   process.env.NEXT_PUBLIC_TASKMARK_STATIC === "1" ||

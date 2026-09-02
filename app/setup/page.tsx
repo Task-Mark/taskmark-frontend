@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { redirect } from "next/navigation"
 
-import { BrandLogo } from "@/components/brand-logo"
+import { BrandLogo } from "@taskmark/components"
 import { SetupWizard } from "@/components/setup/setup-wizard"
 import { resolveAutoconfigWorkspace } from "@/lib/taskmark/autoconfig"
 import { getMasterFoldersCookie } from "@/lib/taskmark/cookies"

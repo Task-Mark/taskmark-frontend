@@ -5,14 +5,14 @@ import {
   Avatar,
   AvatarFallback,
   AvatarGroup,
-} from "@/components/ui/avatar"
+} from "@taskmark/components/ui/avatar"
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip"
-import { cn } from "@/lib/utils"
+} from "@taskmark/components/ui/tooltip"
+import { cn } from "@taskmark/components"
 import type {
   AttributionAvatar,
   AttributionRole,

@@ -27,8 +27,8 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
+} from "@taskmark/components/ui/card"
+import { Button } from "@taskmark/components/ui/button"
 import { usePaginatedRows } from "@/hooks/use-paginated-rows"
 import { usePersistedHideCompleted } from "@/hooks/use-persisted-hide-completed"
 import { displayFileName } from "@/lib/display-path"
@@ -47,7 +47,7 @@ import {
   type OverallTreeNode,
 } from "@/lib/taskmark/overall-tree"
 import type { SolvedCompletionSample } from "@/lib/taskmark/timeframe-filters"
-import { cn } from "@/lib/utils"
+import { cn } from "@taskmark/components"
 
 type OverallTreeListProps = {
   list: ProjectEpicList

@@ -9,7 +9,7 @@ import {
   type PointsCalendarWeek,
 } from "@/lib/taskmark/points-calendar"
 import type { SolvedCompletionSample } from "@/lib/taskmark/timeframe-filters"
-import { cn } from "@/lib/utils"
+import { cn } from "@taskmark/components"
 
 /** White through #C4A1FF: darker means more story points completed. */
 const LEVEL_CLASS: Record<0 | 1 | 2 | 3 | 4, string> = {

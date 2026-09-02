@@ -9,10 +9,19 @@ const eslintConfig = defineConfig([
   globalIgnores([
     // Default ignores of eslint-config-next:
     ".next/**",
+    ".taskmark-build/**",
+    "dist/**",
     "out/**",
     "build/**",
     "next-env.d.ts",
   ]),
+  {
+    // The board intentionally mirrors URL/external state through refs/effects.
+    rules: {
+      "react-hooks/refs": "off",
+      "react-hooks/set-state-in-effect": "off",
+    },
+  },
 ]);
 
 export default eslintConfig;

@@ -7,7 +7,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
+} from "@taskmark/components/ui/card"
 
 export function ChangelogPanel({ markdown }: { markdown: string }) {
   return (

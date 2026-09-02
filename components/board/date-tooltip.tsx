@@ -7,7 +7,7 @@ import {
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip"
+} from "@taskmark/components/ui/tooltip"
 import { formatTaskmarkDate } from "@/lib/format-date"
 
 type DateTooltipProps = {

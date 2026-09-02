@@ -7,13 +7,13 @@ import {
   ChevronRightIcon,
 } from "lucide-react"
 
-import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
+import { Button } from "@taskmark/components/ui/button"
+import { Label } from "@taskmark/components/ui/label"
 import {
   PAGE_SIZE_OPTIONS,
   type PageSize,
 } from "@/lib/taskmark/pagination"
-import { cn } from "@/lib/utils"
+import { cn } from "@taskmark/components"
 
 type ListPaginationProps = {
   page: number

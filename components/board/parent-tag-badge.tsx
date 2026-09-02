@@ -1,14 +1,14 @@
 "use client"
 
-import { Badge } from "@/components/ui/badge"
+import { Badge } from "@taskmark/components/ui/badge"
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip"
+} from "@taskmark/components/ui/tooltip"
 import { typeBadgeClass } from "@/components/board/status-badge"
-import { cn } from "@/lib/utils"
+import { cn } from "@taskmark/components"
 
 type ParentTagBadgeProps = {
   id: string

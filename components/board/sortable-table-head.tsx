@@ -2,8 +2,8 @@
 
 import { ArrowDownIcon, ArrowUpIcon } from "lucide-react"
 
-import { TableHead } from "@/components/ui/table"
-import { cn } from "@/lib/utils"
+import { TableHead } from "@taskmark/components/ui/table"
+import { cn } from "@taskmark/components"
 import type { TableSortDirection, TableSortKey } from "@/lib/taskmark/table-sort"
 
 type SortableTableHeadProps = {

@@ -7,6 +7,7 @@ const packageDir = path.dirname(fileURLToPath(import.meta.url))
 const staticExport = process.env.TASKMARK_STATIC === "1"
 
 const nextConfig: NextConfig = {
+  transpilePackages: ["@taskmark/components"],
   // When installed under a board with its own lockfile, Next would otherwise
   // treat the board as the workspace root and break `@/` resolution.
   outputFileTracingRoot: packageDir,

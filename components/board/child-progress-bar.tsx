@@ -4,8 +4,8 @@ import {
   Progress,
   ProgressLabel,
   ProgressValue,
-} from "@/components/ui/progress"
-import { cn } from "@/lib/utils"
+} from "@taskmark/components/ui/progress"
+import { cn } from "@taskmark/components"
 
 type ChildProgressBarProps = {
   done: number

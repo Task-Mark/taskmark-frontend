@@ -1,5 +1,5 @@
-import { Badge } from "@/components/ui/badge"
-import { cn } from "@/lib/utils"
+import { Badge } from "@taskmark/components/ui/badge"
+import { cn } from "@taskmark/components"
 
 export function formatStatusLabel(status: string): string {
   return status.replaceAll("_", " ")

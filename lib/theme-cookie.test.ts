@@ -4,7 +4,7 @@ import test from "node:test"
 import {
   parseThemePreference,
   themeCookieDomain,
-} from "./theme-cookie"
+} from "@taskmark/components/theme"
 
 test("accepts only light or dark cookie values", () => {
   assert.equal(parseThemePreference("light"), "light")

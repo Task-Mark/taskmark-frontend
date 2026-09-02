@@ -5,7 +5,7 @@ import { HideCompletedToggle } from "@/components/board/hide-completed-toggle"
 import { ParentFilterCombobox } from "@/components/board/parent-filter-combobox"
 import { TagsMultiselectFilter } from "@/components/board/tags-multiselect-filter"
 import type { ParentFilterOption } from "@/lib/taskmark/list-filters"
-import { cn } from "@/lib/utils"
+import { cn } from "@taskmark/components"
 
 type ListFiltersBarProps = {
   query: string

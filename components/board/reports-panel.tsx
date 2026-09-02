@@ -9,14 +9,14 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
+} from "@taskmark/components/ui/card"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@taskmark/components/ui/select"
 import type { BoardReport } from "@/lib/taskmark/report-types"
 
 export function ReportsPanel({ reports }: { reports: BoardReport[] }) {

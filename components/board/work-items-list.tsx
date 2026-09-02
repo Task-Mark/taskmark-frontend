@@ -9,7 +9,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
+} from "@taskmark/components/ui/table"
 import {
   Card,
   CardAction,
@@ -17,7 +17,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
+} from "@taskmark/components/ui/card"
 import { ParentTagBadge } from "@/components/board/parent-tag-badge"
 import { ChildProgressBar } from "@/components/board/child-progress-bar"
 import {

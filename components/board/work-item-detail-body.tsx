@@ -22,20 +22,20 @@ import {
   PriorityBadge,
   typeBadgeClass,
 } from "@/components/board/status-badge"
-import { cn } from "@/lib/utils"
+import { cn } from "@taskmark/components"
 import { AttributionPeopleList } from "@/components/board/attribution-avatars"
 import { DetailChildrenList } from "@/components/board/detail-children-list"
 import { MarkdownContent } from "@/components/board/markdown-content"
 import { useWorkItemSheet } from "@/components/board/work-item-sheet"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Separator } from "@/components/ui/separator"
+import { Badge } from "@taskmark/components/ui/badge"
+import { Button } from "@taskmark/components/ui/button"
+import { Separator } from "@taskmark/components/ui/separator"
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip"
+} from "@taskmark/components/ui/tooltip"
 
 function RelatedItemButton({ itemId }: { itemId: string }) {
   const { openDetailById } = useWorkItemSheet()

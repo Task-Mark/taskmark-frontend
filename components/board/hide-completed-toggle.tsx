@@ -1,8 +1,8 @@
 "use client"
 
-import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
-import { cn } from "@/lib/utils"
+import { Label } from "@taskmark/components/ui/label"
+import { Switch } from "@taskmark/components/ui/switch"
+import { cn } from "@taskmark/components"
 
 type HideCompletedToggleProps = {
   checked: boolean

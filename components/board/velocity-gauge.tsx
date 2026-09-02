@@ -1,12 +1,12 @@
 "use client"
 
-import { Gauge } from "@/components/charts/gauge"
+import { Gauge } from "@taskmark/components/charts/gauge"
 import {
   COMPACT_INTEGER_FORMAT_OPTIONS,
   COMPACT_NUMBER_LOCALES,
   formatExactNumber,
 } from "@/lib/format-compact-number"
-import { cn } from "@/lib/utils"
+import { cn } from "@taskmark/components"
 
 type VelocityGaugeProps = {
   currentPtsPerWeek: number | null

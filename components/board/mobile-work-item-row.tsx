@@ -16,7 +16,7 @@ import {
 import { ViewWorkItemButton } from "@/components/board/work-item-sheet"
 import type { WorkItemRef } from "@/lib/taskmark/detail-types"
 import type { ContributorIdentity } from "@/lib/taskmark/identity"
-import { cn } from "@/lib/utils"
+import { cn } from "@taskmark/components"
 
 type MobileWorkItemRowProps = {
   id: string

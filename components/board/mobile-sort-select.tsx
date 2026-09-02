@@ -1,8 +1,8 @@
 "use client"
 
-import { Label } from "@/components/ui/label"
+import { Label } from "@taskmark/components/ui/label"
 import type { TableSortKey, TableSortState } from "@/lib/taskmark/table-sort"
-import { cn } from "@/lib/utils"
+import { cn } from "@taskmark/components"
 
 const SORT_OPTIONS: { key: TableSortKey; label: string }[] = [
   { key: "id", label: "ID" },

@@ -5,7 +5,7 @@ import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 
 import { MermaidDiagram } from "@/components/board/mermaid-diagram"
-import { cn } from "@/lib/utils"
+import { cn } from "@taskmark/components"
 
 function mermaidSourceFromPreChildren(children: ReactNode): string | null {
   const child = Array.isArray(children) ? children[0] : children

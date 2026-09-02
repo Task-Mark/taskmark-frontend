@@ -10,9 +10,9 @@ import {
   ComboboxItem,
   ComboboxList,
   useComboboxAnchor,
-} from "@/components/ui/combobox"
+} from "@taskmark/components/ui/combobox"
 import { FILTER_CHIPS_FIELD_CLASS } from "@/lib/taskmark/list-filters"
-import { cn } from "@/lib/utils"
+import { cn } from "@taskmark/components"
 
 type TagsMultiselectFilterProps = {
   options: string[]
