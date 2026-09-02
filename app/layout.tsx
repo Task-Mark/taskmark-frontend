@@ -82,6 +82,8 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body
         className={`${archivoBlack.variable} ${spaceGrotesk.variable} font-sans antialiased`}
+        // Browser extensions add body attributes before hydration.
+        suppressHydrationWarning
       >
         <Script
           id="taskmark-theme-init"
