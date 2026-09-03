@@ -7,6 +7,10 @@ import { fileURLToPath } from "node:url"
 
 import { snapshotExternals } from "./snapshot-externals.mjs"
 import { watchBoardMarkdown } from "./watch-board-markdown.mjs"
+import {
+  resolveBoardSyncCredentials,
+  watchBoardSyncConfig,
+} from "../../lib/taskmark/sync-config.mjs"
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const packageRoot = path.resolve(__dirname, "../..")
@@ -194,13 +198,14 @@ function rejectedToken() {
 
 export async function syncBoardOnce(boardPath) {
   loadBoardEnv(boardPath)
-  const token = process.env.TASKMARK_SYNC_TOKEN?.trim()
+  const credentials = resolveBoardSyncCredentials(boardPath)
+  const token = credentials.token
   if (!token) {
     throw new Error(
-      "TASKMARK_SYNC_TOKEN is not set. Copy it from Taskmark Cloud Settings.",
+      "Sync is not configured. Paste the project token in local Taskmark Settings.",
     )
   }
-  const baseUrl = process.env.TASKMARK_CLOUD_URL?.trim() || DEFAULT_CLOUD_URL
+  const baseUrl = credentials.cloudUrl || DEFAULT_CLOUD_URL
   log(`cloud ${baseUrl}`)
   const manifest = await api(baseUrl, token, "GET", "/board-sync/manifest")
   if (manifest.status === 401) throw rejectedToken()
@@ -283,38 +288,40 @@ export async function runBoardSync({ boardPath, watch }) {
     return () => {}
   }
 
-  // A cloud that is down at startup must not cost the whole dev session its
-  // watcher, so only a rejected token is fatal here.
+  // Missing or invalid settings must not cost the whole local session its
+  // watchers: saving a replacement token should recover without a restart.
   try {
     await syncBoardOnce(boardPath)
   } catch (err) {
-    if (err.code === 401) throw err
     console.error(`[taskmark sync] ${err.message || err}`)
-    log("staying in watch mode — will retry on the next markdown change")
+    log("waiting for local Settings or markdown changes")
   }
 
   let debounce = null
   let stopped = false
-  const stopWatch = watchBoardMarkdown(boardPath, () => {
+  const schedule = (reason) => {
     if (stopped) return
     if (debounce) clearTimeout(debounce)
     debounce = setTimeout(async () => {
-      log("markdown changed")
+      log(`${reason} changed`)
       try {
         await syncBoardOnce(boardPath)
       } catch (err) {
         console.error(`[taskmark sync] ${err.message || err}`)
-        if (err.code === 401) {
-          stopped = true
-          stopWatch()
-        }
       }
-    }, 2000)
-  })
-  log("watching board markdown")
+    }, reason === "sync settings" ? 250 : 2000)
+  }
+  const stopMarkdownWatch = watchBoardMarkdown(boardPath, () =>
+    schedule("markdown"),
+  )
+  const stopConfigWatch = watchBoardSyncConfig(boardPath, () =>
+    schedule("sync settings"),
+  )
+  log("watching board markdown and local sync settings")
   return () => {
     stopped = true
-    stopWatch()
+    stopMarkdownWatch()
+    stopConfigWatch()
     if (debounce) clearTimeout(debounce)
   }
 }

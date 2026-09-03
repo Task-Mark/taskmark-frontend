@@ -1,5 +1,7 @@
 "use client"
 
+import Link from "next/link"
+
 import { selectActiveProject, openAddProject } from "@/app/setup/actions"
 import { projectOptionLabel } from "@/lib/taskmark/project-label"
 import type { DiscoveredProject } from "@/lib/taskmark/types"
@@ -57,6 +59,16 @@ export function AppBar({
             Add project
           </Button>
         </form>
+      ) : null}
+
+      {autoconfig ? (
+        <Button
+          render={<Link href="/settings" />}
+          variant="outline"
+          size="sm"
+        >
+          Settings
+        </Button>
       ) : null}
     </AppBarChrome>
   )

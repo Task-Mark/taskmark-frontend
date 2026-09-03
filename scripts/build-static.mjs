@@ -197,6 +197,7 @@ function stashDynamicPages(buildRoot) {
   const pages = [
     "app/page.tsx",
     "app/board/page.tsx",
+    "app/settings/page.tsx",
     "app/setup/page.tsx",
   ]
   const from = `export const dynamic = "force-dynamic"`

@@ -8,7 +8,7 @@ import { createRequire } from "node:module"
 import { fileURLToPath } from "node:url"
 
 import { resolveServeBoard } from "./lib/resolve-board.mjs"
-import { loadBoardEnv, runBoardSync } from "./lib/sync-board.mjs"
+import { runBoardSync } from "./lib/sync-board.mjs"
 import { stageUiForDev } from "./lib/stage-ui.mjs"
 import { startStaticServer } from "./lib/static-preview.mjs"
 import { watchBoardMarkdown } from "./lib/watch-board-markdown.mjs"
@@ -34,9 +34,9 @@ Commands:
   open               Always start in workspace mode (setup / project picker)
   serve              Start the prebuilt UI bound to one resolved board (port ${DEFAULT_PORT})
   dev                Next.js development server with board markdown live reload
-                     (cloud sync watch starts when TASKMARK_SYNC_TOKEN is set)
+                     (cloud sync starts when a token is saved in local Settings)
   build              Production static HTML export for Vercel / static hosting
-  sync               Push board markdown to Taskmark Cloud (needs TASKMARK_SYNC_TOKEN)
+  sync               Push board markdown to Taskmark Cloud using local Settings
   preview            Serve an existing static export (default: <board>/out)
 
 Options:
@@ -44,7 +44,7 @@ Options:
   --board <path>     Board or product root (sets TASKMARK_BOARD)
   --workspace, -w    Force multi-project / setup mode (skip local board binding)
   --out <dir>        Static output directory for build/preview (default: <board>/out)
-  --sync             Also push markdown changes to Taskmark Cloud (serve; implicit on dev when TASKMARK_SYNC_TOKEN is set)
+  --sync             Kept for compatibility; bound dev/serve always monitor sync Settings
   --watch            Keep syncing when markdown changes (sync command)
   --no-open          Do not open a browser (default / open / serve / preview / dev)
   --help, -h         Show help
@@ -413,8 +413,11 @@ async function serve(args) {
   )
 
   let stopSync = () => {}
-  if (!workspace && args.sync) {
-    stopSync = await maybeStartCloudSync(args, resolved.boardPath)
+  if (!workspace) {
+    stopSync = await maybeStartCloudSync(
+      { ...args, sync: true },
+      resolved.boardPath,
+    )
   }
   const shutdown = attachChildLifecycle(child, stopSync)
 
@@ -517,10 +520,10 @@ async function dev(args) {
 
   let stopSync = () => {}
   if (!workspace) {
-    loadBoardEnv(resolved.boardPath)
-    if (args.sync || process.env.TASKMARK_SYNC_TOKEN?.trim()) {
-      stopSync = await maybeStartCloudSync({ ...args, sync: true }, resolved.boardPath)
-    }
+    stopSync = await maybeStartCloudSync(
+      { ...args, sync: true },
+      resolved.boardPath,
+    )
   }
   const shutdown = attachChildLifecycle(child, () => {
     stopWatch()
