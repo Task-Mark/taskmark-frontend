@@ -5,4 +5,5 @@ export const SITE = {
     (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
     "https://taskmark.dev"
   ).replace(/\/$/, ""),
+  cloudUrl: "https://cloud.taskmark.dev",
 } as const

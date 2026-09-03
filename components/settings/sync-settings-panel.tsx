@@ -5,6 +5,8 @@ import { useEffect, useState, type FormEvent } from "react"
 import { Button } from "@taskmark/components/ui/button"
 import { Input } from "@taskmark/components/ui/input"
 
+import { SITE } from "@/lib/site"
+
 type SyncStatus = {
   configured: boolean
   source: "settings" | "environment" | null
@@ -68,7 +70,9 @@ export function SyncSettingsPanel() {
       }
       setStatus(data)
       setToken("")
-      setSuccess("Token saved. Cloud synchronization is starting.")
+      setSuccess(
+        "Token saved. Keep this local board running — Taskmark is starting cloud synchronization now. Markdown changes will keep syncing automatically.",
+      )
     } catch {
       setError("Could not save sync settings.")
     } finally {
@@ -79,39 +83,93 @@ export function SyncSettingsPanel() {
   return (
     <section className="rounded border-2 border-border bg-card p-6 shadow-md">
       <div>
-        <h2 className="font-head text-xl">Cloud synchronization</h2>
-        <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-          Copy this project&apos;s sync token from Taskmark Cloud Settings and
-          paste it below. Taskmark stores it in your user configuration, never
-          in this project repository.
+        <h2 className="font-head text-xl">Connect this board to Taskmark Cloud</h2>
+        <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
+          Taskmark Cloud is the hosted board at{" "}
+          <a
+            href={SITE.cloudUrl}
+            className="underline underline-offset-4 hover:text-foreground"
+            target="_blank"
+            rel="noreferrer"
+          >
+            {SITE.cloudUrl.replace(/^https:\/\//, "")}
+          </a>
+          . After you save a project token here, this local board starts
+          uploading markdown automatically. The token is stored in your user
+          configuration, never in this project repository.
         </p>
       </div>
 
-      <div className="mt-5 rounded border-2 border-border bg-muted/40 p-4 text-sm">
+      <ol className="mt-6 list-decimal space-y-3 pl-5 text-sm leading-relaxed">
+        <li>
+          Keep this local board running with <code>taskmark dev</code> or{" "}
+          <code>taskmark serve</code>. Synchronization only starts while the
+          local UI is open.
+        </li>
+        <li>
+          In a browser, open{" "}
+          <a
+            href={SITE.cloudUrl}
+            className="underline underline-offset-4 hover:text-foreground"
+            target="_blank"
+            rel="noreferrer"
+          >
+            {SITE.cloudUrl}
+          </a>{" "}
+          and sign in.
+        </li>
+        <li>
+          Use the project picker to select the Cloud project that should receive
+          this board, or create a new project if one does not exist yet.
+        </li>
+        <li>
+          Open <strong>Settings</strong> in Taskmark Cloud. Copy the{" "}
+          <strong>board sync token</strong> (it starts with <code>tmk_</code>).
+        </li>
+        <li>
+          Return to this page, paste the token below, and choose{" "}
+          <strong>Save and start sync</strong>. You should see a confirmation
+          here and sync logs in the terminal that started Taskmark.
+        </li>
+        <li>
+          Go back to Taskmark Cloud and refresh the board. The first upload can
+          take a few seconds. After that, local markdown edits keep the Cloud
+          board up to date.
+        </li>
+      </ol>
+
+      <div className="mt-6 rounded border-2 border-border bg-muted/40 p-4 text-sm">
         {loading ? (
           <span className="text-muted-foreground">Loading settings…</span>
         ) : status?.configured ? (
           <div className="flex flex-wrap items-center justify-between gap-2">
             <span>
-              Sync configured{" "}
+              Sync is configured
               {status.tokenHint ? (
-                <code className="font-mono">{status.tokenHint}</code>
+                <>
+                  {" "}
+                  <code className="font-mono">{status.tokenHint}</code>
+                </>
               ) : null}
+              . This board will keep pushing changes while Taskmark is running.
             </span>
             <span className="text-xs text-muted-foreground">
               {status.source === "environment"
                 ? "Environment fallback"
-                : "Local Settings"}
+                : "Saved in local Settings"}
             </span>
           </div>
         ) : (
-          <span className="text-muted-foreground">Sync is not configured.</span>
+          <span className="text-muted-foreground">
+            Sync is not configured yet. Complete the steps above, then paste the
+            token.
+          </span>
         )}
       </div>
 
       <form className="mt-5 grid max-w-xl gap-3" onSubmit={save}>
         <label className="grid gap-1.5 text-sm font-medium">
-          Project sync token
+          Project sync token from Taskmark Cloud
           <Input
             type="password"
             autoComplete="off"
