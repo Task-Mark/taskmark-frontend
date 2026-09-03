@@ -20,6 +20,41 @@ export const DEFAULT_CLOUD_URL = "https://cloud.taskmark.dev"
 
 /** The API rejects batches over 400 files; stay well under to bound body size too. */
 const UPLOAD_BATCH_SIZE = 200
+const activityFingerprintsByBoard = new Map()
+
+function worklogActivityFromSnapshot(boardPath, snapshot) {
+  const events = []
+  const fingerprints = new Set()
+  for (const [filePath, detail] of Object.entries(snapshot.detailsByPath ?? {})) {
+    if (detail?.type !== "task" && detail?.type !== "bug") continue
+    for (const row of detail.workLog ?? []) {
+      const actor = String(row.actor ?? "").trim()
+      const started = String(row.started ?? "").trim()
+      const summary = String(row.summary ?? "").trim()
+      if (!actor || !started || !summary) continue
+      const fingerprint = `${filePath}|${actor}|${started}|${summary}`
+      fingerprints.add(fingerprint)
+      events.push({
+        id: createHash("sha256").update(fingerprint, "utf8").digest("hex"),
+        itemId: String(detail.id ?? ""),
+        itemTitle: String(detail.title ?? ""),
+        path: filePath,
+        actor,
+        started,
+        ended: String(row.ended ?? "").trim(),
+        summary,
+      })
+    }
+  }
+
+  const boardKey = path.resolve(boardPath)
+  const previous = activityFingerprintsByBoard.get(boardKey)
+  activityFingerprintsByBoard.set(boardKey, fingerprints)
+  if (!previous) return []
+  return events.filter((event) => !previous.has(
+    `${event.path}|${event.actor}|${event.started}|${event.summary}`,
+  ))
+}
 
 export function loadBoardEnv(boardPath) {
   const envFile = path.join(boardPath, ".env")
@@ -239,6 +274,10 @@ export async function syncBoardOnce(boardPath) {
     `${manifest.data.projectName} (${manifest.data.slug}) — ${local.length} local file(s), ${upserts} changed, ${deletes} removed`,
   )
   if (!files.length) {
+    if (!activityFingerprintsByBoard.has(path.resolve(boardPath))) {
+      const snapshot = await buildSnapshot(boardPath)
+      worklogActivityFromSnapshot(boardPath, snapshot)
+    }
     log("already up to date")
     return {
       projectName: manifest.data.projectName,
@@ -249,6 +288,7 @@ export async function syncBoardOnce(boardPath) {
   }
   log("building board snapshot")
   const snapshot = await buildSnapshot(boardPath)
+  const activityEvents = worklogActivityFromSnapshot(boardPath, snapshot)
   const batches = []
   for (let i = 0; i < files.length; i += UPLOAD_BATCH_SIZE) {
     batches.push(files.slice(i, i + UPLOAD_BATCH_SIZE))
@@ -265,7 +305,14 @@ export async function syncBoardOnce(boardPath) {
     // that is ahead of the files it was built from.
     const result = await api(baseUrl, token, "PUT", "/board-sync", {
       files: batch,
-      ...(last ? { snapshot } : {}),
+      ...(last
+        ? {
+            snapshot,
+            ...(activityEvents.length
+              ? { activity: { events: activityEvents } }
+              : {}),
+          }
+        : {}),
     })
     if (result.status === 401) throw rejectedToken()
     if (!result.ok) {

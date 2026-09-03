@@ -1,6 +1,7 @@
 export const LIST_VIEW_MODES = [
   "overall",
   "workitems",
+  "worklog",
   "changelog",
   "reports",
 ] as const
@@ -12,6 +13,7 @@ export const DEFAULT_LIST_VIEW_MODE: ListViewMode = "overall"
 export const LIST_VIEW_LABELS: Record<ListViewMode, string> = {
   overall: "Overall",
   workitems: "Work items",
+  worklog: "Worklog",
   changelog: "Changelog",
   reports: "Reports",
 }
@@ -42,6 +44,7 @@ export function parseListViewMode(
   const raw = typeof value === "string" ? value.trim().toLowerCase() : ""
   if (raw === "overall") return "overall"
   if (LEGACY_WORKITEMS_VIEWS.has(raw)) return "workitems"
+  if (raw === "worklog") return "worklog"
   if (raw === "changelog") {
     return availability?.hasChangelog ? "changelog" : DEFAULT_LIST_VIEW_MODE
   }

@@ -12,8 +12,12 @@ import { StaticBoardApp } from "@/components/board/static-board-app"
 import { WorkItemsList } from "@/components/board/work-items-list"
 import { LiveBoardDetailLoaders } from "@/components/board/live-board-detail-loaders"
 import { WorkItemSheetProvider } from "@/components/board/work-item-sheet"
+import { WorklogPanel } from "@taskmark/components/board"
+import { flattenWorklogEntries } from "@taskmark/components/board-model"
 import { resolveActiveProject } from "@/lib/taskmark/active-project"
 import { buildBoardIndex } from "@/lib/taskmark/board-index"
+import { loadWorkItemDetailSync } from "@/lib/taskmark/detail-load"
+import type { WorkItemDetail } from "@/lib/taskmark/detail-types"
 import {
   getActiveProjectCookie,
   getHideCompletedCookie,
@@ -154,6 +158,19 @@ export async function BoardScreen({ searchParams }: BoardScreenProps) {
     activeView === "workitems"
       ? parseWorkItemsViewForProject(activeProject, boardIndex)
       : null
+  const worklogDetails: Record<string, WorkItemDetail> = {}
+  if (activeView === "worklog") {
+    for (const leaf of boardIndex.leaves) {
+      const result = loadWorkItemDetailSync(
+        workspace.projects,
+        leaf.filePath,
+        "item",
+        boardIndex
+      )
+      if (result.ok) worklogDetails[leaf.filePath] = result.detail
+    }
+  }
+  const worklogEntries = flattenWorklogEntries(worklogDetails)
 
   const metricLeaves = collectMetricLeaves(activeProject, boardIndex)
   /** Match Current Speed exactly: completed task/bug leaf points only. */
@@ -191,6 +208,9 @@ export async function BoardScreen({ searchParams }: BoardScreenProps) {
                   : ""}
                 {activeView === "workitems" && workItemsList
                   ? ` · ${workItemsList.rows.length} item${workItemsList.rows.length === 1 ? "" : "s"}`
+                  : ""}
+                {activeView === "worklog"
+                  ? ` · ${worklogEntries.length} entr${worklogEntries.length === 1 ? "y" : "ies"}`
                   : ""}
                 {activeView === "overall" && selectedEpic
                   ? ` · expanded ${selectedEpic.id}`
@@ -234,6 +254,10 @@ export async function BoardScreen({ searchParams }: BoardScreenProps) {
               countableCompletions={countableCompletions}
               initialHideCompleted={hideCompleted}
             />
+          ) : null}
+
+          {activeView === "worklog" ? (
+            <WorklogPanel entries={worklogEntries} />
           ) : null}
 
           {activeView === "changelog" && changelogMarkdown ? (

@@ -9,15 +9,21 @@ import {
 } from "./list-view-mode"
 
 test("omits changelog from the switcher when the file is absent", () => {
-  assert.deepEqual(listViewModes(), ["overall", "workitems"])
+  assert.deepEqual(listViewModes(), ["overall", "workitems", "worklog"])
   assert.equal(parseListViewMode("changelog"), "overall")
   assert.equal(parseListViewMode("changelog", { hasChangelog: false }), "overall")
+})
+
+test("always exposes the worklog view", () => {
+  assert.equal(parseListViewMode("worklog"), "worklog")
+  assert.ok(listViewModes().includes("worklog"))
 })
 
 test("keeps changelog when content is present", () => {
   assert.deepEqual(listViewModes({ hasChangelog: true }), [
     "overall",
     "workitems",
+    "worklog",
     "changelog",
   ])
   assert.equal(parseListViewMode("changelog", { hasChangelog: true }), "changelog")
@@ -27,6 +33,7 @@ test("omits reports from the switcher when no report exists", () => {
   assert.deepEqual(listViewModes({ hasChangelog: true }), [
     "overall",
     "workitems",
+    "worklog",
     "changelog",
   ])
   assert.equal(parseListViewMode("reports"), "overall")
@@ -37,6 +44,7 @@ test("keeps reports when at least one report exists", () => {
   assert.deepEqual(listViewModes({ hasReports: true }), [
     "overall",
     "workitems",
+    "worklog",
     "reports",
   ])
   assert.equal(parseListViewMode("reports", { hasReports: true }), "reports")
