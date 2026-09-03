@@ -19,6 +19,7 @@ import path from "node:path"
 import { fileURLToPath } from "node:url"
 
 import { resolveServeBoard } from "../bin/lib/resolve-board.mjs"
+import { snapshotExternals } from "../bin/lib/snapshot-externals.mjs"
 import { stageUiPackage, underNodeModules } from "../bin/lib/stage-ui.mjs"
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -126,7 +127,7 @@ function writeBoardSnapshot(buildRoot, env) {
     platform: "node",
     format: "esm",
     outfile: outFile,
-    packages: "external",
+    external: snapshotExternals(buildRoot),
     alias: { "@": buildRoot },
     logLevel: "warning",
   })
