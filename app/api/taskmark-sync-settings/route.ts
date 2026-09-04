@@ -22,11 +22,14 @@ function boundBoardRoot(): string | null {
 function status(boardPath: string) {
   const saved = readBoardSyncConfig(boardPath)
   const resolved = resolveBoardSyncCredentials(boardPath)
+  const hintToken =
+    saved?.token ||
+    (resolved.source === "config" ? resolved.token : "")
   return {
     configured: Boolean(resolved.token),
     source: resolved.source,
     // Never derive browser-visible text from a secret inherited via env.
-    tokenHint: syncTokenHint(saved?.token),
+    tokenHint: syncTokenHint(hintToken),
   }
 }
 

@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url"
 import { snapshotExternals } from "./snapshot-externals.mjs"
 import { watchBoardMarkdown } from "./watch-board-markdown.mjs"
 import {
+  parseEnvStyleFile,
   resolveBoardSyncCredentials,
   watchBoardSyncConfig,
 } from "../../lib/taskmark/sync-config.mjs"
@@ -57,21 +58,8 @@ function worklogActivityFromSnapshot(boardPath, snapshot) {
 }
 
 export function loadBoardEnv(boardPath) {
-  const envFile = path.join(boardPath, ".env")
-  if (!fs.existsSync(envFile)) return
-  for (const line of fs.readFileSync(envFile, "utf8").split("\n")) {
-    const trimmed = line.trim()
-    if (!trimmed || trimmed.startsWith("#")) continue
-    const eq = trimmed.indexOf("=")
-    if (eq <= 0) continue
-    const key = trimmed.slice(0, eq).trim()
-    let value = trimmed.slice(eq + 1).trim()
-    if (
-      (value.startsWith('"') && value.endsWith('"')) ||
-      (value.startsWith("'") && value.endsWith("'"))
-    ) {
-      value = value.slice(1, -1)
-    }
+  const values = parseEnvStyleFile(path.join(boardPath, ".env"))
+  for (const [key, value] of Object.entries(values)) {
     if (process.env[key] == null || process.env[key] === "") {
       process.env[key] = value
     }
@@ -237,7 +225,7 @@ export async function syncBoardOnce(boardPath) {
   const token = credentials.token
   if (!token) {
     throw new Error(
-      "Sync is not configured. Paste the project token in local Taskmark Settings.",
+      "Sync is not configured. Add TASKMARK_SYNC_TOKEN to the board .config file, or paste the project token in local Taskmark Settings.",
     )
   }
   const baseUrl = credentials.cloudUrl || DEFAULT_CLOUD_URL
@@ -364,7 +352,7 @@ export async function runBoardSync({ boardPath, watch }) {
   const stopConfigWatch = watchBoardSyncConfig(boardPath, () =>
     schedule("sync settings"),
   )
-  log("watching board markdown and local sync settings")
+  log("watching board markdown, .config, and local sync settings")
   return () => {
     stopped = true
     stopMarkdownWatch()

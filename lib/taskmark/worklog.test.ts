@@ -1,7 +1,7 @@
 import assert from "node:assert/strict"
 import test from "node:test"
 
-import { flattenWorklogEntries } from "@taskmark/components/board-model"
+import { flattenWorklogEntries } from "@taskmark/components/board-model/worklog"
 import type { WorkItemDetail } from "@/lib/taskmark/detail-types"
 
 function leaf(

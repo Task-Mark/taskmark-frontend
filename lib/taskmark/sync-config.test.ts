@@ -61,6 +61,46 @@ test("stores a per-board token outside the repository with a safe hint", () => {
   }
 })
 
+test("committed .config is used when Settings are empty and beats the environment", () => {
+  const { root, board, config } = fixture()
+  const previous = process.env.TASKMARK_CONFIG_HOME
+  process.env.TASKMARK_CONFIG_HOME = config
+  try {
+    const committed = `tmk_${"d".repeat(48)}`
+    const fallback = `tmk_${"e".repeat(48)}`
+    fs.writeFileSync(
+      path.join(board, ".config"),
+      `TASKMARK_SYNC_TOKEN=${committed}\nTASKMARK_CLOUD_URL=https://cloud.example\n`,
+    )
+    assert.deepEqual(
+      resolveBoardSyncCredentials(board, {
+        TASKMARK_SYNC_TOKEN: fallback,
+      }),
+      {
+        token: committed,
+        source: "config",
+        cloudUrl: "https://cloud.example",
+      },
+    )
+    const settingsToken = `tmk_${"f".repeat(48)}`
+    writeBoardSyncConfig(board, settingsToken)
+    assert.deepEqual(
+      resolveBoardSyncCredentials(board, {
+        TASKMARK_SYNC_TOKEN: fallback,
+      }),
+      {
+        token: settingsToken,
+        source: "settings",
+        cloudUrl: "https://cloud.example",
+      },
+    )
+  } finally {
+    if (previous == null) delete process.env.TASKMARK_CONFIG_HOME
+    else process.env.TASKMARK_CONFIG_HOME = previous
+    fs.rmSync(root, { recursive: true, force: true })
+  }
+})
+
 test("rejects malformed tokens", () => {
   const { root, board, config } = fixture()
   const previous = process.env.TASKMARK_CONFIG_HOME

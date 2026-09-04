@@ -9,7 +9,7 @@ import { SITE } from "@/lib/site"
 
 type SyncStatus = {
   configured: boolean
-  source: "settings" | "environment" | null
+  source: "settings" | "config" | "environment" | null
   tokenHint: string | null
   message?: string
 }
@@ -95,8 +95,12 @@ export function SyncSettingsPanel() {
             {SITE.cloudUrl.replace(/^https:\/\//, "")}
           </a>
           . After you save a project token here, this local board starts
-          uploading markdown automatically. The token is stored in your user
-          configuration, never in this project repository.
+          uploading markdown automatically. The token from this page is stored
+          in your user configuration, never in this project repository. To share
+          sync with everyone who clones the board, commit a board-root{" "}
+          <code>.config</code> file instead (dotenv keys{" "}
+          <code>TASKMARK_SYNC_TOKEN</code> and optional{" "}
+          <code>TASKMARK_CLOUD_URL</code>).
         </p>
       </div>
 
@@ -156,13 +160,15 @@ export function SyncSettingsPanel() {
             <span className="text-xs text-muted-foreground">
               {status.source === "environment"
                 ? "Environment fallback"
-                : "Saved in local Settings"}
+                : status.source === "config"
+                  ? "Committed board .config"
+                  : "Saved in local Settings"}
             </span>
           </div>
         ) : (
           <span className="text-muted-foreground">
-            Sync is not configured yet. Complete the steps above, then paste the
-            token.
+            Sync is not configured yet. Commit a board <code>.config</code> or
+            complete the steps above and paste the token.
           </span>
         )}
       </div>
