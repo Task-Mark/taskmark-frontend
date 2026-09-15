@@ -3,6 +3,8 @@ import test from "node:test"
 
 import {
   dailyWorklogHistory,
+  dailyWorklogPace,
+  WORKLOG_PACE_LOOKBACK_DAYS,
   worklogPaceIcon,
 } from "@taskmark/components/board-model"
 
@@ -48,4 +50,27 @@ test("history shows zzz for idle past days and annoyed only for slow ones", () =
       ["2026-09-07", 0, "zzz"],
     ]
   )
+})
+
+test("uses a 10-day peak and ignores a busier day older than that window", () => {
+  assert.equal(WORKLOG_PACE_LOOKBACK_DAYS, 10)
+  const now = localAt("2026-09-15", 12)
+  const entries = [
+    ...Array.from({ length: 82 }, () => startedAt("2026-08-20", 10)),
+    ...Array.from({ length: 3 }, () => startedAt("2026-09-10", 10)),
+    startedAt("2026-09-15", 9),
+  ]
+
+  const pace = dailyWorklogPace(entries, now)
+  assert.equal(pace.today, 1)
+  assert.equal(pace.peak, 3)
+})
+
+test("falls back to the last worked project day when the last 10 days are idle", () => {
+  const now = localAt("2026-09-15", 12)
+  const entries = Array.from({ length: 82 }, () => startedAt("2026-08-20", 10))
+
+  const pace = dailyWorklogPace(entries, now)
+  assert.equal(pace.today, 0)
+  assert.equal(pace.peak, 82)
 })

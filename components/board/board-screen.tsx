@@ -13,6 +13,7 @@ import { WorkItemsList } from "@/components/board/work-items-list"
 import { LiveBoardDetailLoaders } from "@/components/board/live-board-detail-loaders"
 import { WorkItemSheetProvider } from "@/components/board/work-item-sheet"
 import { WorklogPanel } from "@/components/board/worklog-panel"
+import { BoardFloatingChrome, WorklogSpeedometer } from "@taskmark/components/board"
 import { flattenWorklogEntries } from "@taskmark/components/board-model/worklog"
 import { resolveActiveProject } from "@/lib/taskmark/active-project"
 import { buildBoardIndex } from "@/lib/taskmark/board-index"
@@ -163,16 +164,14 @@ export async function BoardScreen({ searchParams }: BoardScreenProps) {
       ? parseWorkItemsViewForProject(activeProject, boardIndex)
       : null
   const worklogDetails: Record<string, WorkItemDetail> = {}
-  if (activeView === "worklog") {
-    for (const leaf of boardIndex.leaves) {
-      const result = loadWorkItemDetailSync(
-        workspace.projects,
-        leaf.filePath,
-        "item",
-        boardIndex
-      )
-      if (result.ok) worklogDetails[leaf.filePath] = result.detail
-    }
+  for (const leaf of boardIndex.leaves) {
+    const result = loadWorkItemDetailSync(
+      workspace.projects,
+      leaf.filePath,
+      "item",
+      boardIndex
+    )
+    if (result.ok) worklogDetails[leaf.filePath] = result.detail
   }
   const worklogEntries = flattenWorklogEntries(worklogDetails)
 
@@ -237,6 +236,10 @@ export async function BoardScreen({ searchParams }: BoardScreenProps) {
 
           <ProjectStatusMetricsStrip metrics={statusMetrics} />
 
+          <div className="md:hidden">
+            <WorklogSpeedometer entries={worklogEntries} layout="inline" />
+          </div>
+
           {activeView === "overall" ? (
             <>
               <PointsHeatmap samples={countableCompletions} />
@@ -272,6 +275,7 @@ export async function BoardScreen({ searchParams }: BoardScreenProps) {
             <ReportsPanel reports={reports} />
           ) : null}
         </div>
+        <BoardFloatingChrome worklogEntries={worklogEntries} />
       </div>
     </WorkItemSheetProvider>
   )

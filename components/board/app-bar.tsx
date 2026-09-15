@@ -19,7 +19,7 @@ export function AppBar({
   autoconfig = false,
 }: AppBarProps) {
   return (
-    <AppBarChrome>
+    <AppBarChrome floatingChromeToggle>
       {!autoconfig ? (
         <form
           action={selectActiveProject}
