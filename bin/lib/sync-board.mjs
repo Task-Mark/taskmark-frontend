@@ -125,6 +125,14 @@ function bundleSnapshotPrinter() {
       "esbuild is missing from @taskmark/ui dependencies (needed for the board snapshot).",
     )
   }
+  try {
+    requireFromPackage.resolve("@taskmark/components/board-model")
+  } catch {
+    throw new Error(
+      "@taskmark/components is not installed next to @taskmark/ui, so the board snapshot cannot be built. " +
+        "Reinstall the CLI with `npx --yes @taskmark/ui@latest`.",
+    )
+  }
   const outFile = path.join(
     packageRoot,
     ".taskmark-build",
