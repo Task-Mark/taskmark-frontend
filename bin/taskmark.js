@@ -403,6 +403,7 @@ async function serve(args) {
         ...process.env,
         PORT: String(port),
         HOSTNAME: "0.0.0.0",
+        TASKMARK_UI_PACKAGE_ROOT: packageRoot,
         ...(workspace
           ? workspaceEnv()
           : { TASKMARK_BOARD: resolved.boardPath }),
@@ -489,6 +490,7 @@ async function dev(args) {
       env: {
         ...process.env,
         PORT: String(port),
+        TASKMARK_UI_PACKAGE_ROOT: packageRoot,
         ...(workspace
           ? workspaceEnv()
           : {

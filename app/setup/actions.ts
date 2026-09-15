@@ -11,6 +11,7 @@ import {
 } from "@/lib/taskmark/cookies"
 import { pickFolderNative } from "@/lib/taskmark/pick-folder"
 import { loadConfiguredWorkspace } from "@/lib/taskmark/workspace"
+import { stopWorkspaceSync } from "@/lib/taskmark/workspace-sync.mjs"
 import { validateMasterFolder } from "@/lib/taskmark/validate"
 import type { DiscoveredProject } from "@/lib/taskmark/types"
 
@@ -107,6 +108,7 @@ export async function selectActiveProject(formData: FormData): Promise<void> {
 /** Optional: clear everything and start over (not shown in app bar by default). */
 export async function resetWorkspace(): Promise<void> {
   const { clearMasterFoldersCookie } = await import("@/lib/taskmark/cookies")
+  stopWorkspaceSync()
   await clearMasterFoldersCookie()
   await clearActiveProjectCookie()
   redirect("/setup")

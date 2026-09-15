@@ -46,6 +46,7 @@ import {
 } from "@/lib/taskmark/project-metrics"
 import { isStaticRuntime } from "@/lib/taskmark/static-mode"
 import { loadWorkspace } from "@/lib/taskmark/workspace"
+import { syncWorkspaceProjects } from "@/lib/taskmark/workspace-sync.mjs"
 
 // Keep this import so `taskmark dev` can touch the token module and refresh RSC.
 void DEV_RELOAD_TOKEN
@@ -91,6 +92,9 @@ export async function BoardScreen({ searchParams }: BoardScreenProps) {
   const workspace = loadWorkspace(masters)
   if (workspace.projects.length === 0) {
     redirect("/setup")
+  }
+  if (!workspace.autoconfig) {
+    syncWorkspaceProjects(workspace.projects)
   }
 
   const savedActiveId = await getActiveProjectCookie()

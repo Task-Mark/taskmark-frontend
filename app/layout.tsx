@@ -3,9 +3,11 @@ import { Archivo_Black, Space_Grotesk } from "next/font/google"
 import Script from "next/script"
 import { BoardDevReloader } from "@/components/board/board-dev-reloader"
 import { ThemeProvider } from "@taskmark/components"
+import { AppFooter } from "@taskmark/components/board/app-footer"
 import { Toaster } from "@taskmark/components/ui/sonner"
 import { SITE } from "@/lib/site"
 import { THEME_INIT_SCRIPT } from "@taskmark/components/theme"
+import pkg from "../package.json"
 import "./globals.css"
 
 const archivoBlack = Archivo_Black({
@@ -93,7 +95,10 @@ export default function RootLayout({
         <ThemeProvider>
           <Toaster />
           <BoardDevReloader />
-          {children}
+          <div className="flex min-h-svh flex-col">
+            <div className="flex-1">{children}</div>
+            <AppFooter version={pkg.version} siteUrl="https://taskmark.dev" />
+          </div>
         </ThemeProvider>
       </body>
     </html>
