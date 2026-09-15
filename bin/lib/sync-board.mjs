@@ -225,7 +225,7 @@ export async function syncBoardOnce(boardPath) {
   const token = credentials.token
   if (!token) {
     throw new Error(
-      "Sync is not configured. Add TASKMARK_SYNC_TOKEN to the board .config file, or paste the project token in local Taskmark Settings.",
+      "Sync is not configured. Add TASKMARK_SYNC_TOKEN to the board .config file.",
     )
   }
   const baseUrl = credentials.cloudUrl || DEFAULT_CLOUD_URL
@@ -329,7 +329,7 @@ export async function runBoardSync({ boardPath, watch }) {
     await syncBoardOnce(boardPath)
   } catch (err) {
     console.error(`[taskmark sync] ${err.message || err}`)
-    log("waiting for local Settings or markdown changes")
+    log("waiting for .config or markdown changes")
   }
 
   let debounce = null
@@ -344,15 +344,15 @@ export async function runBoardSync({ boardPath, watch }) {
       } catch (err) {
         console.error(`[taskmark sync] ${err.message || err}`)
       }
-    }, reason === "sync settings" ? 250 : 2000)
+    }, reason === ".config" ? 250 : 2000)
   }
   const stopMarkdownWatch = watchBoardMarkdown(boardPath, () =>
     schedule("markdown"),
   )
   const stopConfigWatch = watchBoardSyncConfig(boardPath, () =>
-    schedule("sync settings"),
+    schedule(".config"),
   )
-  log("watching board markdown, .config, and local sync settings")
+  log("watching board markdown and .config")
   return () => {
     stopped = true
     stopMarkdownWatch()

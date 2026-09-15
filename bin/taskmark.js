@@ -34,9 +34,9 @@ Commands:
   open               Always start in workspace mode (setup / project picker)
   serve              Start the prebuilt UI bound to one resolved board (port ${DEFAULT_PORT})
   dev                Next.js development server with board markdown live reload
-                     (cloud sync starts when a token is saved in local Settings)
+                     (cloud sync starts from the board .config token)
   build              Production static HTML export for Vercel / static hosting
-  sync               Push board markdown to Taskmark Cloud using local Settings
+  sync               Push board markdown to Taskmark Cloud using board .config
   preview            Serve an existing static export (default: <board>/out)
 
 Options:
@@ -44,7 +44,7 @@ Options:
   --board <path>     Board or product root (sets TASKMARK_BOARD)
   --workspace, -w    Force multi-project / setup mode (skip local board binding)
   --out <dir>        Static output directory for build/preview (default: <board>/out)
-  --sync             Kept for compatibility; bound dev/serve always monitor sync Settings
+  --sync             Kept for compatibility; bound dev/serve always watch .config
   --watch            Keep syncing when markdown changes (sync command)
   --no-open          Do not open a browser (default / open / serve / preview / dev)
   --help, -h         Show help
