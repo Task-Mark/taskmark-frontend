@@ -1,6 +1,6 @@
 {
   "name": "@taskmark/ui",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Taskmark board UI — run globally for setup/project picker, or install in a board folder to open that board with `npx taskmark`",
   "private": false,
   "type": "module",

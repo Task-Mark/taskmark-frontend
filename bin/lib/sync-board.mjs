@@ -162,7 +162,16 @@ async function buildSnapshot(boardPath) {
     const errChunks = []
     const child = spawn(process.execPath, [printer], {
       cwd: packageRoot,
-      env: { ...process.env, TASKMARK_BOARD: boardPath },
+      env: {
+        ...process.env,
+        TASKMARK_BOARD: boardPath,
+        // Workspace mode turns board autoconfig off, and sync inherits it from
+        // the UI server. The printer builds one named board, so bind it.
+        TASKMARK_WORKSPACE: "",
+        TASKMARK_WORKSPACE_ROOT: "",
+        TASKMARK_MASTER: "",
+        TASKMARK_CWD: "",
+      },
       stdio: ["ignore", "pipe", "pipe"],
     })
     child.stdout.on("data", (chunk) => chunks.push(chunk))
