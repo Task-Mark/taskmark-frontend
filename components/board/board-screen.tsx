@@ -1,7 +1,9 @@
+import path from "node:path"
 import { Suspense } from "react"
 import { redirect } from "next/navigation"
 
 import { AppBar } from "@/components/board/app-bar"
+import { BoardAssetsProvider } from "@/components/board/board-assets"
 import { ChangelogPanel } from "@/components/board/changelog-panel"
 import { ListViewSwitcher } from "@/components/board/list-view-switcher"
 import { OverallTreeList } from "@/components/board/overall-tree-list"
@@ -83,9 +85,11 @@ export async function BoardScreen({ searchParams }: BoardScreenProps) {
   if (isStaticRuntime()) {
     const snapshot = loadSnapshotFromPublic()
     return (
-      <Suspense fallback={<div className="p-8 text-sm text-muted-foreground">Loading board…</div>}>
-        <StaticBoardApp snapshot={snapshot} />
-      </Suspense>
+      <BoardAssetsProvider mode="static">
+        <Suspense fallback={<div className="p-8 text-sm text-muted-foreground">Loading board…</div>}>
+          <StaticBoardApp snapshot={snapshot} />
+        </Suspense>
+      </BoardAssetsProvider>
     )
   }
 
@@ -186,6 +190,7 @@ export async function BoardScreen({ searchParams }: BoardScreenProps) {
   )
 
   return (
+    <BoardAssetsProvider mode="live">
     <WorkItemSheetProvider>
       <LiveBoardDetailLoaders />
       <div className="tm-surface min-h-svh">
@@ -268,15 +273,19 @@ export async function BoardScreen({ searchParams }: BoardScreenProps) {
           ) : null}
 
           {activeView === "changelog" && changelogMarkdown ? (
-            <ChangelogPanel markdown={changelogMarkdown} />
+            <ChangelogPanel
+              markdown={changelogMarkdown}
+              sourcePath={path.join(activeProject.boardPath, "CHANGELOG.md")}
+            />
           ) : null}
 
           {activeView === "reports" && hasReports ? (
-            <ReportsPanel reports={reports} />
+            <ReportsPanel reports={reports} boardRoot={activeProject.boardPath} />
           ) : null}
         </div>
         <BoardFloatingChrome worklogEntries={worklogEntries} />
       </div>
     </WorkItemSheetProvider>
+    </BoardAssetsProvider>
   )
 }

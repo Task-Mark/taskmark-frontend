@@ -308,6 +308,12 @@ function main() {
     console.error(String(err?.message || err))
     process.exitCode = 1
   } finally {
+    // Board images are per-board build input; never leave them in the
+    // package's public/ where a later package build would ship them.
+    fs.rmSync(path.join(buildRoot, "public", "board-assets"), {
+      recursive: true,
+      force: true,
+    })
     restoreServerActions(stashed)
     restoreNextBuild(stashedNext)
     if (staged) {

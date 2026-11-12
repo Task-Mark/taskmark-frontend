@@ -17,6 +17,7 @@
 /.next/
 /out/
 /public/taskmark-snapshot.json
+/public/board-assets/
 /.taskmark-build/
 /.taskmark-ui-dev/
 
