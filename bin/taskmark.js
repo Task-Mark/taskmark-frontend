@@ -49,6 +49,17 @@ Commands:
                      (without --key: TASKMARK_AI_KEY, else a hidden prompt)
   ai status          Show the provider, model and last 4 characters of the key
   ai clear           Remove the board's AI key (the App falls back to the server default)
+  app status         Show the GitHub / Bitbucket App connection of this board: provider,
+                     repos, board repo, mode, enabled, AI key, webhooks
+  app connect github|bitbucket
+                     Connect the board's project to the App with the sync token, then
+                     open the install / authorize page:
+                     [--repo <owner>/<repo>]... (default: the board's code repos on
+                     that provider) [--board-repo <provider>:<owner>/<repo>[@branch][:root]]
+                     (default: the board's own origin) [--mode shadow|write]
+  app mode shadow|write
+                     shadow: the App only proposes; write: it updates the board
+  app disable        Stop reconciling on push (app enable turns it back on)
 
 Options:
   --port, -p <n>     Listen port (default ${DEFAULT_PORT}; env PORT / TASKMARK_PORT)
@@ -85,6 +96,8 @@ Examples:
   npx taskmark dev --board .
   npx taskmark build --board .
   npx taskmark ai set --provider anthropic   # prompts for the key, never prints it
+  npx taskmark app connect bitbucket --repo acme/api --repo acme/web
+  npx taskmark app connect github --board-repo github:acme/shop-taskmark@main
   npm run preview
   TASKMARK_BOARD=/path/to/board npx taskmark serve
 `)
@@ -655,10 +668,39 @@ async function runAi(argv) {
   }
 }
 
+async function runApp(argv) {
+  const { APP_USAGE, parseAppArgs, runAppCommand } = await import("./lib/app-connect.mjs")
+  const args = parseAppArgs(argv)
+  if (args.help) {
+    console.log(APP_USAGE)
+    return
+  }
+  if (args.error) {
+    console.error(`${args.error}\n\n${APP_USAGE}`)
+    process.exit(1)
+  }
+  try {
+    const resolved = resolveBoardOrExit(args.board, `app ${args.action}`)
+    const code = await runAppCommand({
+      args,
+      boardPath: resolved.boardPath,
+      openUrl: openBrowser,
+    })
+    if (code !== 0) process.exit(code)
+  } catch (err) {
+    console.error(String(err?.message || err))
+    process.exit(1)
+  }
+}
+
 async function main() {
-  // `ai` has its own flags (--provider, --model, --key).
+  // `ai` and `app` have their own flags (--provider, --repo, --mode...).
   if (process.argv[2] === "ai") {
     await runAi(process.argv.slice(3))
+    return
+  }
+  if (process.argv[2] === "app") {
+    await runApp(process.argv.slice(3))
     return
   }
   const args = parseArgs(process.argv.slice(2))
