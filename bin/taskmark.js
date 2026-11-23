@@ -44,6 +44,11 @@ Commands:
                      Bitbucket App writes stages to the board)
   hooks install      Install the git hook that adds the task id to commits made
                      on a task branch (removes the old post-merge hook)
+  ai set             Give this board its own AI key for the GitHub / Bitbucket App:
+                     ai set --provider anthropic|openai [--model <id>] [--key <key>]
+                     (without --key: TASKMARK_AI_KEY, else a hidden prompt)
+  ai status          Show the provider, model and last 4 characters of the key
+  ai clear           Remove the board's AI key (the App falls back to the server default)
 
 Options:
   --port, -p <n>     Listen port (default ${DEFAULT_PORT}; env PORT / TASKMARK_PORT)
@@ -79,6 +84,7 @@ Examples:
   npx taskmark open                # force setup even inside a board folder
   npx taskmark dev --board .
   npx taskmark build --board .
+  npx taskmark ai set --provider anthropic   # prompts for the key, never prints it
   npm run preview
   TASKMARK_BOARD=/path/to/board npx taskmark serve
 `)
@@ -628,7 +634,33 @@ Then: npm run preview`)
   }
 }
 
+async function runAi(argv) {
+  const { AI_USAGE, parseAiArgs, runAiCommand } = await import("./lib/ai-key.mjs")
+  const args = parseAiArgs(argv)
+  if (args.help) {
+    console.log(AI_USAGE)
+    return
+  }
+  if (args.error) {
+    console.error(`${args.error}\n\n${AI_USAGE}`)
+    process.exit(1)
+  }
+  try {
+    const resolved = resolveBoardOrExit(args.board, `ai ${args.action}`)
+    const code = await runAiCommand({ args, boardPath: resolved.boardPath })
+    if (code !== 0) process.exit(code)
+  } catch (err) {
+    console.error(String(err?.message || err))
+    process.exit(1)
+  }
+}
+
 async function main() {
+  // `ai` has its own flags (--provider, --model, --key).
+  if (process.argv[2] === "ai") {
+    await runAi(process.argv.slice(3))
+    return
+  }
   const args = parseArgs(process.argv.slice(2))
   if (args.help || !args.command) {
     printHelp()
