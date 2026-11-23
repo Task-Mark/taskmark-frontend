@@ -29,6 +29,7 @@ function printHelp() {
   taskmark preview [options]
   taskmark init [--yes ...]
   taskmark reconcile [--last <n>] [--branch <name>]...
+  taskmark requests regroup [--dry-run] [--yes]
   taskmark secret rotate
 
 Commands:
@@ -40,6 +41,9 @@ Commands:
   reconcile          Read the recent commits of each stage branch, show what is in
                      development, in quality and shipped, and review the proposals:
                      reconcile [--last 30] [--branch <name>]...
+  requests regroup   Ask the project's AI which requests belong together, review the
+                     proposals and merge the accepted ones locally (then commit):
+                     requests regroup [--dry-run] [--yes]
   secret rotate      Replace the project secret in the board .config with a new one
   (default)          Bind to a board in/near cwd when one exists; otherwise open
                      the standalone setup / project picker (same as global use)
@@ -746,6 +750,25 @@ async function runReconcileCli(argv) {
   process.exit(code)
 }
 
+async function runRequestsCli(argv) {
+  const { REQUESTS_USAGE, parseRequestsArgs } = await import("./lib/init-args.mjs")
+  const args = parseRequestsArgs(argv)
+  if (args.help) {
+    console.log(REQUESTS_USAGE)
+    return
+  }
+  if (args.error) {
+    console.error(`${args.error}\n\n${REQUESTS_USAGE}`)
+    process.exit(1)
+  }
+  const resolved = resolveBoardOrExit(args.board, "requests regroup")
+  const { runRegroupCommand } = await import("./lib/init.mjs")
+  const { createDefaultsUi } = await import("./lib/prompts.mjs")
+  const ui = args.yes ? createDefaultsUi() : await promptUi()
+  const code = await runRegroupCommand({ args, boardPath: resolved.boardPath, ui })
+  process.exit(code)
+}
+
 async function runSecretCli(argv) {
   const { SECRET_USAGE, parseSecretArgs } = await import("./lib/init-args.mjs")
   const args = parseSecretArgs(argv)
@@ -764,8 +787,8 @@ async function runSecretCli(argv) {
 }
 
 async function main() {
-  // `init`, `reconcile`, `secret`, `ai` and `app` have their own flags.
-  const own = { init: runInitCli, reconcile: runReconcileCli, secret: runSecretCli }
+  // `init`, `reconcile`, `requests`, `secret`, `ai` and `app` have their own flags.
+  const own = { init: runInitCli, reconcile: runReconcileCli, requests: runRequestsCli, secret: runSecretCli }
   if (own[process.argv[2]]) {
     await own[process.argv[2]](process.argv.slice(3))
     return

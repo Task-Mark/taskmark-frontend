@@ -4,7 +4,8 @@
  * hooks, agent instructions, migration, reconciliation, sync); this file asks
  * the questions and writes each step's files at the end of that step.
  *
- * Also `npx taskmark reconcile` and `npx taskmark secret rotate`.
+ * Also `npx taskmark reconcile`, `npx taskmark requests regroup` and
+ * `npx taskmark secret rotate`.
  */
 import { execFileSync } from "node:child_process"
 import fs from "node:fs"
@@ -36,6 +37,7 @@ import { boardKind, detectProject, gitTopLevel, isDedicatedBoardPath } from "./i
 import { migrateBoard } from "./migrate-board.mjs"
 import { CancelledError, MissingAnswerError } from "./prompts.mjs"
 import { DEFAULT_BACKFILL_COMMITS, runReconcile } from "./reconcile.mjs"
+import { readBoardRequests, runRegroup, shouldOfferRegroup } from "./regroup.mjs"
 import { syncBoardOnce } from "./sync-board.mjs"
 import { resolveBoardSyncCredentials } from "../../lib/taskmark/sync-config.mjs"
 
@@ -549,7 +551,8 @@ export async function runInit({
       `Code repos   ${hooked.length || localRepos.length ? "commit hook" : "no local clones"}${agentFiles.length ? `, agent instructions in ${agentFiles.length} file(s) (uncommitted)` : ""}   redo: npx taskmark hooks install`,
     )
 
-    // 7. Existing project: migrate, reconcile ------------------------------
+    // 7. Existing project: migrate, regroup, reconcile ---------------------
+    let justMigrated = false
     if (boardKind(boardPath) === "legacy") {
       const dry = migrateBoard({ boardPath, dryRun: true })
       if (dry.requests.length) {
@@ -564,6 +567,7 @@ export async function runInit({
         const ok = await ui.confirm({ message: "Migrate and commit it in the board repository?", initialValue: true })
         if (ok) {
           const result = migrateBoard({ boardPath })
+          justMigrated = result.requests.length > 0
           let sha = null
           try {
             sha = commitBoard(boardPath, "Migrate the Taskmark board from epics to requests")
@@ -575,8 +579,30 @@ export async function runInit({
         }
       }
     }
-    if (hadBoard) {
-      ui.log.info("Regrouping related requests is not available yet, so this step is skipped.")
+    const requestCount = boardKind(boardPath) === "requests" ? readBoardRequests(boardPath).length : 0
+    const offerRegroup = shouldOfferRegroup({
+      justMigrated,
+      requestCount,
+      aiConfigured: Boolean(ai.view?.keyConfigured),
+    })
+    if (offerRegroup && ui.interactive) {
+      const run = await ui.confirm({
+        message: `Ask the project's AI which of the ${requestCount} requests belong together and merge them?`,
+        initialValue: true,
+      })
+      if (run) {
+        try {
+          const result = await runRegroup({ ui, boardPath, baseUrl, token, fetchImpl })
+          summary.push(
+            `Regroup      ${result.merged} request(s) merged${result.commit ? `, commit ${result.commit}` : ""}   again: npx taskmark requests regroup`,
+          )
+        } catch (err) {
+          if (err instanceof CancelledError) throw err
+          ui.log.warn(`${err.message} You can run it later with npx taskmark requests regroup.`)
+        }
+      }
+    } else if (offerRegroup) {
+      ui.log.info("To merge requests that belong together, run npx taskmark requests regroup.")
     }
     if (hadBoard && !args.skipBackfill) {
       const run = await ui.confirm({
@@ -662,6 +688,30 @@ export async function runReconcileCommand({ args, boardPath, ui, env = process.e
   } catch (err) {
     if (err instanceof CancelledError) {
       ui.cancel("Stopped. Nothing was applied.")
+      return 130
+    }
+    ui.log.error(err.message || String(err))
+    return 1
+  }
+}
+
+/**
+ * `npx taskmark requests regroup [--dry-run] [--yes]`.
+ * @param {{ args: any, boardPath: string, ui: any, env?: Record<string, string | undefined>,
+ *           fetchImpl?: typeof fetch }} options
+ */
+export async function runRegroupCommand({ args, boardPath, ui, env = process.env, fetchImpl = fetch }) {
+  if (args.cloudUrl) env.TASKMARK_CLOUD_URL = args.cloudUrl
+  try {
+    const { token, baseUrl } = boardCredentials(boardPath, env)
+    ui.intro("Taskmark regroup requests")
+    const result = await runRegroup({ ui, boardPath, baseUrl, token, dryRun: args.dryRun, yes: args.yes, fetchImpl })
+    if (result.dryRun) ui.outro(`${result.accepted} proposal(s) would be applied. Nothing was written.`)
+    else ui.outro(result.merged ? `${result.merged} request(s) merged.` : "The board is unchanged.")
+    return 0
+  } catch (err) {
+    if (err instanceof CancelledError) {
+      ui.cancel("Stopped. Nothing was changed.")
       return 130
     }
     ui.log.error(err.message || String(err))

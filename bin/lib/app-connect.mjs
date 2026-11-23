@@ -37,8 +37,9 @@ Defaults for connect:
   --board-repo  the board's own git origin, branch main (or origin's default
                 branch), root "" for a dedicated board repo, else the board
                 folder inside the repo
-  --mode        shadow (the App proposes changes and writes nothing) on a new
-                connection; unchanged on an existing one
+  --mode        write (the App updates the board, the default on a new
+                connection) or shadow (it only comments what it would do);
+                unchanged on an existing connection when omitted
 
 Options:
   --board <path>  picks the board (its .config holds the sync token)

@@ -123,9 +123,22 @@ Favicon, webmanifest, and Open Graph assets ship in `public/` and are included i
 
 ## Board commands
 
-Run these from the board folder, or pass `--board <path>`.
+Start with `npx taskmark init` (or `npx @taskmark/ui init` where `@taskmark/ui` is
+not installed yet: the bare `taskmark` npm name is another package). Run the other
+commands from the board folder, or pass `--board <path>`.
 
 ```bash
+npx taskmark init                # set up or change the project, step by step
+npx taskmark init --yes --provider github --ai anthropic   # no questions (CI); key in TASKMARK_AI_KEY
+
+npx taskmark reconcile           # read the last 30 commits per stage branch, review proposals
+npx taskmark reconcile --last 100 --branch quality
+
+npx taskmark secret rotate       # new project secret in .config; the old one stops working
+
+npx taskmark requests regroup    # the project's AI proposes merging related requests
+npx taskmark requests regroup --dry-run
+
 npx taskmark migrate --dry-run   # preview moving a legacy epics/ board to requests/
 npx taskmark migrate             # one request per epic: brief.md, epics/, log/
 
@@ -137,7 +150,7 @@ npx taskmark hooks install --repo ../my-api
 
 npx taskmark app connect github                     # or bitbucket; opens the install page
 npx taskmark app status
-npx taskmark app mode write                         # shadow (default) | write
+npx taskmark app mode shadow                        # write (default) | shadow
 npx taskmark app disable                            # app enable turns it back on
 
 npx taskmark ai set --provider anthropic            # Claude, default model claude-opus-5-5
@@ -146,11 +159,40 @@ npx taskmark ai status
 npx taskmark ai clear
 ```
 
+- **`init`** asks for the board location, GitHub or Bitbucket and the code repos,
+  Claude or OpenAI and the key, and whether to write the agent instructions. It
+  writes the board scaffold (`requests/`, `meetings/`, `package.json`,
+  `.gitignore`), registers the project on Taskmark Cloud without an account (the
+  secret goes to the gitignored `.config` as `TASKMARK_SYNC_TOKEN`, the id to
+  `taskmark.projectId`), connects the App in write mode, installs the commit hook,
+  and writes the Taskmark section between `<!-- taskmark:begin -->` and
+  `<!-- taskmark:end -->` in `AGENTS.md` and `CLAUDE.md` of each code repo (left
+  uncommitted). On an existing board it also migrates a legacy `epics/` board,
+  offers to regroup requests, and runs the first reconciliation. Re-run it to
+  change any answer. With `--yes` (required without a terminal) the answers come
+  from flags: `--provider github|bitbucket`, `--repo <owner>/<repo>` (repeatable),
+  `--board-repo <provider>:<owner>/<repo>[@branch][:root]`, `--ai anthropic|openai`
+  (key in `TASKMARK_AI_KEY`), `--model <id>`, `--language <name>`,
+  `--skip-backfill`, `--last <n>`, `--board <path>`, `--no-open`. See
+  `npx taskmark init --help`.
+- **`reconcile`** has the App read the last commits of each stage branch
+  (`--last <n>`, default 30, up to 200; `--branch <name>` repeatable to limit the
+  branches), shows the tasks in development, in quality and shipped, applies the
+  links and stage moves, and lets you accept the proposed closes and new tasks or
+  leave them in the review inbox.
+- **`secret rotate`** generates a new project secret, registers it and saves it in
+  `.config`. Share the new `.config` privately with teammates who change the
+  configuration; keep it out of git.
+- **`requests regroup`** asks the project's AI (its own key) which requests belong
+  together. Accept all, choose one by one, or skip; accepted merges move the epics
+  and log entries into the target request, keep the merged ids as `aliases`, and
+  are committed in the board repo after you confirm. `--dry-run` writes nothing;
+  `--yes` accepts proposals at least 80% confident.
 - **`migrate`** moves each legacy epic folder unchanged to `requests/<slug>/epics/`,
   writes `requests/<slug>/brief.md` (id `R-<slug>`, the epic id as an alias) and a
   note in `requests/<slug>/log/`, and gives done tasks without a stage
   `stage: production` and `shipped_at`. Only the empty `epics/` folder is deleted.
-  Review the briefs, merge requests that belong together, then commit.
+  Review the briefs, run `requests regroup`, then commit.
 - **`stages`** is read only. It reads the stage branches in your local clones and
   reports what the GitHub / Bitbucket App would update; the App writes `stage` and
   `shipped_at` to the board. Code repos come from `--repo` (repeatable), else
@@ -163,19 +205,19 @@ npx taskmark ai clear
   message unless the id is already there. It never writes to the board, leaves
   hooks Taskmark did not write alone, and removes the `post-merge` hook older
   versions installed.
-- **`app`** connects the board's project to the GitHub / Bitbucket App with the
-  board sync token (API `https://cloud.taskmark.dev` by default). `connect
+- **`app`** changes the connection `init` made to the GitHub / Bitbucket App, with
+  the project secret in `.config` (API `https://cloud.taskmark.dev` by default). `connect
   github|bitbucket` saves the code repos and the board repo, then opens the GitHub
   App install page or the Bitbucket authorization page (`--no-open` prints the
   link). Defaults: code repos from `taskmark.repos` / `REPOS.md` whose origin is on
   that provider (override with `--repo <owner>/<repo>`, repeatable), the board's
   own git origin as board repo (override with
   `--board-repo <provider>:<owner>/<repo>[@branch][:root]`), stage branches from
-  `taskmark.branches`, and shadow mode on a new connection (`--mode shadow|write`).
+  `taskmark.branches`, and write mode on a new connection (`--mode shadow|write`).
   `status` shows repos, board repo, mode, enabled, AI key and webhooks; `mode`,
   `enable` and `disable` change the connection.
 - **`ai`** sets the project's own Claude or OpenAI key for the GitHub / Bitbucket
-  App, using the board sync token in `.config`. The key comes from `--key`, else
+  App, using the project secret in `.config`. The key comes from `--key`, else
   `TASKMARK_AI_KEY`, else a hidden prompt, and is never printed. `--base-url` sets
   an OpenAI compatible endpoint. `status` shows the provider, model and last 4
   characters of the key; `clear` removes it (the App then falls back to the

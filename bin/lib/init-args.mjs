@@ -37,6 +37,18 @@ Reads the last commits of each stage branch (default ${DEFAULT_BACKFILL_COMMITS}
 development, in quality and shipped, and lets you review the proposed closes
 and new tasks.`
 
+export const REQUESTS_USAGE = `Usage:
+  npx taskmark requests regroup [--dry-run] [--yes] [--board <path>]
+
+Asks the project's AI (its own key, see npx taskmark ai set) which requests
+belong together, shows the proposals and merges the accepted ones locally:
+epics and log entries move into the target request, the merged ids become
+aliases of the target, and the merged folders are removed. Commits in the
+board repository after you confirm.
+
+  --dry-run   show the plan, write nothing
+  --yes       no questions: accept proposals at least 80% confident and commit`
+
 export const SECRET_USAGE = `Usage:
   npx taskmark secret rotate [--board <path>]
 
@@ -180,6 +192,28 @@ export function parseReconcileArgs(argv) {
     },
   })
   if (positional.length) args.error ??= `Unexpected argument: ${positional[0]}`
+  return args
+}
+
+export function parseRequestsArgs(argv) {
+  const args = { action: null, dryRun: false, yes: false, board: null, cloudUrl: null, help: false, error: null }
+  const positional = makeParser(argv, args, {
+    flags: {
+      "--dry-run": () => (args.dryRun = true),
+      "--yes": () => (args.yes = true),
+      "-y": () => (args.yes = true),
+    },
+    values: {
+      "--board": (v) => (args.board = v),
+      "--cloud-url": (v) => (args.cloudUrl = v),
+    },
+  })
+  args.action = positional[0] ?? null
+  if (!args.help && !args.error) {
+    if (args.action !== "regroup") {
+      args.error = args.action ? `Unknown requests command: ${args.action}` : "Missing requests command (use: requests regroup)"
+    } else if (positional.length > 1) args.error = `Unexpected argument: ${positional[1]}`
+  }
   return args
 }
 

@@ -40,7 +40,7 @@ function normalize(raw) {
   return raw.replace(/^(---\r?\n[\s\S]*?\S)---(\r?\n)/, "$1\n---$2")
 }
 
-function readFrontmatter(raw) {
+export function readFrontmatter(raw) {
   const source = normalize(raw)
   const match = FRONTMATTER_RE.exec(source)
   if (!match) return { data: {}, body: source.trim(), source }
@@ -53,7 +53,7 @@ function readFrontmatter(raw) {
   return { data, body: source.slice(match[0].length).trim(), source }
 }
 
-function sections(body) {
+export function sections(body) {
   const out = {}
   let current = null
   let buf = []
@@ -74,7 +74,7 @@ function sections(body) {
   return out
 }
 
-function section(map, ...names) {
+export function section(map, ...names) {
   for (const name of names) {
     const value = map[name.toLowerCase()]
     if (value) return value
