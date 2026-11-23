@@ -109,7 +109,7 @@ export function describeAi(view) {
   return `${label}${model}${last4}, used by the GitHub/Bitbucket App to reconcile this board`
 }
 
-function errorFor(status, data) {
+export function errorFor(status, data) {
   if (status === 401) {
     return "Sync token was rejected. Copy a fresh token from Cloud Settings."
   }

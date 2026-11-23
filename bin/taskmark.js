@@ -27,8 +27,20 @@ function printHelp() {
   taskmark build [options]
   taskmark sync [options]
   taskmark preview [options]
+  taskmark init [--yes ...]
+  taskmark reconcile [--last <n>] [--branch <name>]...
+  taskmark secret rotate
 
 Commands:
+  init               Set up this project step by step: board, Taskmark Cloud project,
+                     GitHub / Bitbucket App, AI key, commit hook, agent instructions,
+                     migration and first reconciliation. Re-run it to change answers.
+                     For CI: init --yes --provider github|bitbucket --ai anthropic|openai
+                     (key in TASKMARK_AI_KEY); init --help lists every option
+  reconcile          Read the recent commits of each stage branch, show what is in
+                     development, in quality and shipped, and review the proposals:
+                     reconcile [--last 30] [--branch <name>]...
+  secret rotate      Replace the project secret in the board .config with a new one
   (default)          Bind to a board in/near cwd when one exists; otherwise open
                      the standalone setup / project picker (same as global use)
   open               Always start in workspace mode (setup / project picker)
@@ -92,6 +104,7 @@ Examples:
   npx @taskmark/ui                 # global: setup / pick projects
   cd my-app-taskmark && npx taskmark   # local board in this folder
   npm i @taskmark/ui --save && npx taskmark serve
+  npx taskmark init                # set up or change this project
   npx taskmark open                # force setup even inside a board folder
   npx taskmark dev --board .
   npx taskmark build --board .
@@ -693,8 +706,70 @@ async function runApp(argv) {
   }
 }
 
+async function promptUi() {
+  const { createClackUi, createDefaultsUi } = await import("./lib/prompts.mjs")
+  return process.stdin.isTTY && process.stdout.isTTY ? createClackUi() : createDefaultsUi()
+}
+
+async function runInitCli(argv) {
+  const { INIT_USAGE, parseInitArgs } = await import("./lib/init-args.mjs")
+  const args = parseInitArgs(argv)
+  if (args.help) {
+    console.log(INIT_USAGE)
+    return
+  }
+  if (args.error) {
+    console.error(`${args.error}\n\n${INIT_USAGE}`)
+    process.exit(1)
+  }
+  const { createDefaultsUi } = await import("./lib/prompts.mjs")
+  const { runInit } = await import("./lib/init.mjs")
+  const ui = args.yes ? createDefaultsUi() : await promptUi()
+  const code = await runInit({ args, cwd: callerCwd(), ui, openUrl: openBrowser })
+  process.exit(code)
+}
+
+async function runReconcileCli(argv) {
+  const { RECONCILE_USAGE, parseReconcileArgs } = await import("./lib/init-args.mjs")
+  const args = parseReconcileArgs(argv)
+  if (args.help) {
+    console.log(RECONCILE_USAGE)
+    return
+  }
+  if (args.error) {
+    console.error(`${args.error}\n\n${RECONCILE_USAGE}`)
+    process.exit(1)
+  }
+  const resolved = resolveBoardOrExit(args.board, "reconcile")
+  const { runReconcileCommand } = await import("./lib/init.mjs")
+  const code = await runReconcileCommand({ args, boardPath: resolved.boardPath, ui: await promptUi() })
+  process.exit(code)
+}
+
+async function runSecretCli(argv) {
+  const { SECRET_USAGE, parseSecretArgs } = await import("./lib/init-args.mjs")
+  const args = parseSecretArgs(argv)
+  if (args.help) {
+    console.log(SECRET_USAGE)
+    return
+  }
+  if (args.error) {
+    console.error(`${args.error}\n\n${SECRET_USAGE}`)
+    process.exit(1)
+  }
+  const resolved = resolveBoardOrExit(args.board, "secret rotate")
+  const { runSecretRotate } = await import("./lib/init.mjs")
+  const code = await runSecretRotate({ args, boardPath: resolved.boardPath })
+  process.exit(code)
+}
+
 async function main() {
-  // `ai` and `app` have their own flags (--provider, --repo, --mode...).
+  // `init`, `reconcile`, `secret`, `ai` and `app` have their own flags.
+  const own = { init: runInitCli, reconcile: runReconcileCli, secret: runSecretCli }
+  if (own[process.argv[2]]) {
+    await own[process.argv[2]](process.argv.slice(3))
+    return
+  }
   if (process.argv[2] === "ai") {
     await runAi(process.argv.slice(3))
     return

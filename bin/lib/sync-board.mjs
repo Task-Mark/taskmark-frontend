@@ -198,14 +198,18 @@ async function buildSnapshot(boardPath) {
   })
 }
 
-async function api(baseUrl, token, method, pathname, body) {
-  const url = `${baseUrl.replace(/\/$/, "")}/v1${pathname}`
+/**
+ * One JSON call to Taskmark Cloud. `token` may be null for the calls that take
+ * no sync token (project registration). Resolves `{ ok, status, data }`.
+ */
+export async function api(baseUrl, token, method, pathname, body, fetchImpl = fetch) {
+  const url = `${baseUrl.replace(/\/+$/, "")}/v1${pathname}`
   let res
   try {
-    res = await fetch(url, {
+    res = await fetchImpl(url, {
       method,
       headers: {
-        authorization: `Bearer ${token}`,
+        ...(token ? { authorization: `Bearer ${token}` } : {}),
         ...(body ? { "content-type": "application/json" } : {}),
       },
       body: body ? JSON.stringify(body) : undefined,
