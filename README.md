@@ -82,7 +82,7 @@ Board resolution (bound mode only):
 | Layout | Where to install / run |
 |--------|------------------------|
 | Single-git | Product root (discovers `./taskmark/`) or the `taskmark/` folder |
-| Multi-git | Dedicated sibling `*-taskmark` repo root (`epics/` at root) |
+| Multi-git | Dedicated sibling `*-taskmark` repo root (`requests/` and `meetings/` at root, or legacy `epics/`) |
 
 You do **not** need to clone `taskmark-frontend`.
 
@@ -120,6 +120,66 @@ npm run preview
 ```
 
 Favicon, webmanifest, and Open Graph assets ship in `public/` and are included in both standalone (`taskmark serve`) and static (`taskmark build`) outputs.
+
+## Board commands
+
+Run these from the board folder, or pass `--board <path>`.
+
+```bash
+npx taskmark migrate --dry-run   # preview moving a legacy epics/ board to requests/
+npx taskmark migrate             # one request per epic: brief.md, epics/, log/
+
+npx taskmark stages              # show the stage each task reached on develop / quality / main
+npx taskmark stages --fetch      # fetch the code repos first
+
+npx taskmark hooks install       # add the prepare-commit-msg hook to every code repo
+npx taskmark hooks install --repo ../my-api
+
+npx taskmark app connect github                     # or bitbucket; opens the install page
+npx taskmark app status
+npx taskmark app mode write                         # shadow (default) | write
+npx taskmark app disable                            # app enable turns it back on
+
+npx taskmark ai set --provider anthropic            # Claude, default model claude-opus-5-5
+npx taskmark ai set --provider openai --model gpt-4o-mini
+npx taskmark ai status
+npx taskmark ai clear
+```
+
+- **`migrate`** moves each legacy epic folder unchanged to `requests/<slug>/epics/`,
+  writes `requests/<slug>/brief.md` (id `R-<slug>`, the epic id as an alias) and a
+  note in `requests/<slug>/log/`, and gives done tasks without a stage
+  `stage: production` and `shipped_at`. Only the empty `epics/` folder is deleted.
+  Review the briefs, merge requests that belong together, then commit.
+- **`stages`** is read only. It reads the stage branches in your local clones and
+  reports what the GitHub / Bitbucket App would update; the App writes `stage` and
+  `shipped_at` to the board. Code repos come from `--repo` (repeatable), else
+  `"taskmark": { "repos": [...] }` in the board `package.json`, else `REPOS.md`.
+  Branch names can be set under `taskmark.branches` (`development`, `testing`,
+  `production`); defaults are `develop`/`dev`/`development`,
+  `quality`/`qa`/`staging`/`test`, and `main`/`master`/`production`.
+- **`hooks install`** installs only `prepare-commit-msg`: on a branch whose name
+  carries a task id (`T-MM-457b0290-login`), it appends `Task: <id>` to the commit
+  message unless the id is already there. It never writes to the board, leaves
+  hooks Taskmark did not write alone, and removes the `post-merge` hook older
+  versions installed.
+- **`app`** connects the board's project to the GitHub / Bitbucket App with the
+  board sync token (API `https://cloud.taskmark.dev` by default). `connect
+  github|bitbucket` saves the code repos and the board repo, then opens the GitHub
+  App install page or the Bitbucket authorization page (`--no-open` prints the
+  link). Defaults: code repos from `taskmark.repos` / `REPOS.md` whose origin is on
+  that provider (override with `--repo <owner>/<repo>`, repeatable), the board's
+  own git origin as board repo (override with
+  `--board-repo <provider>:<owner>/<repo>[@branch][:root]`), stage branches from
+  `taskmark.branches`, and shadow mode on a new connection (`--mode shadow|write`).
+  `status` shows repos, board repo, mode, enabled, AI key and webhooks; `mode`,
+  `enable` and `disable` change the connection.
+- **`ai`** sets the project's own Claude or OpenAI key for the GitHub / Bitbucket
+  App, using the board sync token in `.config`. The key comes from `--key`, else
+  `TASKMARK_AI_KEY`, else a hidden prompt, and is never printed. `--base-url` sets
+  an OpenAI compatible endpoint. `status` shows the provider, model and last 4
+  characters of the key; `clear` removes it (the App then falls back to the
+  server default).
 
 ## Develop this package
 
