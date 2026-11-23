@@ -11,7 +11,8 @@ import { asString, extractFrontmatter } from "@/lib/taskmark/frontmatter"
 import { asContributorList } from "@/lib/taskmark/identity"
 import { parseMeetingsForProject } from "@/lib/taskmark/parse-meetings"
 import { parseRequestsForProject } from "@/lib/taskmark/parse-requests"
-import { extractMarkdownBody } from "@/lib/taskmark/parse-sections"
+import { parseCommits, parseWorkLog } from "@/lib/taskmark/parse-detail"
+import { extractMarkdownBody, extractSections, getSection } from "@/lib/taskmark/parse-sections"
 import type {
   RequestBoardData,
   RequestDetail,
@@ -50,6 +51,7 @@ function listDirs(dir: string): string[] {
 
 function toLeaf(indexed: IndexedLeaf): RequestLeaf {
   const fm = indexed.frontmatter
+  const sections = extractSections(extractMarkdownBody(indexed.raw))
   const type = asString(fm.type).toLowerCase()
   return {
     id: asString(fm.id),
@@ -63,6 +65,8 @@ function toLeaf(indexed: IndexedLeaf): RequestLeaf {
     completedAt: asString(fm.completed_at),
     shippedAt: asString(fm.shipped_at),
     resolvers: asContributorList(fm.resolvers),
+    workLog: parseWorkLog(getSection(sections, "Work log")),
+    commits: parseCommits(getSection(sections, "Commits")),
   }
 }
 

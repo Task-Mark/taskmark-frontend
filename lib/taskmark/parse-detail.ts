@@ -33,7 +33,7 @@ function asBool(value: unknown): boolean {
   return false
 }
 
-function parseCommits(section: string): CommitRow[] {
+export function parseCommits(section: string): CommitRow[] {
   const rows = tableRowsAsObjects(parseMarkdownTable(section))
   return rows.map((row) => ({
     sha: cell(row, "sha"),
@@ -44,7 +44,7 @@ function parseCommits(section: string): CommitRow[] {
   }))
 }
 
-function parseWorkLog(section: string): WorkLogRow[] {
+export function parseWorkLog(section: string): WorkLogRow[] {
   const rows = tableRowsAsObjects(parseMarkdownTable(section))
   return rows.map((row) => ({
     session: cell(row, "session"),
