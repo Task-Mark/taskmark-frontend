@@ -7,8 +7,11 @@ import path from "node:path"
  *
  * - prepare-commit-msg: adds `Task: <id>` to the commit message when the branch
  *   name carries a task id and the message does not mention it yet.
- * - post-merge: after a pull or merge, recomputes branch stages for the board
- *   in the background.
+ *
+ * Reconciliation (status, work log, commits, stages) belongs to the Taskmark
+ * GitHub / Bitbucket App, so no hook writes to the board. Older versions
+ * installed a post-merge hook that ran `taskmark stages`; installing again
+ * removes it.
  *
  * Hooks go into the repository's own hooks folder (respecting core.hooksPath),
  * never into tracked files. A hook that was not written by Taskmark is left
@@ -28,10 +31,6 @@ export function taskIdFromBranch(branch) {
   return `${prefix.toUpperCase()}-${rest[0]}`
 }
 
-function shellQuote(value) {
-  return `'${String(value).replace(/'/g, `'\\''`)}'`
-}
-
 function prepareCommitMsgScript() {
   return `#!/bin/sh
 ${HOOK_MARKER}
@@ -47,16 +46,8 @@ printf '\\nTask: %s\\n' "$id" >> "$msg_file"
 `
 }
 
-function postMergeScript(boardPath) {
-  return `#!/bin/sh
-${HOOK_MARKER}
-# Recompute Taskmark branch stages after a pull or merge, in the background.
-board=${shellQuote(boardPath)}
-[ -d "$board" ] || exit 0
-( cd "$board" && npx --no-install taskmark stages --quiet >/dev/null 2>&1 & ) >/dev/null 2>&1
-exit 0
-`
-}
+/** Hooks Taskmark wrote in earlier versions and no longer installs. */
+const RETIRED_HOOKS = ["post-merge"]
 
 function hooksDir(repo) {
   const rel = execFileSync("git", ["-C", repo, "rev-parse", "--git-path", "hooks"], {
@@ -66,14 +57,13 @@ function hooksDir(repo) {
 }
 
 /**
- * @returns {{ repo: string, written: string[], skipped: string[] }}
+ * @returns {{ repo: string, written: string[], skipped: string[], removed: string[] }}
  */
-export function installHooks({ repo, boardPath }) {
+export function installHooks({ repo }) {
   const dir = hooksDir(repo)
   fs.mkdirSync(dir, { recursive: true })
   const hooks = {
     "prepare-commit-msg": prepareCommitMsgScript(),
-    "post-merge": postMergeScript(boardPath),
   }
   const written = []
   const skipped = []
@@ -87,5 +77,13 @@ export function installHooks({ repo, boardPath }) {
     fs.chmodSync(file, 0o755)
     written.push(name)
   }
-  return { repo, written, skipped }
+  const removed = []
+  for (const name of RETIRED_HOOKS) {
+    const file = path.join(dir, name)
+    if (fs.existsSync(file) && fs.readFileSync(file, "utf8").includes(HOOK_MARKER)) {
+      fs.rmSync(file)
+      removed.push(name)
+    }
+  }
+  return { repo, written, skipped, removed }
 }

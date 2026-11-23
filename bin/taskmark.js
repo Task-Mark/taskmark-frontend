@@ -39,10 +39,11 @@ Commands:
   sync               Push board markdown to Taskmark Cloud using board .config
   preview            Serve an existing static export (default: <board>/out)
   migrate            Move a legacy epics/ board to requests/ (one request per epic)
-  stages             Read develop / quality / main in the code repos and write task
-                     stages, shipped dates, commit rows and request log entries
-  hooks install      Install git hooks in the code repos (task id in commits,
-                     stages after every pull)
+  stages             Read develop / quality / main in the code repos and show the
+                     stage each task has reached (read only: the GitHub /
+                     Bitbucket App writes stages to the board)
+  hooks install      Install the git hook that adds the task id to commits made
+                     on a task branch (removes the old post-merge hook)
 
 Options:
   --port, -p <n>     Listen port (default ${DEFAULT_PORT}; env PORT / TASKMARK_PORT)
@@ -51,7 +52,7 @@ Options:
   --out <dir>        Static output directory for build/preview (default: <board>/out)
   --sync             Kept for compatibility; bound dev/serve always watch .config
   --watch            Keep syncing when markdown changes (sync command)
-  --dry-run          Show what migrate or stages would change without writing
+  --dry-run          Show what migrate would change without writing
   --fetch            Fetch the code repos before reading branches (stages)
   --repo <path>      Code repository to read or hook (repeatable; default: board
                      package.json "taskmark.repos", else REPOS.md)
@@ -731,7 +732,8 @@ Pick projects in UI: npx taskmark open`)
     try {
       const resolved = resolveBoardOrExit(args.board, "stages")
       const { syncStages } = await import("./lib/stages.mjs")
-      const options = { boardPath: resolved.boardPath, fetch: args.fetch, dryRun: args.dryRun }
+      // Read only: reconciliation belongs to the GitHub / Bitbucket App.
+      const options = { boardPath: resolved.boardPath, fetch: args.fetch, dryRun: true }
       if (args.repos.length) options.repos = args.repos.map((r) => path.resolve(r))
       const result = syncStages(options)
       if (args.quiet) return
@@ -747,7 +749,7 @@ Pick projects in UI: npx taskmark open`)
       }
       const c = result.stageCounts
       console.log(
-        `\n${args.dryRun ? "Would update" : "Updated"} ${result.changes.length} tasks ` +
+        `\nThe App would update ${result.changes.length} tasks ` +
           `(${c.development} in development, ${c.testing} in testing, ${c.production} in production) ` +
           `and ${result.logFiles.length} log entries.`
       )
@@ -774,11 +776,12 @@ Pick projects in UI: npx taskmark open`)
         return
       }
       for (const repo of repos) {
-        const result = installHooks({ repo, boardPath: resolved.boardPath })
+        const result = installHooks({ repo })
         const skipped = result.skipped.length
           ? ` (left your own ${result.skipped.join(", ")} alone)`
           : ""
-        console.log(`  ${path.basename(repo)}: ${result.written.join(", ") || "nothing written"}${skipped}`)
+        const removed = result.removed.length ? ` (removed ${result.removed.join(", ")})` : ""
+        console.log(`  ${path.basename(repo)}: ${result.written.join(", ") || "nothing written"}${removed}${skipped}`)
       }
     } catch (err) {
       console.error(String(err?.message || err))

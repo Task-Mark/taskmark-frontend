@@ -37,9 +37,11 @@ test("installed hooks add the task id to commits and leave foreign hooks alone",
     fs.mkdirSync(hooksDir, { recursive: true })
     fs.writeFileSync(path.join(hooksDir, "post-merge"), "#!/bin/sh\necho mine\n", { mode: 0o755 })
 
-    const result = installHooks({ repo, boardPath: path.join(root, "app-taskmark") })
+    const result = installHooks({ repo })
     assert.deepEqual(result.written, ["prepare-commit-msg"])
-    assert.deepEqual(result.skipped, ["post-merge"])
+    assert.deepEqual(result.skipped, [])
+    assert.deepEqual(result.removed, [], "a post-merge hook Taskmark did not write is kept")
+    assert.equal(fs.readFileSync(path.join(hooksDir, "post-merge"), "utf8"), "#!/bin/sh\necho mine\n")
     assert.match(fs.readFileSync(path.join(hooksDir, "prepare-commit-msg"), "utf8"), new RegExp(HOOK_MARKER))
 
     git(repo, ["checkout", "-q", "-b", "feature/T-MM-457b0290-login"])
@@ -53,8 +55,27 @@ test("installed hooks add the task id to commits and leave foreign hooks alone",
     git(repo, ["commit", "-q", "-m", "T-MM-457b0290 fix the picker"])
     assert.doesNotMatch(git(repo, ["log", "-1", "--format=%B"]), /Task:/)
 
-    const again = installHooks({ repo, boardPath: path.join(root, "app-taskmark") })
+    const again = installHooks({ repo })
     assert.deepEqual(again.written, ["prepare-commit-msg"])
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true })
+  }
+})
+
+test("installing again removes the post-merge hook older versions wrote", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "taskmark-hooks-old-"))
+  try {
+    const repo = path.join(root, "app")
+    fs.mkdirSync(repo)
+    git(repo, ["init", "-q", "-b", "main"])
+    const hooksDir = path.join(repo, ".git", "hooks")
+    fs.mkdirSync(hooksDir, { recursive: true })
+    const old = path.join(hooksDir, "post-merge")
+    fs.writeFileSync(old, `#!/bin/sh\n${HOOK_MARKER}\nnpx --no-install taskmark stages\n`, { mode: 0o755 })
+
+    const result = installHooks({ repo })
+    assert.deepEqual(result.removed, ["post-merge"])
+    assert.equal(fs.existsSync(old), false)
   } finally {
     fs.rmSync(root, { recursive: true, force: true })
   }
