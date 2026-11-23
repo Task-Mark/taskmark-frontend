@@ -20,11 +20,11 @@ type Call = { url: string; init: RequestInit }
 
 function fakeFetch(responses: Array<{ status: number; body: unknown }>) {
   const calls: Call[] = []
-  const impl = async (url: string, init: RequestInit) => {
+  const impl = (async (url: string, init: RequestInit) => {
     calls.push({ url, init })
     const next = responses.shift() ?? { status: 500, body: {} }
     return new Response(JSON.stringify(next.body), { status: next.status })
-  }
+  }) as unknown as typeof fetch
   return { calls, impl }
 }
 
@@ -47,7 +47,7 @@ test("registerProject posts name and secret without a token", async () => {
   const limited = fakeFetch([{ status: 429, body: {} }])
   await assert.rejects(
     registerProject({ baseUrl: "https://c.example", name: "s", secret: "tmk_x", fetchImpl: limited.impl }),
-    /Too many projects/,
+    /5 new projects per hour.*Try again in an hour/,
   )
 })
 
@@ -63,7 +63,7 @@ test("secret rotate updates .config only after the server accepted it", async ()
   const board = fs.mkdtempSync(path.join(os.tmpdir(), "taskmark-rotate-"))
   const old = "tmk_" + "a".repeat(43)
   fs.writeFileSync(path.join(board, ".config"), `# keep me\nTASKMARK_SYNC_TOKEN=${old}\nOTHER=1\n`)
-  const env = { TASKMARK_CLOUD_URL: "https://c.example" }
+  const env = { TASKMARK_CLOUD_URL: "https://c.example" } as unknown as NodeJS.ProcessEnv
   const rejected = fakeFetch([{ status: 401, body: {} }])
   const errors: string[] = []
   let code = await runSecretRotate({ args: {}, boardPath: board, env, fetchImpl: rejected.impl, log: () => {}, error: (m: string) => errors.push(m) })

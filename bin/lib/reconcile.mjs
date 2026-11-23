@@ -3,15 +3,19 @@
  * recent commits of every stage branch, says where each task is (development,
  * quality, shipped) and proposes closes and new tasks for a person to review.
  *
- *   POST /v1/board-sync/integration/backfill             { commits?, branches? } → { runId, jobs }
- *   GET  /v1/board-sync/integration/backfill/:runId      → { status, total, done, failed, results }
+ *   POST /v1/board-sync/integration/backfill             { commits?, branches? } → 202 { runId, jobs, skipped, repos, model }
+ *   GET  /v1/board-sync/integration/backfill/:runId      → { status, total, done, failed, pending, tasks, proposals, ... }
  *   POST /v1/board-sync/integration/backfill/:runId/apply { accept, leaveForLater? }
  *
- * The response parsing is tolerant on purpose: field names may still move.
+ * Links and stage moves are facts from the commits and are always applied;
+ * closes and new tasks are reviewed. The API applies only the ids in `accept`;
+ * `leaveForLater` sends the rest to the review inbox (else they are dismissed).
  */
 import { api } from "./sync-board.mjs"
 
 export const DEFAULT_BACKFILL_COMMITS = 30
+/** The API refuses more commits per stage branch. */
+export const MAX_BACKFILL_COMMITS = 200
 
 const BASE = "/board-sync/integration/backfill"
 
@@ -21,121 +25,51 @@ export const STAGE_BLOCKS = [
   { stage: "production", title: "Shipped" },
 ]
 
-const STAGE_ALIASES = {
-  development: ["development", "develop", "dev", "in_development", "in-development"],
-  testing: ["testing", "test", "quality", "qa", "staging", "in_quality", "in-quality"],
-  production: ["production", "prod", "shipped", "released", "release", "main", "master"],
+export const STAGES = ["development", "testing", "production"]
+
+/** Proposals that are facts read from the commits: always applied. */
+export const FACT_KINDS = ["link", "stage"]
+/** Proposals a person decides on: accept, or leave for the review inbox. */
+export const REVIEW_KINDS = ["close", "new_task"]
+
+const OPEN_STATUSES = new Set(["proposed", "", undefined, null])
+
+function list(value) {
+  return Array.isArray(value) ? value : []
 }
 
-export function normalizeStage(value) {
-  const v = String(value ?? "").trim().toLowerCase()
-  for (const [stage, aliases] of Object.entries(STAGE_ALIASES)) {
-    if (aliases.includes(v)) return stage
-  }
-  return null
-}
-
-function str(value) {
-  return value === undefined || value === null ? "" : String(value)
-}
-
-function branchLabel(branch) {
-  if (typeof branch === "string") return branch
-  if (!branch || typeof branch !== "object") return ""
-  const name = str(branch.branch ?? branch.name ?? branch.ref)
-  const repo = str(branch.repo ?? branch.repository)
-  return repo && name ? `${repo}@${name}` : name || repo
-}
-
-function asList(value) {
-  if (Array.isArray(value)) return value
-  if (value && typeof value === "object") {
-    return Object.entries(value).map(([key, item]) =>
-      item && typeof item === "object" ? { id: key, ...item } : { id: key, stage: item },
-    )
-  }
-  return []
-}
-
-function normalizeTask(entry) {
-  const task = entry.task && typeof entry.task === "object" ? entry.task : {}
-  const branches = entry.branches ?? entry.foundOn ?? entry.found_on ?? entry.refs ?? []
-  return {
-    id: str(entry.taskId ?? entry.id ?? task.id),
-    title: str(entry.title ?? entry.taskTitle ?? task.title),
-    stage: normalizeStage(entry.stage ?? entry.status ?? task.stage),
-    branches: [...new Set(asList(branches).map(branchLabel).filter(Boolean))],
-  }
-}
-
-function proposalKind(p, fallback) {
-  const raw = str(p.kind ?? p.type ?? p.action ?? fallback).toLowerCase()
-  if (raw.includes("close") || raw.includes("done")) return "close"
-  if (raw.includes("new") || raw.includes("create")) return "new"
-  return fallback ?? (raw || "other")
-}
-
-function normalizeProposal(p, fallbackKind) {
-  const kind = proposalKind(p, fallbackKind)
-  const taskId = str(p.taskId ?? p.task?.id ?? (kind === "close" ? p.itemId : ""))
-  const title = str(p.title ?? p.taskTitle ?? p.task?.title ?? p.summary)
-  const confidence = p.confidence ?? p.score ?? null
-  return {
-    id: str(p.id ?? p.proposalId ?? p._id ?? (taskId ? `${kind}:${taskId}` : `${kind}:${title}`)),
-    kind,
-    taskId,
-    title,
-    confidence: typeof confidence === "number" ? confidence : confidence ? Number(confidence) : null,
-    reason: str(p.reason ?? p.why ?? p.explanation),
-  }
-}
-
-/** Flattens whatever the run returns into tasks and proposals. */
+/**
+ * The parts of `GET .../backfill/:runId` the CLI uses:
+ * `{ status, total, done, failed, pending, tasks[], proposals[] }`.
+ */
 export function normalizeBackfill(data) {
   const d = data && typeof data === "object" ? data : {}
-  const results = d.results ?? {}
-  let entries = []
-  if (Array.isArray(results)) entries = results
-  else if (Array.isArray(results.tasks)) entries = results.tasks
-  else if (results && typeof results === "object" && !results.proposals) entries = asList(results)
-  // A job-shaped result carries its own tasks / proposals.
-  const tasks = []
-  const proposals = []
-  const takeProposals = (source) => {
-    if (!source) return
-    if (Array.isArray(source)) {
-      for (const p of source) proposals.push(normalizeProposal(p))
-      return
-    }
-    for (const p of asList(source.close ?? source.closes ?? [])) proposals.push(normalizeProposal(p, "close"))
-    for (const p of asList(source.newTasks ?? source.new ?? source.create ?? [])) {
-      proposals.push(normalizeProposal(p, "new"))
-    }
-  }
-  for (const entry of entries) {
-    if (!entry || typeof entry !== "object") continue
-    if (Array.isArray(entry.tasks)) {
-      for (const t of entry.tasks) tasks.push(normalizeTask(t))
-      takeProposals(entry.proposals)
-      continue
-    }
-    tasks.push(normalizeTask(entry))
-    if (entry.proposal) takeProposals([{ taskId: entry.taskId ?? entry.id, ...entry.proposal }])
-  }
-  takeProposals(d.proposals ?? (Array.isArray(results) ? null : results.proposals))
-  const seen = new Set()
-  const unique = proposals.filter((p) => (seen.has(p.id) ? false : (seen.add(p.id), true)))
   return {
-    status: str(d.status || "done").toLowerCase(),
+    status: String(d.status ?? ""),
     total: Number(d.total ?? 0) || 0,
     done: Number(d.done ?? 0) || 0,
     failed: Number(d.failed ?? 0) || 0,
-    tasks: tasks.filter((t) => t.id || t.title),
-    proposals: unique,
+    pending: Number(d.pending ?? 0) || 0,
+    tasks: list(d.tasks).map((t) => ({
+      id: String(t.taskId ?? ""),
+      title: String(t.title ?? ""),
+      fromStage: t.fromStage ?? null,
+      stage: STAGES.includes(t.stage) ? t.stage : null,
+      branches: list(t.branches).map(String),
+    })),
+    proposals: list(d.proposals).filter((p) => p?.id && OPEN_STATUSES.has(p.status)),
   }
 }
 
-/** The three blocks, each with its tasks. Tasks without a known stage are left out. */
+/** Splits proposals into the facts applied automatically and the ones to review. */
+export function splitProposals(proposals) {
+  return {
+    facts: proposals.filter((p) => FACT_KINDS.includes(p.kind)),
+    review: proposals.filter((p) => REVIEW_KINDS.includes(p.kind)),
+  }
+}
+
+/** The three blocks, each with its tasks. Tasks without a stage are left out. */
 export function groupByStage(tasks) {
   return STAGE_BLOCKS.map((block) => ({
     ...block,
@@ -157,25 +91,44 @@ export function renderResults(normalized) {
   })
 }
 
+/** What the start call read: one line per repo, then the model note if any. */
+export function renderStart(started) {
+  const lines = list(started.repos).map((repo) => {
+    const name = `${repo.owner}/${repo.name}`
+    if (repo.error) return `${name}: could not be read (${repo.error})`
+    const branches = list(repo.branches).map((b) => `${b.name} ${b.commits}`)
+    return `${name}: ${branches.length ? branches.join(", ") : "no stage branches"}`
+  })
+  if (started.skipped) lines.push(`${started.skipped} group(s) were already analysed and are skipped.`)
+  return { lines, note: started.model?.note ?? null }
+}
+
 export function proposalLabel(p) {
-  const confidence = p.confidence !== null && Number.isFinite(p.confidence)
-    ? ` ${Math.round(p.confidence <= 1 ? p.confidence * 100 : p.confidence)}%`
-    : ""
-  if (p.kind === "close") {
-    const reason = p.reason ? `: ${p.reason}` : ""
-    return `Close ${p.taskId || p.id}${p.title ? `  ${p.title}` : ""}${confidence ? ` (${confidence.trim()})` : ""}${reason}`
+  const confidence = typeof p.confidence === "number" ? ` (${Math.round(p.confidence * 100)}%)` : ""
+  const reason = p.reason ? `: ${p.reason}` : ""
+  if (p.kind === "close") return `Close ${p.taskId}${p.title ? `  ${p.title}` : ""}${confidence}${reason}`
+  if (p.kind === "new_task") {
+    const story = p.storyId ? ` in ${p.storyId}` : ""
+    return `New task${story}: ${p.title || p.summary}${confidence}${reason}`
   }
-  if (p.kind === "new") return `New task: ${p.title || p.id}${p.reason ? ` (${p.reason})` : ""}`
-  return `${p.title || p.id}${p.reason ? `: ${p.reason}` : ""}`
+  if (p.kind === "stage") return `${p.taskId} ${p.fromStage ?? "none"} to ${p.stage}`
+  return `Link ${p.taskId}${p.title ? `  ${p.title}` : ""}`
 }
 
 // ------------------------------------------------------------------ requests
 
+function messageOf(res) {
+  const m = res.data?.message
+  return Array.isArray(m) ? m.join("; ") : typeof m === "string" ? m : ""
+}
+
 function failure(res, what) {
-  const message = Array.isArray(res.data?.message) ? res.data.message.join("; ") : res.data?.message
-  if (res.status === 401) return new Error("The sync secret was rejected. Run npx taskmark init again.")
-  if (res.status === 404) {
-    return new Error(`${what}: this Taskmark Cloud does not support the initial reconciliation yet.`)
+  const message = messageOf(res)
+  if (res.status === 401) return new Error("The project secret was rejected. Run npx taskmark init again.")
+  if (res.status === 404) return new Error(`${what}: this reconciliation run was not found.`)
+  if (res.status === 409) return new Error(message || `${what}: not possible right now.`)
+  if (res.status === 502) {
+    return new Error("Could not write the board. Nothing was applied. Run npx taskmark reconcile to try again.")
   }
   return new Error(`${what} failed (${res.status})${message ? `: ${message}` : ""}`)
 }
@@ -190,9 +143,8 @@ export function buildBackfillBody({ commits, branches } = {}) {
 export async function startBackfill({ baseUrl, token, commits, branches, fetchImpl = fetch }) {
   const res = await api(baseUrl, token, "POST", BASE, buildBackfillBody({ commits, branches }), fetchImpl)
   if (!res.ok) throw failure(res, "Starting the reconciliation")
-  const runId = res.data.runId ?? res.data.id
-  if (!runId) throw new Error("Taskmark Cloud did not return a reconciliation run id.")
-  return { runId: String(runId), jobs: res.data.jobs ?? null }
+  if (!res.data.runId) throw new Error("Taskmark Cloud did not return a reconciliation run id.")
+  return res.data
 }
 
 export async function getBackfill({ baseUrl, token, runId, fetchImpl = fetch }) {
@@ -211,7 +163,11 @@ export async function applyBackfill({ baseUrl, token, runId, accept, leaveForLat
 
 const sleepMs = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
-/** Polls the run until it is done or failed. */
+/**
+ * Polls the run until it is done or failed.
+ * @param {{ fetchRun: () => Promise<any>, intervalMs?: number, timeoutMs?: number,
+ *           sleep?: (ms: number) => Promise<void>, now?: () => number, onProgress?: (data: any) => void }} options
+ */
 export async function pollBackfill({
   fetchRun,
   intervalMs = 2000,
@@ -224,7 +180,7 @@ export async function pollBackfill({
   for (;;) {
     const data = await fetchRun()
     const status = String(data?.status ?? "").toLowerCase()
-    if (status === "done" || status === "failed" || status === "completed") return data
+    if (status === "done" || status === "failed") return data
     onProgress(data)
     if (now() - started > timeoutMs) {
       throw new Error("The reconciliation is taking too long. Run npx taskmark reconcile later to see it.")
@@ -236,26 +192,31 @@ export async function pollBackfill({
 /**
  * The whole flow: start, wait, show the three blocks, review the proposals,
  * apply. `ui` is the prompt layer (see prompts.mjs). Returns a summary.
+ * @param {{ ui: any, baseUrl: string, token: string, commits?: number, branches?: string[],
+ *           fetchImpl?: typeof fetch, sleep?: (ms: number) => Promise<void> }} options
  */
 export async function runReconcile({
   ui,
   baseUrl,
   token,
   commits = DEFAULT_BACKFILL_COMMITS,
-  branches,
+  branches = [],
   fetchImpl = fetch,
-  sleep,
+  sleep = sleepMs,
 }) {
   const started = await startBackfill({ baseUrl, token, commits, branches, fetchImpl })
+  const read = renderStart(started)
+  if (read.lines.length) ui.note(read.lines.join("\n"), "Branches read (commits)")
+  if (read.note) ui.log.warn(read.note)
   const spin = ui.spinner()
-  spin.start(`Reading the last ${commits} commits of each stage branch`)
+  spin.start(`Analysing ${started.jobs} group(s) of commits`)
   let data
   try {
     data = await pollBackfill({
       fetchRun: () => getBackfill({ baseUrl, token, runId: started.runId, fetchImpl }),
       sleep,
       onProgress: (d) => {
-        if (d?.total) spin.message(`Reading commits (${d.done ?? 0} of ${d.total} repos)`)
+        if (d?.total) spin.message(`Analysing commits (${d.done ?? 0} of ${d.total})`)
       },
     })
   } catch (err) {
@@ -265,17 +226,20 @@ export async function runReconcile({
   const result = normalizeBackfill(data)
   if (result.status === "failed") {
     spin.error("The reconciliation failed")
-    throw new Error("Taskmark Cloud could not read the repositories. Check the App access, then run npx taskmark reconcile.")
+    throw new Error("Taskmark Cloud could not analyse the commits. Check the App access, then run npx taskmark reconcile.")
   }
-  spin.stop(result.failed ? `Done, ${result.failed} of ${result.total} repos could not be read` : "Done")
+  spin.stop(result.failed ? `Done, ${result.failed} of ${result.total} group(s) failed` : "Done")
 
   for (const block of renderResults(result)) ui.note(block)
 
-  const proposals = result.proposals
-  let accept = []
-  let leaveForLater = false
-  if (proposals.length) {
-    ui.note(proposals.map((p) => `- ${proposalLabel(p)}`).join("\n"), `Proposals to review (${proposals.length})`)
+  const { facts, review } = splitProposals(result.proposals)
+  if (facts.length) {
+    const links = facts.filter((p) => p.kind === "link").length
+    ui.log.info(`From the commits: ${links} link(s) and ${facts.length - links} stage move(s) will be written.`)
+  }
+  let chosen = []
+  if (review.length) {
+    ui.note(review.map((p) => `- ${proposalLabel(p)}`).join("\n"), `Proposals to review (${review.length})`)
     const choice = await ui.select({
       message: "What should happen with these proposals?",
       options: [
@@ -285,25 +249,29 @@ export async function runReconcile({
       ],
       initialValue: "later",
     })
-    if (choice === "all") accept = proposals.map((p) => p.id)
+    if (choice === "all") chosen = review.map((p) => p.id)
     else if (choice === "pick") {
-      accept = await ui.multiselect({
+      chosen = await ui.multiselect({
         message: "Accept which ones? (the rest wait in the review inbox)",
-        options: proposals.map((p) => ({ value: p.id, label: proposalLabel(p) })),
+        options: review.map((p) => ({ value: p.id, label: proposalLabel(p) })),
         required: false,
         initialValues: [],
       })
     }
-    leaveForLater = accept.length < proposals.length
   }
-  await applyBackfill({ baseUrl, token, runId: started.runId, accept, leaveForLater, fetchImpl })
+  const accept = [...facts.map((p) => p.id), ...chosen]
+  const leaveForLater = chosen.length < review.length
+  const applied = await applyBackfill({ baseUrl, token, runId: started.runId, accept, leaveForLater, fetchImpl })
+  if (applied?.message) ui.log.success(applied.message)
   const counts = groupByStage(result.tasks).map((b) => b.tasks.length)
   return {
     runId: started.runId,
     development: counts[0],
     testing: counts[1],
     production: counts[2],
-    accepted: accept.length,
-    leftForLater: proposals.length - accept.length,
+    accepted: chosen.length,
+    leftForLater: review.length - chosen.length,
+    applied: applied?.applied ?? null,
+    boardCommitSha: applied?.boardCommitSha ?? null,
   }
 }

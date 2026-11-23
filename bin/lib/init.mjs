@@ -246,6 +246,9 @@ async function setupAi({ ui, args, env, credentials, existingAi, fetchImpl }) {
 // -------------------------------------------------------------------- init
 
 /**
+ * @param {{ args: any, cwd: string, ui: any, env?: Record<string, string | undefined>,
+ *           fetchImpl?: typeof fetch, openUrl?: ((url: string) => void) | null, stdinIsTTY?: boolean,
+ *           sleep?: (ms: number) => Promise<void>, syncBoard?: (boardPath: string) => Promise<any> }} options
  * @returns {Promise<number>} exit code
  */
 export async function runInit({
@@ -636,6 +639,10 @@ function boardCredentials(boardPath, env) {
   return { token, baseUrl: cloudBaseUrl(boardPath, env) }
 }
 
+/**
+ * @param {{ args: any, boardPath: string, ui: any, env?: Record<string, string | undefined>,
+ *           fetchImpl?: typeof fetch, sleep?: (ms: number) => Promise<void> }} options
+ */
 export async function runReconcileCommand({ args, boardPath, ui, env = process.env, fetchImpl = fetch, sleep }) {
   if (args.cloudUrl) env.TASKMARK_CLOUD_URL = args.cloudUrl
   try {

@@ -4,7 +4,7 @@
  */
 import { AI_KEY_ENV, AI_PROVIDERS } from "./ai-key.mjs"
 import { APP_PROVIDERS } from "./app-connect.mjs"
-import { DEFAULT_BACKFILL_COMMITS } from "./reconcile.mjs"
+import { DEFAULT_BACKFILL_COMMITS, MAX_BACKFILL_COMMITS } from "./reconcile.mjs"
 
 export const DEFAULT_MODELS = { anthropic: "claude-opus-5-5", openai: "gpt-4o-mini" }
 
@@ -83,8 +83,8 @@ function makeParser(argv, args, spec) {
 
 function parseCount(value, args, flag) {
   const n = Number.parseInt(value, 10)
-  if (!/^\d+$/.test(value) || n < 1 || n > 1000) {
-    args.error ??= `${flag} needs a number between 1 and 1000`
+  if (!/^\d+$/.test(value) || n < 1 || n > MAX_BACKFILL_COMMITS) {
+    args.error ??= `${flag} needs a number between 1 and ${MAX_BACKFILL_COMMITS}`
     return null
   }
   return n

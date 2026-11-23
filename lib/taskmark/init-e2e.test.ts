@@ -45,18 +45,37 @@ async function stubCloud() {
         ai = { provider: body.provider, model: body.model, keyConfigured: true, keyLast4: body.apiKey.slice(-4) }
         return send(200, ai)
       }
-      if (key === "POST /v1/board-sync/integration/backfill") return send(201, { runId: "run_1", jobs: 1 })
+      if (key === "POST /v1/board-sync/integration/backfill") {
+        return send(202, {
+          runId: "run_1",
+          jobs: 1,
+          skipped: 0,
+          repos: [{ owner: "acme", name: "shop", branches: [{ name: "main", stage: "production", commits: 3 }], error: null }],
+          model: { used: true, provider: "anthropic", cap: 1, note: null },
+        })
+      }
       if (key === "GET /v1/board-sync/integration/backfill/run_1") {
+        const p = { storyId: null, summary: "", source: "explicit", groupKey: "g1", fromStage: null, stage: null, branches: ["main"], status: "proposed" }
         return send(200, {
+          runId: "run_1",
           status: "done",
           total: 1,
           done: 1,
           failed: 0,
-          results: [{ taskId: "T-001", title: "Old task", stage: "production", branches: ["main"] }],
-          proposals: { close: [{ id: "c1", taskId: "T-002", confidence: 0.9, reason: "merged" }], newTasks: [] },
+          pending: 0,
+          results: [],
+          tasks: [{ taskId: "T-001", title: "Old task", fromStage: null, stage: "production", branches: ["main"], groups: ["g1"] }],
+          stageMoves: [],
+          proposals: [
+            { ...p, id: "l1", kind: "link", taskId: "T-001", title: "Old task", confidence: 1, reason: "id in the branch" },
+            { ...p, id: "c1", kind: "close", taskId: "T-002", title: "Other", confidence: 0.9, reason: "merged", source: "model" },
+            { ...p, id: "stage:T-001", kind: "stage", taskId: "T-001", title: "Old task", confidence: 1, reason: "", stage: "production", groupKey: null },
+          ],
         })
       }
-      if (key === "POST /v1/board-sync/integration/backfill/run_1/apply") return send(200, { applied: true })
+      if (key === "POST /v1/board-sync/integration/backfill/run_1/apply") {
+        return send(200, { applied: body.accept.length, boardCommitSha: "b0a4d", leftForLater: 1, dismissed: 0, notApplied: [], message: "Wrote 2 change(s) to the board in one commit." })
+      }
       if (key === "GET /v1/board-sync/manifest") return send(200, { files: [], projectName: "shop", slug: "shop" })
       if (key === "PUT /v1/board-sync") return send(200, { version: 1 })
       send(404, { message: `stub has no ${key}` })
@@ -153,7 +172,7 @@ test("init --yes on a legacy board: register, connect, AI, hooks, agents, migrat
       model: "claude-opus-5-5",
     })
     assert.deepEqual(cloud.seen.find((s) => s.url === "/v1/board-sync/integration/backfill")!.body, { commits: 7 })
-    assert.deepEqual(cloud.seen.find((s) => s.url.endsWith("/apply"))!.body, { accept: [], leaveForLater: true })
+    assert.deepEqual(cloud.seen.find((s) => s.url.endsWith("/apply"))!.body, { accept: ["l1", "stage:T-001"], leaveForLater: true })
     assert.ok(calls.filter((c) => c === "GET /v1/board-sync/integration").length >= 2, "waited for the install")
     assert.ok(calls.includes("GET /v1/board-sync/manifest"), "synced the board")
 
@@ -173,6 +192,8 @@ test("init --yes on a legacy board: register, connect, AI, hooks, agents, migrat
     assert.match(status, /CLAUDE\.md/)
     assert.match(status, /AGENTS\.md/)
 
+    assert.match(result.out, /acme\/shop: main 3/)
+    assert.match(result.out, /Wrote 2 change\(s\) to the board in one commit\./)
     assert.match(result.out, /In development \(0\)/)
     assert.match(result.out, /Shipped \(1\)\n {2}T-001 {2}Old task {2}\(main\)/)
 
@@ -199,7 +220,7 @@ test("interactive init on a new multi-repo project: new board repo, typed board 
   const seen: Seen[] = []
   let connection: Record<string, unknown> | null = null
   let keyTries = 0
-  const fetchImpl = async (url: string, init: RequestInit) => {
+  const fetchImpl = (async (url: string, init: RequestInit) => {
     const body = init.body ? JSON.parse(String(init.body)) : undefined
     const u = new URL(url)
     seen.push({ method: String(init.method), url: u.pathname, body })
@@ -219,7 +240,7 @@ test("interactive init on a new multi-repo project: new board repo, typed board 
       return Response.json({ provider: body.provider, model: body.model, keyConfigured: true, keyLast4: "abcd" })
     }
     return Response.json({ message: "no" }, { status: 404 })
-  }
+  }) as unknown as typeof fetch
 
   const asked: string[] = []
   const answers: Array<[RegExp, unknown]> = [
@@ -243,12 +264,12 @@ test("interactive init on a new multi-repo project: new board repo, typed board 
     args: parseInitArgs([]),
     cwd: api,
     ui,
-    env: { TASKMARK_CLOUD_URL: "https://cloud.test" },
+    env: { TASKMARK_CLOUD_URL: "https://cloud.test" } as unknown as NodeJS.ProcessEnv,
     fetchImpl,
-    openUrl: (u: string) => opened.push(u),
+    openUrl: ((u: string) => opened.push(u)) as never,
     stdinIsTTY: true,
     sleep: async () => {},
-    syncBoard: async () => ({ version: 3 }),
+    syncBoard: (async () => ({ version: 3 })) as never,
   })
   assert.equal(code, 0, asked.join("\n"))
   assert.equal(answers.length, 0, "every scripted answer was used")
@@ -297,7 +318,7 @@ test("Ctrl+C on a prompt stops cleanly before anything is written", async () => 
       throw new CancelledError()
     },
   }
-  const code = await runInit({ args: parseInitArgs([]), cwd: shop, ui, env: {}, fetchImpl: fetch, stdinIsTTY: true })
+  const code = await runInit({ args: parseInitArgs([]), cwd: shop, ui, env: {} as NodeJS.ProcessEnv, fetchImpl: fetch, stdinIsTTY: true })
   assert.equal(code, 130)
   assert.equal(cancelled.length, 1)
   assert.ok(!fs.existsSync(path.join(shop, "taskmark")))

@@ -53,7 +53,10 @@ export async function registerProject({ baseUrl, name, secret, fetchImpl = fetch
   const res = await api(baseUrl, null, "POST", "/board-sync/projects", { name, secret }, fetchImpl)
   if (!res.ok) {
     if (res.status === 429) {
-      throw new CloudError("Too many projects registered from this network. Try again in a while.", 429)
+      throw new CloudError(
+        "Taskmark Cloud allows 5 new projects per hour from one network, and that limit is reached. Try again in an hour.",
+        429,
+      )
     }
     if (res.status === 404) {
       throw new CloudError(
