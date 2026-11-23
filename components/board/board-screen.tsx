@@ -160,7 +160,7 @@ export async function BoardScreen({ searchParams }: BoardScreenProps) {
               <BoardSidebar
                 activeView={boardView}
                 projectName={activeProject.name}
-                projectMeta={`${requestBoard.requests.length} requests · ${requestBoard.meetings.length} meetings`}
+                projectMeta={`${requestBoard.requests.length} requests${requestBoard.meetings.length > 0 ? ` · ${requestBoard.meetings.length} meetings` : ""}`}
                 projectSlot={
                   workspace.autoconfig ? null : (
                     <ProjectSwitcher
@@ -313,7 +313,7 @@ export async function BoardScreen({ searchParams }: BoardScreenProps) {
               <BoardSidebar
                 activeView={boardView}
                 projectName={activeProject.name}
-                projectMeta={`${requestBoard.requests.length} requests · ${requestBoard.meetings.length} meetings`}
+                projectMeta={`${requestBoard.requests.length} requests${requestBoard.meetings.length > 0 ? ` · ${requestBoard.meetings.length} meetings` : ""}`}
                 projectSlot={
                   workspace.autoconfig ? null : (
                     <ProjectSwitcher
