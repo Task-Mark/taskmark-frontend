@@ -63,9 +63,8 @@ export function boardHref(opts: {
 }): string {
   const params = new URLSearchParams()
   const view = opts.view ?? DEFAULT_LIST_VIEW_MODE
-  if (view !== DEFAULT_LIST_VIEW_MODE) {
-    params.set("view", view)
-  }
+  // Always explicit: on request boards `/` opens Work, not Overall.
+  params.set("view", view)
   if (view === "overall") {
     if (opts.epic) params.set("epic", opts.epic)
     if (opts.epic && opts.story) params.set("story", opts.story)

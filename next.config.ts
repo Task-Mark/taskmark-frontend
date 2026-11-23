@@ -17,10 +17,18 @@ const nextConfig: NextConfig = {
   images: staticExport ? { unoptimized: true } : undefined,
   // Static build stubs server actions; skip tsc against those temporary stubs.
   typescript: staticExport ? { ignoreBuildErrors: true } : undefined,
-  webpack: (config) => {
+  webpack: (config, { dev }) => {
     config.resolve.alias = {
       ...config.resolve.alias,
       "@": packageDir,
+    }
+    if (dev) {
+      // `@taskmark/components` is linked from ../taskmark-ui while developing:
+      // do not treat it as an immutable package, so edits there hot reload.
+      config.snapshot = {
+        ...config.snapshot,
+        managedPaths: [/^(.+?[\\/]node_modules[\\/])(?!@taskmark[\\/])/],
+      }
     }
     return config
   },

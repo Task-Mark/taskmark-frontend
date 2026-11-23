@@ -23,6 +23,7 @@ import { loadBoardReports } from "@/lib/taskmark/load-reports"
 import { loadWorkspace } from "@/lib/taskmark/workspace"
 import { asString, extractFrontmatter } from "@/lib/taskmark/frontmatter"
 import { listEpicFolderLocations } from "@/lib/taskmark/board-layout"
+import { buildRequestBoard } from "@/lib/taskmark/request-board"
 
 function toBoardRelative(boardPath: string, filePath: string): string {
   const relative = path.relative(boardPath, filePath)
@@ -211,6 +212,7 @@ export function buildBoardSnapshot(
       countableCompletions: collectCompletedLeafPointSamples(metricLeaves),
       changelogMarkdown: loadBoardChangelogMarkdown(boardPath),
       reports: loadBoardReports(boardPath),
+      requestBoard: buildRequestBoard(active, boardIndex),
       hideCompleted: HIDE_COMPLETED_DEFAULT,
       detailsByPath,
       refsById,

@@ -28,7 +28,6 @@ import {
 } from "@/lib/taskmark/cookies"
 import {
   LIST_VIEW_LABELS,
-  parseListViewMode,
   type ListViewMode,
 } from "@/lib/taskmark/list-view-mode"
 import { DEV_RELOAD_TOKEN } from "@/lib/taskmark/dev-reload-token"
@@ -49,6 +48,19 @@ import {
 } from "@/lib/taskmark/project-metrics"
 import { isStaticRuntime } from "@/lib/taskmark/static-mode"
 import { loadWorkspace } from "@/lib/taskmark/workspace"
+import { buildRequestBoard } from "@/lib/taskmark/request-board"
+import { ProjectSwitcher } from "@/components/board/project-switcher"
+import {
+  BOARD_VIEW_LABELS,
+  isOpenRequest,
+  isRequestView,
+  parseBoardView,
+} from "@taskmark/components/board-model"
+import {
+  BoardSidebar,
+  RequestShell,
+  RequestViewContent,
+} from "@taskmark/components/requests"
 import { syncWorkspaceProjects } from "@/lib/taskmark/workspace-sync.mjs"
 
 // Keep this import so `taskmark dev` can touch the token module and refresh RSC.
@@ -59,6 +71,9 @@ export type BoardSearchParams = {
   epic?: string | string[]
   story?: string | string[]
   item?: string | string[]
+  request?: string | string[]
+  meeting?: string | string[]
+  period?: string | string[]
 }
 
 /**
@@ -119,10 +134,61 @@ export async function BoardScreen({ searchParams }: BoardScreenProps) {
   const hasChangelog = changelogMarkdown != null
   const reports = loadBoardReports(activeProject.boardPath)
   const hasReports = reports.length > 0
-  const activeView = parseListViewMode(params.view, {
+  const requestBoard = buildRequestBoard(activeProject, boardIndex)
+  const boardView = parseBoardView(params.view, {
     hasChangelog,
     hasReports,
+    hasRequestBoard: requestBoard != null,
   })
+  // Epic links from the legacy tree carry `epic=` without a view.
+  const activeView: ListViewMode = isRequestView(boardView)
+    ? "overall"
+    : boardView
+
+  if (requestBoard && isRequestView(boardView)) {
+    const openRequests = requestBoard.requests.filter(isOpenRequest).length
+    const openMeetingTasks = requestBoard.meetings.reduce(
+      (n, m) => n + m.tasks.filter((t) => t.status === "open" || t.status === "in_progress").length,
+      0
+    )
+    return (
+      <BoardAssetsProvider mode="live">
+        <WorkItemSheetProvider>
+          <LiveBoardDetailLoaders />
+          <RequestShell
+            sidebar={
+              <BoardSidebar
+                activeView={boardView}
+                projectName={activeProject.name}
+                projectMeta={`${requestBoard.requests.length} requests · ${requestBoard.meetings.length} meetings`}
+                projectSlot={
+                  workspace.autoconfig ? null : (
+                    <ProjectSwitcher
+                      projects={workspace.projects}
+                      activeProjectId={activeProject.id}
+                    />
+                  )
+                }
+                openRequestCount={openRequests}
+                openMeetingTaskCount={openMeetingTasks}
+                hasChangelog={hasChangelog}
+                hasReports={hasReports}
+              />
+            }
+          >
+            <RequestViewContent
+              view={boardView}
+              data={requestBoard}
+              projectName={activeProject.name}
+              request={paramValue(params.request)}
+              meeting={paramValue(params.meeting)}
+              period={paramValue(params.period)}
+            />
+          </RequestShell>
+        </WorkItemSheetProvider>
+      </BoardAssetsProvider>
+    )
+  }
   const selectedEpicId =
     activeView === "overall" ? paramValue(params.epic) : null
   const selectedStoryId =
@@ -189,6 +255,95 @@ export async function BoardScreen({ searchParams }: BoardScreenProps) {
     metricLeaves
   )
 
+  const legacyContent = (
+    <>
+          <ProjectStatusMetricsStrip metrics={statusMetrics} />
+
+          <div className="md:hidden">
+            <WorklogSpeedometer entries={worklogEntries} layout="inline" />
+          </div>
+
+          {activeView === "overall" ? (
+            <>
+              <PointsHeatmap samples={countableCompletions} />
+              <OverallTreeList
+                list={list}
+                workItemsByEpic={workItemsByEpic}
+                itemsByStory={itemsByStory}
+                selectedEpicId={selectedEpicId}
+                selectedStoryId={selectedStoryId}
+                countableCompletions={countableCompletions}
+                initialHideCompleted={hideCompleted}
+              />
+            </>
+          ) : null}
+
+          {activeView === "workitems" && workItemsList ? (
+            <WorkItemsList
+              list={workItemsList}
+              countableCompletions={countableCompletions}
+              initialHideCompleted={hideCompleted}
+            />
+          ) : null}
+
+          {activeView === "worklog" ? (
+            <WorklogPanel entries={worklogEntries} />
+          ) : null}
+
+          {activeView === "changelog" && changelogMarkdown ? (
+            <ChangelogPanel
+              markdown={changelogMarkdown}
+              sourcePath={path.join(activeProject.boardPath, "CHANGELOG.md")}
+            />
+          ) : null}
+
+          {activeView === "reports" && hasReports ? (
+            <ReportsPanel reports={reports} boardRoot={activeProject.boardPath} />
+          ) : null}
+    </>
+  )
+
+  if (requestBoard) {
+    return (
+      <BoardAssetsProvider mode="live">
+        <WorkItemSheetProvider>
+          <LiveBoardDetailLoaders />
+          <RequestShell
+            sidebar={
+              <BoardSidebar
+                activeView={boardView}
+                projectName={activeProject.name}
+                projectMeta={`${requestBoard.requests.length} requests · ${requestBoard.meetings.length} meetings`}
+                projectSlot={
+                  workspace.autoconfig ? null : (
+                    <ProjectSwitcher
+                      projects={workspace.projects}
+                      activeProjectId={activeProject.id}
+                    />
+                  )
+                }
+                openRequestCount={requestBoard.requests.filter(isOpenRequest).length}
+                hasChangelog={hasChangelog}
+                hasReports={hasReports}
+              />
+            }
+          >
+            <div>
+              <h1 className="font-head text-3xl tracking-tight">
+                {BOARD_VIEW_LABELS[activeView]}
+              </h1>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {activeProject.name} · the board files as they are, epic by epic
+              </p>
+            </div>
+            {legacyContent}
+          </RequestShell>
+          <BoardFloatingChrome worklogEntries={worklogEntries} />
+        </WorkItemSheetProvider>
+      </BoardAssetsProvider>
+    )
+  }
+
   return (
     <BoardAssetsProvider mode="live">
     <WorkItemSheetProvider>
@@ -239,49 +394,7 @@ export async function BoardScreen({ searchParams }: BoardScreenProps) {
             />
           </div>
 
-          <ProjectStatusMetricsStrip metrics={statusMetrics} />
-
-          <div className="md:hidden">
-            <WorklogSpeedometer entries={worklogEntries} layout="inline" />
-          </div>
-
-          {activeView === "overall" ? (
-            <>
-              <PointsHeatmap samples={countableCompletions} />
-              <OverallTreeList
-                list={list}
-                workItemsByEpic={workItemsByEpic}
-                itemsByStory={itemsByStory}
-                selectedEpicId={selectedEpicId}
-                selectedStoryId={selectedStoryId}
-                countableCompletions={countableCompletions}
-                initialHideCompleted={hideCompleted}
-              />
-            </>
-          ) : null}
-
-          {activeView === "workitems" && workItemsList ? (
-            <WorkItemsList
-              list={workItemsList}
-              countableCompletions={countableCompletions}
-              initialHideCompleted={hideCompleted}
-            />
-          ) : null}
-
-          {activeView === "worklog" ? (
-            <WorklogPanel entries={worklogEntries} />
-          ) : null}
-
-          {activeView === "changelog" && changelogMarkdown ? (
-            <ChangelogPanel
-              markdown={changelogMarkdown}
-              sourcePath={path.join(activeProject.boardPath, "CHANGELOG.md")}
-            />
-          ) : null}
-
-          {activeView === "reports" && hasReports ? (
-            <ReportsPanel reports={reports} boardRoot={activeProject.boardPath} />
-          ) : null}
+          {legacyContent}
         </div>
         <BoardFloatingChrome worklogEntries={worklogEntries} />
       </div>
