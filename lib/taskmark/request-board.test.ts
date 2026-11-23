@@ -139,3 +139,10 @@ test("an undated request is queued by when it would land on its own", () => {
   assert.equal(forecasts.get("R-maint")!.likely, "2026-12-02")
   assert.equal(forecasts.get("R-careers")!.likely, "2026-12-16")
 })
+
+test("a brief with status backlog reads as ready", () => {
+  const board = writeBoard()
+  write(path.join(board, "requests", "csv", "brief.md"), ["---", "id: R-csv", "title: CSV", "status: Backlog", "---", ""])
+  const data = buildRequestBoard(project(board), undefined, AS_OF)!
+  assert.equal(data.requests.find((r) => r.id === "R-csv")?.status, "ready")
+})

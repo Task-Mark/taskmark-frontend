@@ -60,7 +60,9 @@ export function checklistOrBullets(markdown: string): ChecklistItem[] {
 }
 
 function asRequestStatus(value: unknown): RequestStatus | null {
-  const v = asString(value).trim().toLowerCase().replace(/\s+/g, "_")
+  const raw = asString(value).trim().toLowerCase().replace(/\s+/g, "_")
+  // The interface calls `ready` "Backlog"; accept both in the brief.
+  const v = raw === "backlog" ? "ready" : raw
   return (REQUEST_STATUSES as readonly string[]).includes(v)
     ? (v as RequestStatus)
     : null
