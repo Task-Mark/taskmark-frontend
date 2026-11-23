@@ -8,6 +8,8 @@ const staticExport = process.env.TASKMARK_STATIC === "1"
 
 const nextConfig: NextConfig = {
   transpilePackages: ["@taskmark/components"],
+  // Keep the dev-only Next badge off the sidebar's account row (bottom left).
+  devIndicators: { position: "bottom-right" },
   // When installed under a board with its own lockfile, Next would otherwise
   // treat the board as the workspace root and break `@/` resolution.
   outputFileTracingRoot: packageDir,
