@@ -49,6 +49,7 @@ import {
 import { isStaticRuntime } from "@/lib/taskmark/static-mode"
 import { loadWorkspace } from "@/lib/taskmark/workspace"
 import { buildRequestBoard } from "@/lib/taskmark/request-board"
+import { readGitUser } from "@/lib/taskmark/git-user"
 import { ProjectSwitcher } from "@/components/board/project-switcher"
 import {
   BOARD_VIEW_LABELS,
@@ -135,6 +136,7 @@ export async function BoardScreen({ searchParams }: BoardScreenProps) {
   const reports = loadBoardReports(activeProject.boardPath)
   const hasReports = reports.length > 0
   const requestBoard = buildRequestBoard(activeProject, boardIndex)
+  const gitUser = requestBoard ? readGitUser(activeProject.boardPath) : null
   const boardView = parseBoardView(params.view, {
     hasChangelog,
     hasReports,
@@ -173,6 +175,7 @@ export async function BoardScreen({ searchParams }: BoardScreenProps) {
                 openMeetingTaskCount={openMeetingTasks}
                 hasChangelog={hasChangelog}
                 hasReports={hasReports}
+                user={gitUser}
               />
             }
           >
@@ -325,6 +328,7 @@ export async function BoardScreen({ searchParams }: BoardScreenProps) {
                 openRequestCount={requestBoard.requests.filter(isOpenRequest).length}
                 hasChangelog={hasChangelog}
                 hasReports={hasReports}
+                user={gitUser}
               />
             }
           >
