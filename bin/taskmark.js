@@ -39,6 +39,10 @@ Commands:
   sync               Push board markdown to Taskmark Cloud using board .config
   preview            Serve an existing static export (default: <board>/out)
   migrate            Move a legacy epics/ board to requests/ (one request per epic)
+  stages             Read develop / quality / main in the code repos and write task
+                     stages, shipped dates, commit rows and request log entries
+  hooks install      Install git hooks in the code repos (task id in commits,
+                     stages after every pull)
 
 Options:
   --port, -p <n>     Listen port (default ${DEFAULT_PORT}; env PORT / TASKMARK_PORT)
@@ -47,7 +51,11 @@ Options:
   --out <dir>        Static output directory for build/preview (default: <board>/out)
   --sync             Kept for compatibility; bound dev/serve always watch .config
   --watch            Keep syncing when markdown changes (sync command)
-  --dry-run          Show what migrate would change without writing (migrate)
+  --dry-run          Show what migrate or stages would change without writing
+  --fetch            Fetch the code repos before reading branches (stages)
+  --repo <path>      Code repository to read or hook (repeatable; default: board
+                     package.json "taskmark.repos", else REPOS.md)
+  --quiet            Print nothing unless something fails (stages)
   --no-open          Do not open a browser (default / open / serve / preview / dev)
   --help, -h         Show help
 
@@ -87,6 +95,10 @@ function parseArgs(argv) {
     sync: false,
     watch: false,
     dryRun: false,
+    fetch: false,
+    quiet: false,
+    repos: [],
+    positional: [],
   }
   const rest = [...argv]
   if (rest.length === 0) {
@@ -109,6 +121,12 @@ function parseArgs(argv) {
       args.watch = true
     } else if (token === "--dry-run") {
       args.dryRun = true
+    } else if (token === "--fetch") {
+      args.fetch = true
+    } else if (token === "--quiet") {
+      args.quiet = true
+    } else if (token === "--repo") {
+      args.repos.push(rest.shift())
     } else if (token === "--port" || token === "-p") {
       args.port = rest.shift()
     } else if (token === "--board") {
@@ -121,6 +139,8 @@ function parseArgs(argv) {
       args.board = token.slice("--board=".length)
     } else if (token.startsWith("--out=")) {
       args.out = token.slice("--out=".length)
+    } else if (!token.startsWith("-")) {
+      args.positional.push(token)
     } else {
       console.error(`Unknown argument: ${token}`)
       args.help = true
@@ -700,6 +720,65 @@ Pick projects in UI: npx taskmark open`)
       console.log(`\n${result.requests.length} requests, ${result.stagedLeaves} done tasks marked as in production.`)
       if (!args.dryRun) {
         console.log("Review the briefs, merge requests that belong together, then commit.")
+      }
+    } catch (err) {
+      console.error(String(err?.message || err))
+      process.exit(1)
+    }
+    return
+  }
+  if (args.command === "stages") {
+    try {
+      const resolved = resolveBoardOrExit(args.board, "stages")
+      const { syncStages } = await import("./lib/stages.mjs")
+      const options = { boardPath: resolved.boardPath, fetch: args.fetch, dryRun: args.dryRun }
+      if (args.repos.length) options.repos = args.repos.map((r) => path.resolve(r))
+      const result = syncStages(options)
+      if (args.quiet) return
+      if (result.repos.length === 0) {
+        console.log('No code repositories found. Add them to the board package.json: "taskmark": { "repos": ["../my-api"] }')
+        return
+      }
+      for (const repo of result.repos) {
+        const refs = Object.entries(repo.refs)
+          .map(([stage, ref]) => `${stage}=${ref ?? "none"}`)
+          .join(", ")
+        console.log(`  ${repo.repo} (${repo.provider}): ${refs}`)
+      }
+      const c = result.stageCounts
+      console.log(
+        `\n${args.dryRun ? "Would update" : "Updated"} ${result.changes.length} tasks ` +
+          `(${c.development} in development, ${c.testing} in testing, ${c.production} in production) ` +
+          `and ${result.logFiles.length} log entries.`
+      )
+    } catch (err) {
+      console.error(String(err?.message || err))
+      process.exit(1)
+    }
+    return
+  }
+  if (args.command === "hooks") {
+    try {
+      if (args.positional[0] !== "install") {
+        console.error("Usage: npx taskmark hooks install [--repo <path>] [--board <path>]")
+        process.exit(1)
+      }
+      const resolved = resolveBoardOrExit(args.board, "hooks install")
+      const { installHooks } = await import("./lib/hooks.mjs")
+      const { resolveRepos } = await import("./lib/stages.mjs")
+      const repos = args.repos.length
+        ? args.repos.map((r) => path.resolve(r))
+        : resolveRepos(resolved.boardPath)
+      if (repos.length === 0) {
+        console.log("No code repositories found. Pass --repo <path> or list them in the board package.json.")
+        return
+      }
+      for (const repo of repos) {
+        const result = installHooks({ repo, boardPath: resolved.boardPath })
+        const skipped = result.skipped.length
+          ? ` (left your own ${result.skipped.join(", ")} alone)`
+          : ""
+        console.log(`  ${path.basename(repo)}: ${result.written.join(", ") || "nothing written"}${skipped}`)
       }
     } catch (err) {
       console.error(String(err?.message || err))
