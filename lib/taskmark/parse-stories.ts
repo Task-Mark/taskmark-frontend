@@ -15,6 +15,7 @@ import {
 import { asContributorList } from "@/lib/taskmark/identity"
 import { deriveParentRollup } from "@/lib/taskmark/derive-parents"
 import type { BoardIndex } from "@/lib/taskmark/board-index"
+import { listEpicFolderLocations } from "@/lib/taskmark/board-layout"
 
 type EpicFolder = {
   dirName: string
@@ -57,17 +58,8 @@ export function findEpicFolder(
   boardPath: string,
   epicId: string
 ): EpicFolder | null {
-  const epicsDir = path.join(boardPath, "epics")
-  let entries: fs.Dirent[]
-  try {
-    entries = fs.readdirSync(epicsDir, { withFileTypes: true })
-  } catch {
-    return null
-  }
-
-  for (const entry of entries) {
-    if (!entry.isDirectory() || entry.name.startsWith(".")) continue
-    const meta = readEpicFolderMeta(path.join(epicsDir, entry.name), entry.name)
+  for (const location of listEpicFolderLocations(boardPath)) {
+    const meta = readEpicFolderMeta(location.absDir, location.relDir)
     if (meta?.id === epicId) return meta
   }
   return null
@@ -224,7 +216,7 @@ export function parseStoriesForEpic(
     }
   }
 
-  const epicDir = path.join(project.boardPath, "epics", folder.dirName)
+  const epicDir = path.join(project.boardPath, folder.dirName)
   const files = listStoryMarkdownFiles(epicDir)
   const stories: StorySummary[] = []
   const errors: StoryParseError[] = []

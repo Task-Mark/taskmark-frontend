@@ -13,6 +13,7 @@ import {
 } from "@taskmark/components/board-model"
 
 import { REPORTS_DIR_NAME } from "@/lib/taskmark/report-types"
+import { boardContentRelDirs } from "@/lib/taskmark/board-layout"
 
 /** Largest image either mode will serve or copy. */
 export const MAX_BOARD_ASSET_BYTES = 20 * 1024 * 1024
@@ -78,7 +79,9 @@ function listBoardMarkdown(boardPath: string): string[] {
       else if (entry.isFile() && entry.name.endsWith(".md")) out.push(full)
     }
   }
-  walk(path.join(boardPath, "epics"))
+  for (const dir of boardContentRelDirs(boardPath)) {
+    walk(path.join(boardPath, dir))
+  }
   const changelog = path.join(boardPath, "CHANGELOG.md")
   if (fs.existsSync(changelog)) out.push(changelog)
   const reportsDir = path.join(boardPath, REPORTS_DIR_NAME)

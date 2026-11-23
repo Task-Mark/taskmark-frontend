@@ -64,7 +64,7 @@ export type ParentRollup = {
   doneLeafCount: number
 }
 
-function leafPoints(frontmatter: Record<string, unknown>): number {
+export function leafPoints(frontmatter: Record<string, unknown>): number {
   const explicit = asNumberOrNull(frontmatter.points)
   if (explicit != null) return Math.max(0, explicit)
   const size = asString(frontmatter.size).trim().toUpperCase()

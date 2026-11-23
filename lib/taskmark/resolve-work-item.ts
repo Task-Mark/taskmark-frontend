@@ -7,6 +7,7 @@ import {
 } from "@/lib/taskmark/frontmatter"
 import type { WorkItemRef } from "@/lib/taskmark/detail-types"
 import type { DiscoveredProject } from "@/lib/taskmark/types"
+import { listEpicFolderLocations } from "@/lib/taskmark/board-layout"
 
 export type ResolvedWorkItem = WorkItemRef & {
   boardPath: string
@@ -76,17 +77,7 @@ export function findWorkItemOnBoard(
   const id = itemId.trim()
   if (!id) return null
 
-  const epicsDir = path.join(boardPath, "epics")
-  let epicEntries: fs.Dirent[]
-  try {
-    epicEntries = fs.readdirSync(epicsDir, { withFileTypes: true })
-  } catch {
-    return null
-  }
-
-  for (const epicEntry of epicEntries) {
-    if (!epicEntry.isDirectory() || epicEntry.name.startsWith(".")) continue
-    const epicDir = path.join(epicsDir, epicEntry.name)
+  for (const { absDir: epicDir } of listEpicFolderLocations(boardPath)) {
 
     const epicFile = path.join(epicDir, "epic.md")
     if (fs.existsSync(epicFile)) {

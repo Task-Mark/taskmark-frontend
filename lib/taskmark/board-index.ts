@@ -3,6 +3,7 @@ import path from "node:path"
 
 import { asString, extractFrontmatter } from "@/lib/taskmark/frontmatter"
 import { readActualTimingFromWorkLog } from "@/lib/taskmark/timing"
+import { epicRootRelDirs } from "@/lib/taskmark/board-layout"
 
 export type IndexedLeaf = {
   filePath: string
@@ -73,7 +74,10 @@ export function buildBoardIndex(boardPath: string): BoardIndex {
   const leavesByEpic = new Map<string, IndexedLeaf[]>()
   const leavesByParent = new Map<string, IndexedLeaf[]>()
 
-  for (const filePath of itemMarkdownFiles(path.join(boardPath, "epics"))) {
+  const files = epicRootRelDirs(boardPath).flatMap((root) =>
+    itemMarkdownFiles(path.join(boardPath, root))
+  )
+  for (const filePath of files) {
     try {
       const raw = fs.readFileSync(filePath, "utf8")
       const frontmatter = extractFrontmatter(raw)

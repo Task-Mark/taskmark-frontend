@@ -38,6 +38,7 @@ Commands:
   build              Production static HTML export for Vercel / static hosting
   sync               Push board markdown to Taskmark Cloud using board .config
   preview            Serve an existing static export (default: <board>/out)
+  migrate            Move a legacy epics/ board to requests/ (one request per epic)
 
 Options:
   --port, -p <n>     Listen port (default ${DEFAULT_PORT}; env PORT / TASKMARK_PORT)
@@ -46,6 +47,7 @@ Options:
   --out <dir>        Static output directory for build/preview (default: <board>/out)
   --sync             Kept for compatibility; bound dev/serve always watch .config
   --watch            Keep syncing when markdown changes (sync command)
+  --dry-run          Show what migrate would change without writing (migrate)
   --no-open          Do not open a browser (default / open / serve / preview / dev)
   --help, -h         Show help
 
@@ -84,6 +86,7 @@ function parseArgs(argv) {
     help: false,
     sync: false,
     watch: false,
+    dryRun: false,
   }
   const rest = [...argv]
   if (rest.length === 0) {
@@ -104,6 +107,8 @@ function parseArgs(argv) {
       args.sync = true
     } else if (token === "--watch") {
       args.watch = true
+    } else if (token === "--dry-run") {
+      args.dryRun = true
     } else if (token === "--port" || token === "-p") {
       args.port = rest.shift()
     } else if (token === "--board") {
@@ -673,6 +678,29 @@ Pick projects in UI: npx taskmark open`)
       process.on("SIGINT", halt)
       process.on("SIGTERM", halt)
       await new Promise(() => {})
+    } catch (err) {
+      console.error(String(err?.message || err))
+      process.exit(1)
+    }
+    return
+  }
+  if (args.command === "migrate") {
+    try {
+      const resolved = resolveBoardOrExit(args.board, "migrate")
+      const { migrateBoard } = await import("./lib/migrate-board.mjs")
+      const result = migrateBoard({ boardPath: resolved.boardPath, dryRun: args.dryRun })
+      if (result.requests.length === 0) {
+        console.log("Nothing to migrate: this board has no legacy epics/ folder.")
+        return
+      }
+      console.log(args.dryRun ? "Dry run, nothing written:\n" : "Migrated:\n")
+      for (const r of result.requests) {
+        console.log(`  ${r.epicId}  →  requests/${r.slug}/  (${r.status}, ${r.stagedLeaves} tasks marked as in production)`)
+      }
+      console.log(`\n${result.requests.length} requests, ${result.stagedLeaves} done tasks marked as in production.`)
+      if (!args.dryRun) {
+        console.log("Review the briefs, merge requests that belong together, then commit.")
+      }
     } catch (err) {
       console.error(String(err?.message || err))
       process.exit(1)

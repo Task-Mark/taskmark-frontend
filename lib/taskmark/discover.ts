@@ -12,9 +12,10 @@ import {
   resolveBoardKey,
 } from "@/lib/taskmark/projects"
 import type { DiscoveredProject } from "@/lib/taskmark/types"
+import { hasBoardLayout } from "@/lib/taskmark/board-layout"
 
 function hasBoardMarkers(boardPath: string): boolean {
-  return fs.existsSync(path.join(boardPath, "epics"))
+  return hasBoardLayout(boardPath)
 }
 
 /** Single-project layout: `<project>/taskmark/` with epics/. */

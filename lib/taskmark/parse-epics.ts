@@ -16,24 +16,13 @@ import { asContributorList } from "@/lib/taskmark/identity"
 import { sortEpicsGeneralFirst } from "@/lib/taskmark/general-epic"
 import { deriveParentRollup } from "@/lib/taskmark/derive-parents"
 import type { BoardIndex } from "@/lib/taskmark/board-index"
+import { listEpicFolderLocations } from "@/lib/taskmark/board-layout"
 
 function listEpicMarkdownFiles(boardPath: string): string[] {
-  const epicsDir = path.join(boardPath, "epics")
-  let entries: fs.Dirent[]
-  try {
-    entries = fs.readdirSync(epicsDir, { withFileTypes: true })
-  } catch {
-    return []
-  }
-
   const files: string[] = []
-  for (const entry of entries) {
-    if (!entry.isDirectory()) continue
-    if (entry.name.startsWith(".")) continue
-    const epicFile = path.join(epicsDir, entry.name, "epic.md")
-    if (fs.existsSync(epicFile)) {
-      files.push(epicFile)
-    }
+  for (const location of listEpicFolderLocations(boardPath)) {
+    const epicFile = path.join(location.absDir, "epic.md")
+    if (fs.existsSync(epicFile)) files.push(epicFile)
   }
   return files.sort()
 }

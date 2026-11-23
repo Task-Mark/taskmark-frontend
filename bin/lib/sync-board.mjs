@@ -66,6 +66,9 @@ export function loadBoardEnv(boardPath) {
   }
 }
 
+/** Top-level board folders whose markdown is synced. */
+const BOARD_CONTENT_DIRS = ["epics", "requests", "meetings"]
+
 function isAllowedBoardPath(raw) {
   const rel = raw.replaceAll("\\", "/").replace(/^\/+/, "")
   if (!rel || rel.includes("\0") || rel.split("/").includes("..")) return false
@@ -74,7 +77,7 @@ function isAllowedBoardPath(raw) {
   }
   if (/^\.reports\/report-\d{8}\.md$/.test(rel)) return true
   return (
-    rel.startsWith("epics/") &&
+    BOARD_CONTENT_DIRS.some((dir) => rel.startsWith(`${dir}/`)) &&
     rel.endsWith(".md") &&
     rel.split("/").every((part) => part.length > 0 && !part.startsWith("."))
   )
@@ -93,7 +96,8 @@ function collectBoardFiles(boardPath) {
       const rel = prefix ? `${prefix}/${entry.name}` : entry.name
       const full = path.join(dir, entry.name)
       if (entry.isDirectory()) {
-        if (entry.name === "epics" || entry.name === ".reports" || prefix.startsWith("epics")) {
+        const top = (prefix || entry.name).split("/")[0]
+        if (top === ".reports" || BOARD_CONTENT_DIRS.includes(top)) {
           walk(full, rel)
         }
       } else if (entry.isFile() && isAllowedBoardPath(rel)) {

@@ -133,7 +133,7 @@ export function progressUnderEpic(
   const epic = findEpicFolder(boardPath, epicId)
   if (!epic) return { total: 0, done: 0 }
 
-  const epicDir = path.join(boardPath, "epics", epic.dirName)
+  const epicDir = path.join(boardPath, epic.dirName)
   let progress = progressStoriesUnderEpic(epicDir)
   progress = addProgress(
     progress,
@@ -176,7 +176,7 @@ export function progressUnderStory(
   const epic = findEpicFolder(boardPath, epicId)
   if (!epic) return { total: 0, done: 0 }
 
-  const storiesDir = path.join(boardPath, "epics", epic.dirName, "stories")
+  const storiesDir = path.join(boardPath, epic.dirName, "stories")
   let entries: fs.Dirent[]
   try {
     entries = fs.readdirSync(storiesDir, { withFileTypes: true })

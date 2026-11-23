@@ -22,6 +22,7 @@ import { loadBoardChangelogMarkdown } from "@/lib/taskmark/load-changelog"
 import { loadBoardReports } from "@/lib/taskmark/load-reports"
 import { loadWorkspace } from "@/lib/taskmark/workspace"
 import { asString, extractFrontmatter } from "@/lib/taskmark/frontmatter"
+import { listEpicFolderLocations } from "@/lib/taskmark/board-layout"
 
 function toBoardRelative(boardPath: string, filePath: string): string {
   const relative = path.relative(boardPath, filePath)
@@ -89,17 +90,7 @@ function readMeta(
 /** Walk one board and collect every work-item ref. */
 export function listAllWorkItemRefs(boardPath: string): WorkItemRef[] {
   const refs: WorkItemRef[] = []
-  const epicsDir = path.join(boardPath, "epics")
-  let epicEntries: fs.Dirent[]
-  try {
-    epicEntries = fs.readdirSync(epicsDir, { withFileTypes: true })
-  } catch {
-    return refs
-  }
-
-  for (const epicEntry of epicEntries) {
-    if (!epicEntry.isDirectory() || epicEntry.name.startsWith(".")) continue
-    const epicDir = path.join(epicsDir, epicEntry.name)
+  for (const { absDir: epicDir } of listEpicFolderLocations(boardPath)) {
 
     const epicFile = path.join(epicDir, "epic.md")
     if (fs.existsSync(epicFile)) {

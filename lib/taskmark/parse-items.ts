@@ -66,7 +66,7 @@ export function findStoryFolder(
   const epic = findEpicFolder(boardPath, epicId)
   if (!epic) return null
 
-  const storiesDir = path.join(boardPath, "epics", epic.dirName, "stories")
+  const storiesDir = path.join(boardPath, epic.dirName, "stories")
   let entries: fs.Dirent[]
   try {
     entries = fs.readdirSync(storiesDir, { withFileTypes: true })
@@ -234,7 +234,7 @@ export function parseItemsForStory(
       errors: [
         {
           filePath: epic
-            ? path.join(project.boardPath, "epics", epic.dirName, "stories")
+            ? path.join(project.boardPath, epic.dirName, "stories")
             : path.join(project.boardPath, "epics"),
           projectId: project.id,
           projectName: project.name,
@@ -249,7 +249,6 @@ export function parseItemsForStory(
 
   const storyDir = path.join(
     project.boardPath,
-    "epics",
     folder.epicDirName,
     "stories",
     folder.dirName
@@ -318,7 +317,7 @@ export function parseItemsForEpic(
     }
   }
 
-  const epicDir = path.join(project.boardPath, "epics", epic.dirName)
+  const epicDir = path.join(project.boardPath, epic.dirName)
   const files = listItemMarkdownFiles(epicDir)
   const indexedByPath = index
     ? new Map(
